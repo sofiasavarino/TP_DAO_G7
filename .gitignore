@@ -1,0 +1,29 @@
+# Entorno virtual
+venv/
+.venv/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# Variables de entorno (tienen la API key de Google)
+.env
+!.env.example
+
+# Base de datos local
+*.db
+*.sqlite3
+
+# Tests y herramientas
+.pytest_cache/
+.coverage
+.ruff_cache/
+
+# Editores y sistema operativo
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
