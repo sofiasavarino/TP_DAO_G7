@@ -7,7 +7,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import Base, BajaLogicaMixin
 
 if TYPE_CHECKING:
-    from app.models.empleado import Empleado
+    from app.models.usuario import Usuario
 
 
 class Sede(Base, BajaLogicaMixin):
@@ -21,4 +21,4 @@ class Sede(Base, BajaLogicaMixin):
     horario_atencion: Mapped[str | None] = mapped_column(String(200))
     fecha_creacion: Mapped[date] = mapped_column(default=date.today)
 
-    empleados: Mapped[list["Empleado"]] = relationship(back_populates="sede")
+    usuarios: Mapped[list["Usuario"]] = relationship(back_populates="sede")

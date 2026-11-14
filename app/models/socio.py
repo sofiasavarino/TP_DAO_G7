@@ -9,7 +9,6 @@ from app.models.enums import EstadoSocio
 if TYPE_CHECKING:
     from app.models.prestamo import Prestamo
     from app.models.reserva import Reserva
-    from app.models.resena import Resena
     from app.models.sancion import Sancion
     from app.models.usuario import Usuario
 
@@ -32,4 +31,3 @@ class Socio(Base):
     prestamos: Mapped[list["Prestamo"]] = relationship(back_populates="socio")
     reservas: Mapped[list["Reserva"]] = relationship(back_populates="socio")
     sanciones: Mapped[list["Sancion"]] = relationship(back_populates="socio")
-    resenas: Mapped[list["Resena"]] = relationship(back_populates="socio")

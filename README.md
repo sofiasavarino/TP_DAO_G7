@@ -8,11 +8,11 @@ Gestiona el catálogo, los socios y la logística de una red de bibliotecas: pr�
 
 | Componente | Tecnología |
 |---|---|
-| Lenguaje | Python 3.12 |
+| Lenguaje | Python 3.12+ |
 | Base de datos | SQLite |
 | ORM | SQLAlchemy 2.0 (`Mapped[]` y `mapped_column`) |
 | DTOs y validación | Pydantic |
-| Interfaz | Flet (fijar la versión en `pyproject.toml`) |
+| Interfaz | Flet (versión fijada en `pyproject.toml`) |
 | Integración externa | Google Books API |
 | Arquitectura | Monolito en capas |
 
@@ -54,7 +54,7 @@ TP_DAO_G7/
 | `controllers` | Puente entre las vistas y los services. |
 | `dtos` | Objetos de transferencia con Pydantic. |
 | `views` | Pantallas de Flet. `components` tiene los widgets reutilizables. |
-| `states` | Patrón State ?¿ . Se agrega al final si lo hacemos, es una carpeta de ejemplo para los patrones |
+| `states` | Pensado para el patrón State. Se agrega al final, solo si se termina implementando. |
 | `reports` | Reportes y estadísticas. Opcional, se agrega al final. |
 | `notifications` | Envío de notificaciones (Observer o Strategy). Opcional, se agrega al final. |
 | `integrations/googlebooks` | Cliente HTTP de Google Books y mapper de la respuesta a `Libro` y `Autor`. Solo lo usa el service de libro. |
@@ -77,8 +77,10 @@ views → controllers → services → repositories → models
 | `views` | Dibujar pantallas y capturar eventos | Llamar a services o repositories directamente |
 | `controllers` | Recibir eventos de la vista, armar DTOs, llamar al service | Contener reglas de negocio ni tocar la base |
 | `services` | Reglas de negocio y manejo de la transacción | Conocer Flet |
-| `repositories` | Queries sobre la sesión recibida | Hacer `commit()` ni tener reglas de negocio |
+| `repositories` | Queries sobre la sesión recibida: colecciones (listados, historiales) y agregados (`count`, `sum`) con `selectinload`/`func` | Hacer `commit()` ni tener reglas de negocio |
 | `models` | Mapeo de tablas y relaciones | Contener lógica de negocio |
+
+**Navegación del ORM.** Los services pueden navegar relaciones a-uno por lazy loading (`prestamo.ejemplar`, `ejemplar.libro`): son lookups por PK, baratos y quedan dentro de la transacción abierta. Lo que involucra colecciones o agregados lo resuelve siempre el repository: listados con `selectinload` (evita el N+1), conteos para reglas de negocio con `func.count` (p. ej. el límite de préstamos activos de un socio). Si un caso de uso encadena 3 o más lazy loads, se precarga el grafo desde el repository. Los DTOs se arman dentro de la sesión (`PrestamoDTO.from_model(...)`); nunca se devuelven objetos ORM vivos al controller ni a la vista.
 
 ## Convenciones
 
@@ -101,7 +103,7 @@ class Prestamo(Base):
 
 **Baja lógica.** Nunca se borra físicamente. Se marca `activo = False` y los repositories filtran por activos por defecto.
 
-**Enums.** Los valores fijos van como `Enum` de Python en el módulo de enums de `models`. Las tablas `Estado` y `Rol` se usan solo donde el diagrama lo indica.
+**Enums.** Los valores fijos van como `Enum` de Python en el módulo de enums de `models`. No hay tabla `Estado`: todos los estados (socio, préstamo, ejemplar, reserva, remito) son enums. Más adelante se puede evaluar el patrón State (ver `states` en la estructura del proyecto). La tabla `Rol` sí existe y se usa en `Usuario`, donde el diagrama lo indica.
 
 **Transacciones.** El service abre la transacción y los repositories reciben la sesión:
 

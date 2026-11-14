@@ -25,7 +25,6 @@ class Prestamo(Base):
     )
     fecha_inicio: Mapped[date] = mapped_column(default=date.today)
     fecha_vencimiento: Mapped[date]
-    fecha_retiro: Mapped[date | None]
     fecha_devolucion: Mapped[date | None]
     observaciones: Mapped[str | None] = mapped_column(Text)
 

@@ -14,10 +14,13 @@ class EstadoPrestamo(enum.Enum):
 
 class EstadoEjemplar(enum.Enum):
     DISPONIBLE = "DISPONIBLE"
+    RESERVADO = "RESERVADO"
     PRESTADO = "PRESTADO"
-    EN_TRANSITO = "EN_TRANSITO"
-    DANADO = "DANADO"
-    BAJA = "BAJA"
+    EN_TRANSITO_IDA = "EN_TRANSITO_IDA"
+    EN_OTRA_SEDE = "EN_OTRA_SEDE"
+    EN_TRANSITO_VUELTA = "EN_TRANSITO_VUELTA"
+    EN_REPARACION = "EN_REPARACION"
+    INUTILIZABLE = "INUTILIZABLE"
 
 
 class EstadoRemito(enum.Enum):

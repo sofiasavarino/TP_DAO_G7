@@ -7,7 +7,7 @@ from app.models.base import Base
 
 if TYPE_CHECKING:
     from app.models.libro import Libro
-    from app.models.socio import Socio
+    from app.models.usuario import Usuario
 
 
 class Resena(Base):
@@ -17,8 +17,8 @@ class Resena(Base):
     descripcion: Mapped[str | None] = mapped_column(String(1000))
     puntuacion: Mapped[int]
 
-    socio_id: Mapped[int] = mapped_column(ForeignKey("socio.id"))
+    usuario_id: Mapped[int] = mapped_column(ForeignKey("usuario.id"))
     libro_id: Mapped[int] = mapped_column(ForeignKey("libro.id"))
 
-    socio: Mapped["Socio"] = relationship(back_populates="resenas")
+    usuario: Mapped["Usuario"] = relationship(back_populates="resenas")
     libro: Mapped["Libro"] = relationship(back_populates="resenas")
