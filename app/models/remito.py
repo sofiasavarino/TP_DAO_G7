@@ -5,7 +5,7 @@ from sqlalchemy import Enum, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
-from app.models.enums import EstadoRemito
+from app.models.enums import EstadoRemito, TipoTraslado
 
 if TYPE_CHECKING:
     from app.models.prestamo import Prestamo
@@ -18,7 +18,9 @@ class Remito(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     numero_remito: Mapped[str] = mapped_column(String(20), unique=True)
-    caracter_traslado: Mapped[str] = mapped_column(String(50))
+    caracter_traslado: Mapped[TipoTraslado] = mapped_column(
+        Enum(TipoTraslado, native_enum=False)
+    )
     observaciones: Mapped[str | None] = mapped_column(Text)
     estado: Mapped[EstadoRemito] = mapped_column(
         Enum(EstadoRemito, native_enum=False), default=EstadoRemito.CREADO

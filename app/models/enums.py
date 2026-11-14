@@ -45,3 +45,8 @@ class EstadoSocio(enum.Enum):
 class TipoSancion(enum.Enum):
     MULTA = "MULTA"            # usa `monto`
     SUSPENSION = "SUSPENSION"  # usa `dias_suspension`
+
+
+class TipoTraslado(enum.Enum):
+    IDA = "IDA"        # remito del préstamo saliente A -> B
+    VUELTA = "VUELTA"  # remito de devolución B -> A
