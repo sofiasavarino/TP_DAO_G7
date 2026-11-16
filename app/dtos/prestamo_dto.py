@@ -1,0 +1,52 @@
+from datetime import date
+from typing import TYPE_CHECKING
+
+from pydantic import BaseModel, ConfigDict
+
+from app.models.enums import EstadoPrestamo, TipoPrestamo
+
+if TYPE_CHECKING:
+    # Solo hints para type-checker; no circular dependency en runtime.
+    from app.models.prestamo import Prestamo
+
+
+class PrestamoCreate(BaseModel):
+    """Entrada: lo que manda la vista/controller para dar de alta un préstamo."""
+
+    socio_id: int
+    ejemplar_id: int
+    tipo: TipoPrestamo
+    fecha_vencimiento: date
+    observaciones: str | None = None
+
+
+class PrestamoDTO(BaseModel):
+    """Salida plana 1:1 con el modelo."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    numero: str
+    tipo: TipoPrestamo
+    estado: EstadoPrestamo
+    socio_id: int
+    ejemplar_id: int
+    fecha_inicio: date
+    fecha_vencimiento: date
+    fecha_devolucion: date | None
+    observaciones: str | None
+    # Sin from_model: `PrestamoDTO.model_validate(prestamo)` alcanza.
+
+
+class PrestamoListadoDTO(BaseModel):
+    """Salida enriquecida para la grilla/pantallas: trae datos cruzados planos."""
+
+    id: int
+    numero: str
+    estado: EstadoPrestamo
+    tipo: TipoPrestamo
+    fecha_vencimiento: date
+    socio_id: int
+    socio_nombre: str
+    ejemplar_id: int
+    ejemplar_codigo: str
