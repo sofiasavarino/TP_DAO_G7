@@ -13,6 +13,7 @@ class LibroCreate(BaseModel):
     cant_paginas: int | None = None
     editorial: str | None = None
     fecha_publicacion: date | None = None
+    imagen_url: str | None = None
     autor_ids: list[int] = []  # N:N; vacío = sin autor asignado todavía
 
 
@@ -27,11 +28,12 @@ class LibroDTO(BaseModel):
     cant_paginas: int | None = None
     editorial: str | None = None
     fecha_publicacion: date | None = None
+    imagen_url: str | None = None
     autores: list[AutorDTO] = []
 
 
 class LibroListadoDTO(BaseModel):
-    """Salida de catálogo/backoffice (incluye ejemplares que la app filtra por disponibilidad)."""
+    """Salida de catálogo/backoffice."""
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -39,4 +41,5 @@ class LibroListadoDTO(BaseModel):
     nombre: str
     editorial: str | None = None
     isbn: str | None = None
+    imagen_url: str | None = None
     autores: list[AutorDTO] = []

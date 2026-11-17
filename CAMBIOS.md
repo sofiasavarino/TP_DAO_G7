@@ -31,6 +31,9 @@ El proyecto pasó de un único paquete Python suelto a un **monorepo con `backen
 | 5 | `Notificacion` nueva entidad | `notificacion (id, usuario_id FK, tipo, titulo, cuerpo, leida, fecha_creacion)`. `Tipo: RESERVA_LISTA`, también `RESERVA_VENCIDA` y `SANCION_APLICADA/LEVANTADA`, `EJEMPLAR_ASIGNADO`. Relación 1:N con `Usuario`. |
 | 6 | `Reserva.sede_retiro_id` nuevo | FK a `Sede`. La reserva queda ligada a la sede de retiro (48 hs hábiles desde que el ejemplar queda `LISTA_PARA_RETIRO`). |
 | 7 | `Reserva.fecha_expiracion` → `fecha_vencimiento_retiro` | Renombrada para reflejar semántica de "ventana de retiro"; equivalente lógica. |
+| 8 | `libro.imagen_url` nueva | Columna `String(500)` NULL con el link a la portada; se llena igualmente en el alta por Google Books (autocompletable con ISBN). No estaba en el diagrama original. |
+| 9 | Namespace `/api/v1/<recurso>` | Todas las rutas de negocio pasan por env `API_PREFIX = "/api/v1"` en `app/main.py` (ver README). Health check en `/health` fuera del namespace, reservado para infra. |
+| 9.1 | Integración Google Books + ruta de lookup | `integrations/googlebooks/client.py` + `mapper.py`; service `libro_service.buscar_libro_por_isbn` (local → Google → manual); expuesta por `GET /api/v1/libros/lookup?isbn=…`. La API key vive en `backend/.env` (`GOOGLE_BOOKS_API_KEY`), nunca en el frontend. `app/main.py` con app FastAPI + CORS para localhost:5173/5174. |
 
 ## 2. Máquina de estados (inventario flotante)
 

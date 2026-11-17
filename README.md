@@ -66,7 +66,16 @@ TP_DAO_G7/
 | `utils` | Funciones auxiliares (fechas, etc.). |
 | `tests` | Tests de services y repositories. |
 
-El punto de entrada del backend es `app/main.py`, que inicia la aplicación FastAPI con Uvicorn (pendiente de crear). El frontend (`/frontend`) será una SPA React + Vite + TypeScript independiente, consumiendo la API REST/JSON.
+## Endpoints disponibles (FastAPI + Uvicorn)
+
+| Método | Ruta | Qué hace |
+|---|---|---|
+| GET | `/health` | Health check (fuera del namespace API, para smoke tests del proxy/infra) |
+| GET | `/api/v1/libros/lookup?isbn=...` | Autocompletado por ISBN: local → Google Books → `MANUAL` (la vista pide carga manual) |
+
+- `/docs` — Swagger UI generado por FastAPI. `/openapi.json` — spec OpenAPI.
+- Versionado: todas las rutas de negocio cuelgan de `/api/v1/<recurso>` (`/api/v1/libros`, `/api/v1/prestamos`, ...). Cambios incompatibles a `v2` en el futuro.
+- CORS: abierto a `localhost:5173`/`5174` para el frontend; ajustar `allow_origins` en `app/main.py` al deployear.
 
 ## Arquitectura
 
@@ -135,7 +144,7 @@ python -m venv ../.venv     # o el venv que prefieran, p. ej. backend/.venv
 source ../.venv/bin/activate   # En Windows: ..\.venv\Scripts\activate
 pip install -e ".[dev]"        # instala las dependencias de backend/pyproject.toml
 cp .env.example .env           # Completar la API key de Google Books
-uvicorn app.main:app --reload  # (cuando exista main.py)
+uvicorn app.main:app --reload  # http://localhost:8000 | documentación en /docs
 # Los seeds (3 sedes + 1 usuario por rol: Socio, Bibliotecario, Administrador)
 # se cargarán con backend/seeds.py, pendiente.
 ```

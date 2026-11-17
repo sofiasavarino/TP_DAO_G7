@@ -1,3 +1,5 @@
+from collections.abc import Iterator
+
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
 
@@ -14,6 +16,12 @@ def activar_claves_foraneas(conexion, _):
     cursor = conexion.cursor()
     cursor.execute("PRAGMA foreign_keys=ON")
     cursor.close()
+
+
+def get_session() -> Iterator:
+    """Dependency de FastAPI: una sesión por request, cerrada al terminar."""
+    with SessionLocal() as session:
+        yield session
 
 
 def crear_tablas() -> None:
