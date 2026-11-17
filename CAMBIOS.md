@@ -1,7 +1,21 @@
 # Cambios con respecto a la presentación original (grupo 7)
 
-Resumen de todo lo decidido/implementado con respecto a los primeros modelos
-(conviene para mantener actualizado el diagrama de clases).
+Resumen de todo lo decidido/implementado con respecto a la presentación y a los primeros modelos.
+Conviene para mantener actualizado el diagrama de clases y la doc.
+
+## 0. Reestructuración del repositorio (monorepo back/front)
+
+El proyecto pasa de un único paquete Python suelto a un **monorepo con `backend/` y `frontend/`**:
+
+- `app/` → `backend/app/` (los modelos, services, repositories, DTOs, etc. viven bajo `backend/`).
+- `tests/` → `backend/tests/`.
+- `pyproject.toml` → `backend/pyproject.toml`. Instalación: `pip install -e "backend[.dev]"`.
+- `.env` / `.env.example` → `backend/`. La key de Google Books vive solo en el backend (proxy de Google Books desde la API).
+- `biblioteca.db` → `backend/` (sigue `*.db` en `.gitignore`).
+- `frontend/` — nueva carpeta vacía; la SPA React + Vite + TypeScript se crea ahí próximamente.
+- **Stack reemplazada**: Flet salió del diseño; backend HTTP con **FastAPI + Uvicorn** (REST/JSON); frontend React + Vite + TypeScript independiente consumiendo la API. `flet` removida de `pyproject.toml`; quedó documentado Flet como descartado.
+- **Layout de capas**: `routers` (FastAPI, en `controllers/`) → `services` → `repositories` → `models`; `frontend` por fuera de Python. Los DTOs Pydantic ya son la forma de request/response de la API — sin capa anti-corrupción extra.
+- La integración externa con Google Books pasa a llamarse **proxy backend** (la key nunca llega al frontend).
 
 ## 1. Modelos / código (implementado)
 

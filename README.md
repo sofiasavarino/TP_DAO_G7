@@ -8,41 +8,48 @@ Gestiona el catálogo, los socios y la logística de una red de bibliotecas: pr�
 
 | Componente | Tecnología |
 |---|---|
-| Lenguaje | Python 3.12+ |
+| Lenguajes | Python 3.12+ (backend) · TypeScript (frontend) |
 | Base de datos | SQLite |
 | ORM | SQLAlchemy 2.0 (`Mapped[]` y `mapped_column`) |
 | DTOs y validación | Pydantic |
-| Interfaz | Flet (versión fijada en `pyproject.toml`) |
-| Integración externa | Google Books API |
-| Arquitectura | Monolito en capas |
+| Backend HTTP | FastAPI + Uvicorn (REST/JSON, OpenAPI incluido) |
+| Frontend | React + Vite + TypeScript |
+| Integración externa | Google Books API (proxy desde el backend: la API key vive en el servidor) |
+| Arquitectura | Monolito en capas (backend) + SPA React (frontend) |
 
 ## Estructura del proyecto
 
 ```
 TP_DAO_G7/
-├── app/
-│   ├── config/
-│   ├── models/
-│   ├── repositories/
-│   ├── services/
-│   ├── controllers/
-│   ├── dtos/
-│   ├── views/
-│   │   └── components/
-│   ├── states/
-│   ├── reports/
-│   ├── notifications/
-│   ├── integrations/
-│   │   └── googlebooks/
-│   ├── exceptions/
-│   └── utils/
-├── tests/
-│   ├── services/
-│   └── repositories/
-├── .env
+├── backend/
+│   ├── app/
+│   │   ├── config/
+│   │   ├── models/
+│   │   ├── repositories/
+│   │   ├── services/
+│   │   ├── controllers/
+│   │   ├── dtos/
+│   │   ├── views/
+│   │   │   └── components/
+│   │   ├── states/
+│   │   ├── reports/
+│   │   ├── notifications/
+│   │   ├── integrations/
+│   │   │   └── googlebooks/
+│   │   ├── exceptions/
+│   │   ├── utils/
+│   │   └── main.py          # pendiente: FastAPI entrypoint (uvicorn app.main:app)
+│   ├── tests/
+│   │   ├── services/
+│   │   └── repositories/
+│   ├── .env
+│   ├── .env.example
+│   ├── pyproject.toml
+│   └── biblioteca.db        # SQLite local (no se commitea)
+├── frontend/                # SPA React + Vite + TypeScript (pendiente de creación)
 ├── .gitignore
-├── pyproject.toml
-└── README.md
+├── README.md
+└── CAMBIOS.md
 ```
 
 | Carpeta | Contenido |
@@ -51,9 +58,9 @@ TP_DAO_G7/
 | `models` | Entidades SQLAlchemy, la clase base con baja lógica (`activo`) y los enums. |
 | `repositories` | Acceso a datos. Un repository por entidad, sobre un repository base con CRUD genérico. |
 | `services` | Reglas de negocio y manejo de transacciones. |
-| `controllers` | Puente entre las vistas y los services. |
-| `dtos` | Objetos de transferencia con Pydantic. |
-| `views` | Pantallas de Flet. `components` tiene los widgets reutilizables. |
+| `controllers` | Routers de FastAPI: reciben el request HTTP, arman DTOs de entrada, llaman al service y devuelven el DTO de respuesta. |
+| `dtos` | Objetos de transferencia con Pydantic. Son también el modelo request/response de la API (FastAPI los valida igual automáticamente). |
+| `views` | ⚠️ Pendiente de reemplazo por el frontend React en `/frontend`. Los directorios quedan vacíos tras la restructuración y se eliminan (o mueven) cuando se cree la SPA. |
 | `states` | Pensado para el patrón State. Se agrega al final, solo si se termina implementando. |
 | `reports` | Reportes y estadísticas. Opcional, se agrega al final. |
 | `notifications` | Envío de notificaciones (Observer o Strategy). Opcional, se agrega al final. |
@@ -62,25 +69,27 @@ TP_DAO_G7/
 | `utils` | Funciones auxiliares (fechas, etc.). |
 | `tests` | Tests de services y repositories. |
 
-El punto de entrada es `app/main.py`, que inicia la aplicación Flet.
+El punto de entrada del backend es `app/main.py`, que inicia la aplicación FastAPI con Uvicorn (pendiente de crear). El frontend (`/frontend`) será una SPA React + Vite + TypeScript independiente, consumiendo la API REST/JSON.
 
 ## Arquitectura
 
-Cada capa solo conoce a la que tiene debajo:
+Cada capa solo conoce a la que tiene debajo. El frontend consume la API HTTP/JSON:
 
 ```
-views → controllers → services → repositories → models
+frontend (React)
+      ⇄ HTTP/JSON
+routers (FastAPI, en controllers/) → services → repositories → models
 ```
 
 | Capa | Responsabilidad | No debe |
 |---|---|---|
-| `views` | Dibujar pantallas y capturar eventos | Llamar a services o repositories directamente |
-| `controllers` | Recibir eventos de la vista, armar DTOs, llamar al service | Contener reglas de negocio ni tocar la base |
-| `services` | Reglas de negocio y manejo de la transacción | Conocer Flet |
+| `frontend` | SPA en React: render y captura de eventos | Conocer detalles de la DB ni reglas de negocio |
+| `routers` (FastAPI) | Recibir request HTTP, armar DTOs de entrada, llamar al service, devolver DTO de salida | Contener reglas de negocio ni tocar la base |
+| `services` | Reglas de negocio y manejo de la transacción | Exponer DTOs crudos de infra o conocer Flet/HTTP |
 | `repositories` | Queries sobre la sesión recibida: colecciones (listados, historiales) y agregados (`count`, `sum`) con `selectinload`/`func` | Hacer `commit()` ni tener reglas de negocio |
 | `models` | Mapeo de tablas y relaciones | Contener lógica de negocio |
 
-**Navegación del ORM.** Los services pueden navegar relaciones a-uno por lazy loading (`prestamo.ejemplar`, `ejemplar.libro`): son lookups por PK, baratos y quedan dentro de la transacción abierta. Lo que involucra colecciones o agregados lo resuelve siempre el repository: listados con `selectinload` (evita el N+1), conteos para reglas de negocio con `func.count` (p. ej. el límite de préstamos activos de un socio). Si un caso de uso encadena 3 o más lazy loads, se precarga el grafo desde el repository. Los DTOs se arman dentro de la sesión (`PrestamoDTO.from_model(...)`); nunca se devuelven objetos ORM vivos al controller ni a la vista.
+**Navegación del ORM.** Los services pueden navegar relaciones a-uno por lazy loading (`prestamo.ejemplar`, `ejemplar.libro`): son lookups por PK, baratos y quedan dentro de la transacción abierta. Lo que involucra colecciones o agregados lo resuelve siempre el repository: listados con `selectinload` (evita el N+1), conteos para reglas de negocio con `func.count` (p. ej. el límite de préstamos activos de un socio). Si un caso de uso encadena 3 o más lazy loads, se precarga el grafo desde el repository. Los DTOs se arman dentro de la sesión (`PrestamoDTO.model_validate(prestamo)` o `PrestamoListadoDTO.from_model(...)` para enriquecidos); nunca se devuelven objetos ORM vivos al controller ni a la vista.
 
 ## Convenciones
 
@@ -121,12 +130,23 @@ Si un service necesita llamar a otro, le pasa la misma sesión. Si cada uno abre
 
 ## Instalación
 
+Backend:
+
 ```bash
-python -m venv venv
-source venv/bin/activate      # En Windows: venv\Scripts\activate
-pip install -e ".[dev]"   # instala las dependencias de pyproject.toml
-cp .env.example .env          # Completar la API key de Google Books
-python -m app.main
+cd backend
+python -m venv ../.venv     # o el venv que prefieran, p. ej. backend/.venv
+source ../.venv/bin/activate   # En Windows: ..\.venv\Scripts\activate
+pip install -e ".[dev]"        # instala las dependencias de backend/pyproject.toml
+cp .env.example .env           # Completar la API key de Google Books
+uvicorn app.main:app --reload  # (cuando exista main.py)
+```
+
+Frontend:
+
+```bash
+cd frontend                 # cuando se cree la SPA
+npm install
+npm run dev
 ```
 
 ## Integrantes
