@@ -2,13 +2,15 @@ from sqlalchemy.orm import Session
 
 from app.dtos.googlebooks_dto import LibroLookupDTO
 from app.models.libro import Libro
-from app.repositories import libro_repository
+from app.repositories.libro_repository import LibroRepository
+
+libro_repo = LibroRepository()
 
 
 def buscar_libro_por_isbn(session: Session, isbn: str) -> LibroLookupDTO:
-    """Precedencia: DB local → Google Books → MANUAL (maula rellenada)."""
+    """Precedencia: DB local -> Google Books -> MANUAL (carga manual)."""
     # 1) LOCAL: ¿ya lo tenemos?
-    libro = libro_repository.get_by_isbn(session, isbn)
+    libro = libro_repo.get_by_isbn(session, isbn)
     if libro is not None:
         return _local_a_dto(libro)
 

@@ -1,5 +1,3 @@
-from app.repositories.libro_repository import get_by_isbn
-
 """Capa de acceso a datos: un repository por entidad sobre BaseRepository.
 
 Uso tipico desde un service:
@@ -28,5 +26,5 @@ __all__ = [
     "AutorRepository", "BaseRepository", "EjemplarRepository", "LibroRepository",
     "NotificacionRepository", "PrestamoRepository", "RemitoRepository",
     "ReservaRepository", "RolRepository", "SancionRepository", "SedeRepository",
-    "SocioRepository", "UsuarioRepository", "get_by_isbn"
+    "SocioRepository", "UsuarioRepository",
 ]
