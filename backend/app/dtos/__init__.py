@@ -1,6 +1,7 @@
 from app.dtos.autor_dto import AutorCreate, AutorDTO
 from app.dtos.ejemplar_dto import EjemplarCreate, EjemplarDTO
 from app.dtos.libro_dto import LibroCreate, LibroDTO, LibroListadoDTO
+from app.dtos.notificacion_dto import NotificacionCreate, NotificacionDTO
 from app.dtos.prestamo_dto import PrestamoCreate, PrestamoDTO, PrestamoListadoDTO
 from app.dtos.reserva_dto import ReservaCreate, ReservaDTO
 from app.dtos.remito_dto import RemitoCreate, RemitoDetalleDTO, RemitoListadoDTO
@@ -15,6 +16,7 @@ __all__ = [
     "AutorCreate", "AutorDTO",
     "EjemplarCreate", "EjemplarDTO",
     "LibroCreate", "LibroDTO", "LibroListadoDTO",
+    "NotificacionCreate", "NotificacionDTO",
     "PrestamoCreate", "PrestamoDTO", "PrestamoListadoDTO",
     "ReservaCreate", "ReservaDTO",
     "RemitoCreate", "RemitoDetalleDTO", "RemitoListadoDTO",

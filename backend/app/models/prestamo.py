@@ -1,5 +1,5 @@
 from datetime import date
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Enum, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -9,7 +9,6 @@ from app.models.enums import EstadoPrestamo, TipoPrestamo
 
 if TYPE_CHECKING:
     from app.models.ejemplar import Ejemplar
-    from app.models.remito import Remito
     from app.models.sancion import Sancion
     from app.models.socio import Socio
 
@@ -30,16 +29,7 @@ class Prestamo(Base):
 
     socio_id: Mapped[int] = mapped_column(ForeignKey("socio.id"))
     ejemplar_id: Mapped[int] = mapped_column(ForeignKey("ejemplar.id"))
-    # Solo los interbibliotecarios tienen remitos (ida y vuelta), ambos opcionales.
-    remito_ida_id: Mapped[int | None] = mapped_column(ForeignKey("remito.id"))
-    remito_devolucion_id: Mapped[int | None] = mapped_column(ForeignKey("remito.id"))
 
     socio: Mapped["Socio"] = relationship(back_populates="prestamos")
     ejemplar: Mapped["Ejemplar"] = relationship(back_populates="prestamos")
-    remito_ida: Mapped[Optional["Remito"]] = relationship(
-        foreign_keys=[remito_ida_id], back_populates="prestamos_ida"
-    )
-    remito_devolucion: Mapped[Optional["Remito"]] = relationship(
-        foreign_keys=[remito_devolucion_id], back_populates="prestamos_devolucion"
-    )
     sanciones: Mapped[list["Sancion"]] = relationship(back_populates="prestamo")

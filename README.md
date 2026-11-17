@@ -29,8 +29,6 @@ TP_DAO_G7/
 │   │   ├── services/
 │   │   ├── controllers/
 │   │   ├── dtos/
-│   │   ├── views/
-│   │   │   └── components/
 │   │   ├── states/
 │   │   ├── reports/
 │   │   ├── notifications/
@@ -60,7 +58,6 @@ TP_DAO_G7/
 | `services` | Reglas de negocio y manejo de transacciones. |
 | `controllers` | Routers de FastAPI: reciben el request HTTP, arman DTOs de entrada, llaman al service y devuelven el DTO de respuesta. |
 | `dtos` | Objetos de transferencia con Pydantic. Son también el modelo request/response de la API (FastAPI los valida igual automáticamente). |
-| `views` | ⚠️ Pendiente de reemplazo por el frontend React en `/frontend`. Los directorios quedan vacíos tras la restructuración y se eliminan (o mueven) cuando se cree la SPA. |
 | `states` | Pensado para el patrón State. Se agrega al final, solo si se termina implementando. |
 | `reports` | Reportes y estadísticas. Opcional, se agrega al final. |
 | `notifications` | Envío de notificaciones (Observer o Strategy). Opcional, se agrega al final. |
@@ -139,6 +136,8 @@ source ../.venv/bin/activate   # En Windows: ..\.venv\Scripts\activate
 pip install -e ".[dev]"        # instala las dependencias de backend/pyproject.toml
 cp .env.example .env           # Completar la API key de Google Books
 uvicorn app.main:app --reload  # (cuando exista main.py)
+# Los seeds (3 sedes + 1 usuario por rol: Socio, Bibliotecario, Administrador)
+# se cargarán con backend/seeds.py, pendiente.
 ```
 
 Frontend:

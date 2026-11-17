@@ -9,30 +9,31 @@ class TipoPrestamo(enum.Enum):
 class EstadoPrestamo(enum.Enum):
     ACTIVO = "ACTIVO"
     VENCIDO = "VENCIDO"
-    DEVUELTO = "DEVUELTO"
+    FINALIZADO = "FINALIZADO"
 
 
 class EstadoEjemplar(enum.Enum):
     DISPONIBLE = "DISPONIBLE"
     RESERVADO = "RESERVADO"
+    EN_TRANSITO = "EN_TRANSITO"
     PRESTADO = "PRESTADO"
-    EN_TRANSITO_IDA = "EN_TRANSITO_IDA"
-    EN_OTRA_SEDE = "EN_OTRA_SEDE"
-    EN_TRANSITO_VUELTA = "EN_TRANSITO_VUELTA"
     EN_REPARACION = "EN_REPARACION"
     INUTILIZABLE = "INUTILIZABLE"
 
 
 class EstadoRemito(enum.Enum):
     CREADO = "CREADO"
-    DESPACHADO = "DESPACHADO"
+    EN_TRANSITO = "EN_TRANSITO"
     RECIBIDO = "RECIBIDO"
+    CON_INCIDENCIA = "CON_INCIDENCIA"
 
 
 class EstadoReserva(enum.Enum):
     PENDIENTE = "PENDIENTE"
-    ASIGNADA = "ASIGNADA"
-    EXPIRADA = "EXPIRADA"
+    EN_CAMINO = "EN_CAMINO"
+    LISTA_PARA_RETIRO = "LISTA_PARA_RETIRO"
+    CUMPLIDA = "CUMPLIDA"
+    VENCIDA = "VENCIDA"
     CANCELADA = "CANCELADA"
 
 
@@ -47,6 +48,14 @@ class TipoSancion(enum.Enum):
     SUSPENSION = "SUSPENSION"  # usa `dias_suspension`
 
 
-class TipoTraslado(enum.Enum):
-    IDA = "IDA"        # remito del préstamo saliente A -> B
-    VUELTA = "VUELTA"  # remito de devolución B -> A
+class MotivoTraslado(enum.Enum):
+    IDA = "IDA"              # remito de préstamo saliente (envio interbibliotecario)
+    REBALANCEO = "REBALANCEO"  # relocalización administrativa entre sedes, sin préstamo
+
+
+class NotificacionTipo(enum.Enum):
+    RESERVA_LISTA = "RESERVA_LISTA"                  # el ejemplar llegó y hay 48 hs para retirarlo
+    RESERVA_VENCIDA = "RESERVA_VENCIDA"              # venció la ventana de retiro
+    SANCION_APLICADA = "SANCION_APLICADA"            # se le aplicó una sanción
+    SANCION_LEVANTADA = "SANCION_LEVANTADA"          # se levantó una sanción
+    EJEMPLAR_ASIGNADO = "EJEMPLAR_ASIGNADO"          # le asignaron un ejemplar para retiro

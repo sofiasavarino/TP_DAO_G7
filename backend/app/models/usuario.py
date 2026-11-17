@@ -7,6 +7,7 @@ from app.models.base import Base, BajaLogicaMixin
 
 if TYPE_CHECKING:
     from app.models.empleado import Empleado
+    from app.models.notificacion import Notificacion
     from app.models.resena import Resena
     from app.models.rol import Rol
     from app.models.sede import Sede
@@ -28,3 +29,6 @@ class Usuario(Base, BajaLogicaMixin):
     empleado: Mapped[Optional["Empleado"]] = relationship(back_populates="usuario")
     socio: Mapped[Optional["Socio"]] = relationship(back_populates="usuario")
     resenas: Mapped[list["Resena"]] = relationship(back_populates="usuario")
+    notificaciones: Mapped[list["Notificacion"]] = relationship(
+        back_populates="usuario"
+    )

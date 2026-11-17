@@ -9,6 +9,7 @@ from app.models.enums import EstadoEjemplar
 if TYPE_CHECKING:
     from app.models.libro import Libro
     from app.models.prestamo import Prestamo
+    from app.models.remito import Remito
     from app.models.sede import Sede
 
 
@@ -31,3 +32,6 @@ class Ejemplar(Base):
     sede_origen: Mapped["Sede"] = relationship(foreign_keys=[sede_origen_id])
     sede_actual: Mapped["Sede"] = relationship(foreign_keys=[sede_actual_id])
     prestamos: Mapped[list["Prestamo"]] = relationship(back_populates="ejemplar")
+    remitos: Mapped[list["Remito"]] = relationship(
+        secondary="remito_ejemplar", back_populates="ejemplares"
+    )

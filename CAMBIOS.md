@@ -5,64 +5,63 @@ Conviene para mantener actualizado el diagrama de clases y la doc.
 
 ## 0. Reestructuración del repositorio (monorepo back/front)
 
-El proyecto pasa de un único paquete Python suelto a un **monorepo con `backend/` y `frontend/`**:
+El proyecto pasó de un único paquete Python suelto a un **monorepo con `backend/` y `frontend/`**:
 
-- `app/` → `backend/app/` (los modelos, services, repositories, DTOs, etc. viven bajo `backend/`).
-- `tests/` → `backend/tests/`.
-- `pyproject.toml` → `backend/pyproject.toml`. Instalación: `pip install -e "backend[.dev]"`.
-- `.env` / `.env.example` → `backend/`. La key de Google Books vive solo en el backend (proxy de Google Books desde la API).
-- `biblioteca.db` → `backend/` (sigue `*.db` en `.gitignore`).
-- `frontend/` — nueva carpeta vacía; la SPA React + Vite + TypeScript se crea ahí próximamente.
-- **Stack reemplazada**: Flet salió del diseño; backend HTTP con **FastAPI + Uvicorn** (REST/JSON); frontend React + Vite + TypeScript independiente consumiendo la API. `flet` removida de `pyproject.toml`; quedó documentado Flet como descartado.
-- **Layout de capas**: `routers` (FastAPI, en `controllers/`) → `services` → `repositories` → `models`; `frontend` por fuera de Python. Los DTOs Pydantic ya son la forma de request/response de la API — sin capa anti-corrupción extra.
-- La integración externa con Google Books pasa a llamarse **proxy backend** (la key nunca llega al frontend).
+- `app/` → `backend/app/`; `tests/` → `backend/tests/`; `pyproject.toml` → `backend/pyproject.toml`.
+  Instalación: `pip install -e "backend[.dev]"`.
+- `.env` / `.env.example` → `backend/`. La key de Google Books vive solo en el backend (proxy de
+  Google Books desde la API).
+- `biblioteca.db` → `backend/` (`*.db` sigue en `.gitignore`).
+- `frontend/` — SPA React + Vite + TypeScript (pendiente de negocio).
+- **Stack reemplazada**: Flet fuera del diseño; backend HTTP con **FastAPI + Uvicorn** (REST/JSON);
+  frontend React + Vite + TypeScript independiente. `flet` removida de `pyproject.toml`,
+  `fastapi` y `uvicorn[standard]` agregadas.
+- **Layout de capas**: `routers` (FastAPI, en `controllers/`) → `services` → `repositories` →
+  `models`; `frontend` existe por fuera de Python. Los DTOs Pydantic ya son request/response de la API.
+- La integración con Google Books pasa a ser **proxy backend** (la key nunca llega al frontend).
 
-## 1. Modelos / código (implementado)
+## 1. Cambios en modelos/código (estado implementado)
 
 | # | Cambio | Detalle |
 |---|---|---|
-| 1 | `Prestamo.sede_origen_id` / `sede_destino_id` NO existen (decisión) | El traslado interbibliotecario lo modela `Remito` (`sede_origen_id`/`sede_destino_id`). El préstamo solo referencia el remito de ida y de vuelta. |
-| 2 | `Prestamo` ↔ `Remito`: dos FKs opcionales | `remito_ida_id` y `remito_devolucion_id` (solo interbibliotecarios). Un remito transporta muchos préstamos; un préstamo tiene como máximo un remito de ida y uno de vuelta. No hace falta tabla intermedia. En el modelo (y en el diagrama de clases) se refleja con dos relationships espejo: `Prestamo.remito_ida`/`remito_devolucion` ↔ `Remito.prestamos_ida`/`prestamos_devolucion`, una por cada FK. |
-| 3 | `Sancion` siempre apunta a `Prestamo` | `sancion.prestamo_id` FK NOT NULL (una sanción nace de un préstamo). |
-| 4 | `Libro` ↔ `Autor`: N a N | N:N implementado con tabla intermedia `libro_autor` (PK compuesta, `secondary=`). En el diagrama de clases se dibuja la asociación N:N simple, sin tabla intermedia. |
+| 1 | `Prestamo` **sin remitos** | `remito_ida_id` y `remito_devolucion_id` eliminados (innecesarios con colección flotante). Un remito va asociado directamente a `Ejemplar` por `remito_ejemplar`, no al préstamo. La asociación paralela al prestamo se borra. |
+| 2 | `Remito` → `Ejemplar` como punto de enlace | Tabla de unión `remito_ejemplar` (N:M) entre `Remito` y `Ejemplar`. Un remito puede llevar varios ejemplares; un ejemplar acumula su historial de remitos. Sin `remito_reserva`. |
+| 3 | `Sancion` apunta a `Prestamo` | `sancion.prestamo_id` FK NOT NULL (una sanción nace de un préstamo). |
+| 4 | `Libro` ↔ `Autor`: N a N | N:N implementado con `libro_autor` (PK compuesta, `secondary=`). En el diagrama de clases se dibuja la asociación N:N simple, sin tabla intermedia. |
+| 5 | `Notificacion` nueva entidad | `notificacion (id, usuario_id FK, tipo, titulo, cuerpo, leida, fecha_creacion)`. `Tipo: RESERVA_LISTA`, también `RESERVA_VENCIDA` y `SANCION_APLICADA/LEVANTADA`, `EJEMPLAR_ASIGNADO`. Relación 1:N con `Usuario`. |
+| 6 | `Reserva.sede_retiro_id` nuevo | FK a `Sede`. La reserva queda ligada a la sede de retiro (48 hs hábiles desde que el ejemplar queda `LISTA_PARA_RETIRO`). |
+| 7 | `Reserva.fecha_expiracion` → `fecha_vencimiento_retiro` | Renombrada para reflejar semántica de "ventana de retiro"; equivalente lógica. |
 
-## 2. Máquina de estados del ejemplar (implementada en `EstadoEjemplar`)
+## 2. Máquina de estados (inventario flotante)
 
-Estado anterior → actual:
+`Inutilizable` es terminal, conserva histórico y es alcanzable desde cualquier estado (lo fuerza el service).
 
-| Antes | Ahora |
-|---|---|
-| `DISPONIBLE` | `DISPONIBLE` |
-| `PRESTADO` | `PRESTADO` (un solo estado; ya no hay "prestado intersede" separado) |
-| `EN_TRANSITO` | `EN_TRANSITO_IDA` **y** `EN_TRANSITO_VUELTA` |
-| `DANADO` | **Eliminado** → `EN_REPARACION` |
-| `BAJA` | **Renombrado** a `INUTILIZABLE` |
-| — | **Nuevo**: `RESERVADO` |
-| — | **Nuevo**: `EN_OTRA_SEDE` |
+**Ejemplar:**
 
-Flujo: `Disponible → Prestado → Disponible` (local). Interbibliotecario:
-`Disponible → [Reservado] → EnTransitoIda → EnOtraSede → Prestado → Devuelto → EnTransitoVuelta → Disponible`.
-`Inutilizable` es terminal, se conserva históricamente (nunca se borra la fila), y **es alcanzable
-desde cualquier estado** (pérdida/destrucción/robo/inundación; lo fuerza el service).
-El diagrama de estados vive en `ejemplar-estados.mmd` (Mermaid).
+```
+DISPONIBLE → RESERVADO → EN_TRANSITO → RESERVADO → PRESTADO → DISPONIBLE
+                 ↓                                                    ↑
+            EN_REPARACION ────────────────────────► Disponible        (devolución)
+```
 
-Decisión de diseño: la dirección del tránsito la indica el propio estado del ejemplar
-(`EN_TRANSITO_IDA` = viajando de su sede hacia otra; `EN_TRANSITO_VUELTA` = retorno a su sede),
-sin atributo de dirección. El `remito` abierto asociado (ida o devolución) lleva los datos del traslado.
+**Reserva:** `PENDIENTE → EN_CAMINO → LISTA_PARA_RETIRO → CUMPLIDA | VENCIDA | CANCELADA`
+
+**Remito:** `CREADO → EN_TRANSITO → RECIBIDO` · (+ `CON_INCIDENCIA` si llega dañado, no pasa a estado alternativo, solo registra).
+
+**Prestamo:** `ACTIVO → VENCIDO → FINALIZADO`
 
 ## 3. Estado de las otras zonas del sistema
 
-- **Enum vs tabla**: no hay tabla `Estado` (decisión: `Rol` sigue como tabla; todos los estados
-  son enums de Python en `app/models/enums.py`). Un patrón State podría implementarse más
-  adelante (ver `states` en la estructura del proyecto).
-- **`Prestamo.estado`**: se mantiene (`ACTIVO / VENCIDO / DEVUELTO`).
-- **`Remito.estado`**: `CREADO / DESPACHADO / RECIBIDO`.
-- **`Remito.caracter_traslado`**: enum `TipoTraslado` (`IDA` / `VUELTA`). Indica si el remito es de ida o de vuelta (solo interbibliotecarios). Lo valida el service al crear el remito según el rol: `VUELTA` ↔ existe `prestamo.remito_devolucion_id = remito.id`; `IDA` ↔ existe `prestamo.remito_ida_id = remito.id`. La dirección del viaje también está reflejada en el estado del ejemplar (`EN_TRANSITO_IDA/VUELTA`); `caracter_traslado` existe para que el mostrador de la logística pueda listar remitos por tipo de traslado con un simple `WHERE`.
-- **`Reserva.estado`**: `PENDIENTE / ASIGNADA / EXPIRADA / CANCELADA`.
+- **Enum vs tabla**: no hay tabla `Estado` (decisión: `Rol` sigue como tabla; todos los estados son enums de Python en `app/models/enums.py`). Un patrón State se evalúa más adelante.
+- **`Prestamo.estado`**: `ACTIVO / VENCIDO / FINALIZADO`. **`Prestamo.tipo`**: `LOCAL / INTERBIBLIOTECARIO` (se mantiene).
+- **`Remito.estado`**: `CREADO / EN_TRANSITO / RECIBIDO / CON_INCIDENCIA`.
+- **`Reserva.estado`**: `PENDIENTE / EN_CAMINO / LISTA_PARA_RETIRO / CUMPLIDA / VENCIDA / CANCELADA`.
 - **`Socio.estado`**: `ACTIVO / SUSPENDIDO / BAJA`.
 - **`Sancion.tipo`**: `MULTA` (usa `monto`) / `SUSPENSION` (usa `dias_suspension`).
-- **`Prestamo.tipo`**: `LOCAL` / `INTERBIBLIOTECARIO`.
-- **Límite de préstamos**: no es cardinalidad del modelo; es **regla de service** (p. ej. máx. N
-  activos). Multiplicidad socio→prestamo: `0..*`.
-- **Partido de capas** (documentado en el README): repos precargan con `selectinload`/`func`;
-  navegación a-uno por lazy load en el service; DTOs se arman dentro de la sesión.
+- **`MotivoTraslado`** (antes `caracter_traslado: String`): enum `IDA / REBALANCEO`. Identifica remitos por préstamo saliente (`IDA`) de remitos administrativos (`REBALANCEO`, relocalización manual contable).
+- **`NotificacionTipo`**: `RESERVA_LISTA / RESERVA_VENCIDA / SANCION_APLICADA / SANCION_LEVANTADA / EJEMPLAR_ASIGNADO`.
+- **Límite de préstamos**: regla de service (p. ej. máx. N activos), no cardinalidad del modelo.
+- **Prioridad de asignación**: FIFO estricto (gana la reserva creada primero para el mismo título).
+- **Partido de capas** (documentado en el README): repos precargan con `selectinload`/`func`; navegación a-uno por lazy load en el service; DTOs se arman dentro de la sesión.
+- **Frontend React + Vite + TypeScript**: consume API FastAPI con JWT simple (access token); la API key de libros vive en backend (proxy Google Books); CORS habilitado para origen de desarrollo con IP privada.
+- **Pendiente seeds**: `backend/seeds.py` con 3 sedes (ej. Centro, Norte, Sur) y 1 usuario por rol — `socio1`, `bibliotecario1`, `admin1` (rol = Socio/Bibliotecario/Administrador, password de prueba). Obligatorio para el primer arranque después del próximo reset de la DB.

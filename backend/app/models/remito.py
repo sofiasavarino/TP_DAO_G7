@@ -1,16 +1,24 @@
 from datetime import date
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import Enum, ForeignKey, String, Text
+from sqlalchemy import Column, Enum, ForeignKey, String, Table, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
-from app.models.enums import EstadoRemito, TipoTraslado
+from app.models.enums import EstadoRemito, MotivoTraslado
 
 if TYPE_CHECKING:
-    from app.models.prestamo import Prestamo
+    from app.models.ejemplar import Ejemplar
     from app.models.sede import Sede
     from app.models.usuario import Usuario
+
+# Tabla pivot N a N: un remito transporta muchos ejemplares; un ejemplar acumula remitos (histórico).
+remito_ejemplar = Table(
+    "remito_ejemplar",
+    Base.metadata,
+    Column("remito_id", ForeignKey("remito.id"), primary_key=True),
+    Column("ejemplar_id", ForeignKey("ejemplar.id"), primary_key=True),
+)
 
 
 class Remito(Base):
@@ -18,8 +26,8 @@ class Remito(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     numero_remito: Mapped[str] = mapped_column(String(20), unique=True)
-    caracter_traslado: Mapped[TipoTraslado] = mapped_column(
-        Enum(TipoTraslado, native_enum=False)
+    motivo_traslado: Mapped[MotivoTraslado] = mapped_column(
+        Enum(MotivoTraslado, native_enum=False)
     )
     observaciones: Mapped[str | None] = mapped_column(Text)
     estado: Mapped[EstadoRemito] = mapped_column(
@@ -48,9 +56,6 @@ class Remito(Base):
         foreign_keys=[responsable_recepcion_id]
     )
 
-    prestamos_ida: Mapped[list["Prestamo"]] = relationship(
-        foreign_keys="Prestamo.remito_ida_id", back_populates="remito_ida"
-    )
-    prestamos_devolucion: Mapped[list["Prestamo"]] = relationship(
-        foreign_keys="Prestamo.remito_devolucion_id", back_populates="remito_devolucion"
+    ejemplares: Mapped[list["Ejemplar"]] = relationship(
+        secondary="remito_ejemplar", back_populates="remitos"
     )

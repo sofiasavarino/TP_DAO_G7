@@ -10,6 +10,7 @@ from app.models.enums import EstadoReserva
 if TYPE_CHECKING:
     from app.models.ejemplar import Ejemplar
     from app.models.libro import Libro
+    from app.models.sede import Sede
     from app.models.socio import Socio
 
 
@@ -19,16 +20,19 @@ class Reserva(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     fecha_reserva: Mapped[date] = mapped_column(default=date.today)
     fecha_asignacion: Mapped[date | None]
-    fecha_expiracion: Mapped[date | None]
+    # Fecha tope para que el socio retire el ejemplar desde que está LISTA_PARA_RETIRO.
+    fecha_vencimiento_retiro: Mapped[date | None]
     estado: Mapped[EstadoReserva] = mapped_column(
         Enum(EstadoReserva, native_enum=False), default=EstadoReserva.PENDIENTE
     )
 
     socio_id: Mapped[int] = mapped_column(ForeignKey("socio.id"))
     libro_id: Mapped[int] = mapped_column(ForeignKey("libro.id"))
+    sede_retiro_id: Mapped[int] = mapped_column(ForeignKey("sede.id"))
     # Se completa recien al asignar un ejemplar.
     ejemplar_id: Mapped[int | None] = mapped_column(ForeignKey("ejemplar.id"))
 
     socio: Mapped["Socio"] = relationship(back_populates="reservas")
     libro: Mapped["Libro"] = relationship(back_populates="reservas")
+    sede_retiro: Mapped["Sede"] = relationship(foreign_keys=[sede_retiro_id])
     ejemplar: Mapped[Optional["Ejemplar"]] = relationship()

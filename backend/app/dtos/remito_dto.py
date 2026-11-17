@@ -2,16 +2,17 @@ from datetime import date
 
 from pydantic import BaseModel, ConfigDict
 
-from app.models.enums import EstadoRemito, TipoTraslado
+from app.models.enums import EstadoRemito, MotivoTraslado
 
 
 class RemitoCreate(BaseModel):
-    """Entrada: alta de remito interbibliotecario. Los responsables se completan por flujo."""
+    """Entrada: alta de remito interbibliotecario. Responsables se completan por flujo."""
 
     numero_remito: str
-    caracter_traslado: TipoTraslado
+    motivo_traslado: MotivoTraslado
     sede_origen_id: int
     sede_destino_id: int
+    ejemplar_ids: list[int] = []
     observaciones: str | None = None
 
 
@@ -22,7 +23,7 @@ class RemitoListadoDTO(BaseModel):
 
     id: int
     numero_remito: str
-    caracter_traslado: TipoTraslado
+    motivo_traslado: MotivoTraslado
     estado: EstadoRemito
     sede_origen_id: int
     sede_destino_id: int
@@ -32,13 +33,13 @@ class RemitoListadoDTO(BaseModel):
 
 
 class RemitoDetalleDTO(BaseModel):
-    """Salida: vista completa del remito."""
+    """Salida: vista completa del remito (incluye ejemplares)."""
 
     model_config = ConfigDict(from_attributes=True)
 
     id: int
     numero_remito: str
-    caracter_traslado: TipoTraslado
+    motivo_traslado: MotivoTraslado
     estado: EstadoRemito
     observaciones: str | None = None
     sede_origen_id: int
