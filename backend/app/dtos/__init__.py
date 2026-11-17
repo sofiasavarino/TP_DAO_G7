@@ -1,6 +1,6 @@
 from app.dtos.autor_dto import AutorCreate, AutorDTO
 from app.dtos.googlebooks_dto import LibroLookupDTO
-from app.dtos.ejemplar_dto import EjemplarCreate, EjemplarDTO
+from app.dtos.ejemplar_dto import EjemplarCreate, EjemplarDTO, EjemplarEstadoUpdate
 from app.dtos.libro_dto import LibroCreate, LibroDTO, LibroListadoDTO
 from app.dtos.notificacion_dto import NotificacionCreate, NotificacionDTO
 from app.dtos.prestamo_dto import PrestamoCreate, PrestamoDTO, PrestamoListadoDTO
@@ -16,7 +16,7 @@ from app.dtos.usuario_dto import UsuarioCreate, UsuarioListadoDTO, UsuarioSesion
 __all__ = [
     "AutorCreate", "AutorDTO",
     "LibroLookupDTO",
-    "EjemplarCreate", "EjemplarDTO",
+    "EjemplarCreate", "EjemplarDTO", "EjemplarEstadoUpdate",
     "LibroCreate", "LibroDTO", "LibroListadoDTO",
     "NotificacionCreate", "NotificacionDTO",
     "PrestamoCreate", "PrestamoDTO", "PrestamoListadoDTO",

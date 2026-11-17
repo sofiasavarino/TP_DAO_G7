@@ -72,6 +72,14 @@ TP_DAO_G7/
 |---|---|---|
 | GET | `/health` | Health check (fuera del namespace API, para smoke tests del proxy/infra) |
 | GET | `/api/v1/libros/lookup?isbn=...` | Autocompletado por ISBN: local → Google Books → `MANUAL` (la vista pide carga manual) |
+| GET | `/api/v1/catalogo` | Catálogo de libros (con autores precargados) |
+| GET | `/api/v1/catalogo/{id}` | Detalle de un libro |
+| GET | `/api/v1/libros/buscar?texto=…` · `/titulo` · `/autor` | Búsqueda libre por título/ISBN/autor |
+| POST | `/api/v1/libros` | Alta de libro; dedupa por ISBN (devuelve el existente) |
+| GET | `/api/v1/ejemplares/disponibles?libro_id=&sede_id=` | Consulta de disponibilidad filtrada por sede actual |
+| GET | `/api/v1/ejemplares/por-libro/{id}` | Todos los ejemplares de un libro |
+| POST | `/api/v1/ejemplares` | Alta de ejemplar físico (código único) |
+| PATCH | `/api/v1/ejemplares/{id}/estado` | Cambio de estado de un ejemplar |
 
 - `/docs` — Swagger UI generado por FastAPI. `/openapi.json` — spec OpenAPI.
 - Versionado: todas las rutas de negocio cuelgan de `/api/v1/<recurso>` (`/api/v1/libros`, `/api/v1/prestamos`, ...). Cambios incompatibles a `v2` en el futuro.

@@ -33,7 +33,11 @@ El proyecto pasó de un único paquete Python suelto a un **monorepo con `backen
 | 7 | `Reserva.fecha_expiracion` → `fecha_vencimiento_retiro` | Renombrada para reflejar semántica de "ventana de retiro"; equivalente lógica. |
 | 8 | `libro.imagen_url` nueva | Columna `String(500)` NULL con el link a la portada; se llena igualmente en el alta por Google Books (autocompletable con ISBN). No estaba en el diagrama original. |
 | 9 | Namespace `/api/v1/<recurso>` | Todas las rutas de negocio pasan por env `API_PREFIX = "/api/v1"` en `app/main.py` (ver README). Health check en `/health` fuera del namespace, reservado para infra. |
-| 9.1 | Integración Google Books + ruta de lookup | `integrations/googlebooks/client.py` + `mapper.py`; service `libro_service.buscar_libro_por_isbn` (local → Google → manual); expuesta por `GET /api/v1/libros/lookup?isbn=…`. La API key vive en `backend/.env` (`GOOGLE_BOOKS_API_KEY`), nunca en el frontend. `app/main.py` con app FastAPI + CORS para localhost:5173/5174. |
+| 9.1 | Tabla `libro` | CRUD completo demostrado como patrón para copiar al resto: servicios Pydantic, resymbol layer, endpoints `Catálogo`/`Libro` + `buscar`, y Pydantic E2E. |
+| 9.2 | Service de libro | `crear_libro(datos)` con dedup por ISBN y resolución de autores; `buscar/listar/to_listado_dto`. Cuando el ISBN existe se devuelve el existente sin duplicar. |
+| 9.3 | Reportes `mas_solicitados` y `disponibilidad_por_sede` | Atributos relevantes para el módulo de reportes del TP (ver reportes) |
+| 9.4 | Tests mínimos de pytest | `conftest.py` con `:memory:` + `TestClient` + dependency-override; 10 tests verdes (libro service + repo) |
+| 9.1.1 | Integración Google Books + ruta de lookup | `integrations/googlebooks/client.py` + `mapper.py`; service `libro_service.buscar_libro_por_isbn` (local → Google → manual); expuesta por `GET /api/v1/libros/lookup?isbn=…`. La API key vive en `backend/.env` (`GOOGLE_BOOKS_API_KEY`), nunca en el frontend. `app/main.py` con app FastAPI + CORS para localhost:5173/5174. |
 
 ## 2. Máquina de estados (inventario flotante)
 

@@ -2,7 +2,6 @@ from pydantic import BaseModel, ConfigDict
 
 from app.models.enums import EstadoEjemplar
 
-
 class EjemplarCreate(BaseModel):
     """Entrada: alta física de un ejemplar."""
 
@@ -27,3 +26,9 @@ class EjemplarDTO(BaseModel):
     libro_id: int
     sede_actual_id: int
     sede_origen_id: int
+
+
+class EjemplarEstadoUpdate(BaseModel):
+    """Cuerpo para el endpoint PATCH de cambio de estado."""
+
+    estado: EstadoEjemplar
