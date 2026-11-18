@@ -152,9 +152,8 @@ python -m venv ../.venv     # o el venv que prefieran, p. ej. backend/.venv
 source ../.venv/bin/activate   # En Windows: ..\.venv\Scripts\activate
 pip install -e ".[dev]"        # instala las dependencias de backend/pyproject.toml
 cp .env.example .env           # Completar la API key de Google Books
+python -m app.seeds            # datos iniciales: 3 sedes, 3 roles, usuarios seed, catálogo de muestra
 uvicorn app.main:app --reload  # http://localhost:8000 | documentación en /docs
-# Los seeds (3 sedes + 1 usuario por rol: Socio, Bibliotecario, Administrador)
-# se cargarán con backend/seeds.py, pendiente.
 ```
 
 Frontend:

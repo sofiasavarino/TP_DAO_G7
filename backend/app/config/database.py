@@ -3,7 +3,7 @@ from collections.abc import Iterator
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
 
-DATABASE_URL = "sqlite:///biblioteca.db"
+from app.config.settings import DATABASE_URL
 
 # Un modulo se ejecuta una sola vez: engine y SessionLocal funcionan como singletons.
 engine = create_engine(DATABASE_URL, echo=False)
