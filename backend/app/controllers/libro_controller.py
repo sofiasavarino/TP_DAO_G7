@@ -12,11 +12,11 @@ from app.services.libro_service import (
     to_listado_dto,
 )
 
-libro_router = APIRouter(tags=["libros"])
+libro_router = APIRouter(prefix="/libros", tags=["libros"])
 libro_repo = LibroRepository()
 
 
-@libro_router.get("/libros/lookup", response_model=LibroLookupDTO, include_in_schema=True)
+@libro_router.get("/lookup", response_model=LibroLookupDTO, include_in_schema=True)
 def lookup_libro(isbn: str, session: Session = Depends(get_session)) -> LibroLookupDTO:
     """Autocompletado por ISBN: DB local → Google Books → MANUAL."""
     return buscar_libro_por_isbn(session, isbn)
@@ -51,8 +51,9 @@ def obtener_libro(libro_id: int, session: Session = Depends(get_session)) -> Lib
     return LibroDTO.model_validate(libro)
 
 
-@libro_router.post("/libros", response_model=LibroDTO, status_code=201)
+@libro_router.post("", response_model=LibroDTO, status_code=201)
 def crear_libro_endpoint(datos: LibroCreate, session: Session = Depends(get_session)) -> LibroDTO:
+    """Alta de libro. Si el ISBN ya existe, devuelve el existente (no duplica)."""
     try:
         libro, fue_nuevo = crear_libro(session, datos)
     except ValueError as e:
