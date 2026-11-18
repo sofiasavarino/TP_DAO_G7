@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.models.autor import Autor
 from app.repositories.base_repository import BaseRepository
+from app.utils.texto import unaccent
 
 
 class AutorRepository(BaseRepository[Autor]):
@@ -27,5 +28,9 @@ class AutorRepository(BaseRepository[Autor]):
         return list(session.scalars(select(Autor).where(Autor.id.in_(ids))))
 
     def buscar(self, session: Session, texto: str) -> list[Autor]:
-        stmt = select(Autor).where(Autor.nombre.ilike(f"%{texto}%")).order_by(Autor.nombre)
+        stmt = (
+            select(Autor)
+            .where(func.unaccent(Autor.nombre).ilike(f"%{unaccent(texto)}%"))
+            .order_by(Autor.nombre)
+        )
         return list(session.scalars(stmt))

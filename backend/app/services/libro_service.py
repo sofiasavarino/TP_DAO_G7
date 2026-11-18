@@ -66,37 +66,22 @@ def crear_libro(session: Session, datos: LibroCreate) -> tuple[Libro, bool]:
     return libro_repo.add(session, libro), True
 
 
-def listar_catalogo(session: Session) -> list[Libro]:
-    """Catálogo con autores precargados (1 + 1 queries, sin N+1)."""
-    return libro_repo.listar_catalogo(session)
-
-
 def listar_catalogo_filtrado(
     session: Session,
     *,
-    texto: str | None = None,
+    titulo: str | None = None,
+    isbn: str | None = None,
     autor: str | None = None,
     genero: str | None = None,
     sedes: list[int] | None = None,
     orden: str = "default",
 ) -> list[Libro]:
-    """Catálogo filtrable por texto/título/ISBN, autor, género, sedes (disponibles) y orden."""
+    """Catálogo filtrable por título, ISBN y/o autor (parciales), género, disponibilidad
+    por sede y orden. Todos opcionales y combinables (AND)."""
     return libro_repo.listar_catalogo_filtrado(
-        session, texto=texto, autor=autor, genero=genero, sedes=sedes, orden=orden
+        session, titulo=titulo, isbn=isbn, autor=autor, genero=genero,
+        sedes=sedes, orden=orden,
     )
-
-
-def buscar_libros(session: Session, texto: str) -> list[Libro]:
-    """Búsqueda libre por título, ISBN o nombre de autor."""
-    return libro_repo.buscar(session, texto)
-
-
-def buscar_por_titulo(session: Session, titulo: str) -> list[Libro]:
-    return libro_repo.buscar_por_titulo(session, titulo)
-
-
-def buscar_por_autor(session: Session, autor: str) -> list[Libro]:
-    return libro_repo.buscar_por_autor(session, autor)
 
 
 def to_listado_dto(libro: Libro) -> LibroListadoDTO:

@@ -6,6 +6,7 @@ from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
+from app.config.database import registrar_unaccent
 from app.config.database import get_session
 from app.main import app
 from app.models import Base
@@ -18,12 +19,13 @@ def session(tmp_path):
         connect_args={"check_same_thread": False},
         poolclass=StaticPool,
     )
+    registrar_unaccent(engine)
+    Base.metadata.create_all(engine)
 
     @event.listens_for(engine, "connect")
     def _fks(conn, _rec):
         conn.execute("PRAGMA foreign_keys=ON")
 
-    Base.metadata.create_all(engine)
     SessionT = sessionmaker(bind=engine, expire_on_commit=False)
     with SessionT() as s:
         yield s

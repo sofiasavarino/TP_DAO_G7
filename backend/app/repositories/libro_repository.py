@@ -1,4 +1,4 @@
-from sqlalchemy import Row, func, or_, select
+from sqlalchemy import Row, exists, func, or_, select
 from sqlalchemy.orm import Session, selectinload
 
 from app.models.autor import Autor
@@ -6,6 +6,7 @@ from app.models.ejemplar import Ejemplar
 from app.models.enums import EstadoEjemplar, TipoPrestamo
 from app.models.libro import Libro
 from app.models.prestamo import Prestamo
+from app.utils.texto import unaccent
 from app.repositories.base_repository import BaseRepository
 
 
@@ -31,16 +32,12 @@ class LibroRepository(BaseRepository[Libro]):
             filtros.append(Libro.id != excluir_id)
         return self.exists(session, *filtros)
 
-    def listar_catalogo(self, session: Session) -> list[Libro]:
-        """Catalogo completo con autores (1 query de libros + 1 de autores, sin N+1)."""
-        stmt = select(Libro).options(selectinload(Libro.autores)).order_by(Libro.nombre)
-        return list(session.scalars(stmt))
-
     def listar_catalogo_filtrado(
         self,
         session: Session,
         *,
-        texto: str | None = None,
+        titulo: str | None = None,
+        isbn: str | None = None,
         autor: str | None = None,
         genero: str | None = None,
         sedes: list[int] | None = None,
@@ -50,19 +47,17 @@ class LibroRepository(BaseRepository[Libro]):
         EXISTS (al menos una copia DISPONIBLE en una de las sedes seleccionadas)."""
         stmt = select(Libro).options(selectinload(Libro.autores))
 
-        if texto:
-            patron = f"%{texto.strip()}%"
-            stmt = stmt.where(
-                or_(Libro.nombre.ilike(patron), Libro.isbn.ilike(patron))
-            )
+        if titulo:
+            stmt = stmt.where(func.unaccent(Libro.nombre).ilike(f"%{unaccent(titulo)}%"))
+
+        if isbn:
+            # ISBN es numérico: no hace falta quitar tildes.
+            stmt = stmt.where(Libro.isbn.ilike(f"%{isbn.strip()}%"))
 
         if autor:
-            patron = f"%{autor.strip()}%"
-            stmt = (
-                stmt.outerjoin(Libro.autores)
-                .where(Autor.nombre.ilike(patron))
-                .distinct()
-            )
+            stmt = stmt.outerjoin(Libro.autores).where(
+                func.unaccent(Autor.nombre).ilike(f"%{unaccent(autor)}%")
+            ).distinct()
 
         if genero:
             stmt = stmt.where(Libro.genero == genero.strip())
@@ -94,45 +89,6 @@ class LibroRepository(BaseRepository[Libro]):
         else:
             stmt = stmt.order_by(Libro.nombre)
 
-        return list(session.scalars(stmt))
-
-    def buscar(self, session: Session, texto: str) -> list[Libro]:
-        """Busqueda libre por titulo, ISBN o nombre de autor."""
-        patron = f"%{texto.strip()}%"
-        stmt = (
-            select(Libro)
-            .outerjoin(Libro.autores)
-            .where(
-                or_(
-                    Libro.nombre.ilike(patron),
-                    Libro.isbn.ilike(patron),
-                    Autor.nombre.ilike(patron),
-                )
-            )
-            .distinct()
-            .options(selectinload(Libro.autores))
-            .order_by(Libro.nombre)
-        )
-        return list(session.scalars(stmt))
-
-    def buscar_por_titulo(self, session: Session, titulo: str) -> list[Libro]:
-        stmt = (
-            select(Libro)
-            .where(Libro.nombre.ilike(f"%{titulo.strip()}%"))
-            .options(selectinload(Libro.autores))
-            .order_by(Libro.nombre)
-        )
-        return list(session.scalars(stmt))
-
-    def buscar_por_autor(self, session: Session, autor: str) -> list[Libro]:
-        stmt = (
-            select(Libro)
-            .join(Libro.autores)
-            .where(Autor.nombre.ilike(f"%{autor.strip()}%"))
-            .distinct()
-            .options(selectinload(Libro.autores))
-            .order_by(Libro.nombre)
-        )
         return list(session.scalars(stmt))
 
     # ---------------------------------------------------------------- reportes

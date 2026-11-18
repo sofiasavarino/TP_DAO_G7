@@ -1,4 +1,4 @@
-from app.models.autor import Autor
+﻿from app.models.autor import Autor
 from app.models.ejemplar import Ejemplar
 from app.models.enums import EstadoEjemplar
 from app.models.libro import Libro
@@ -31,33 +31,49 @@ def test_guardar_y_existe_isbn(session):
     assert libro_repo.existe_isbn(session, "0000000000") is False
 
 
+def test_listar_catalogo_filtrado_busqueda_libro_con_autor(session):
+    _hacer_libro(session, nombre="Ficciones", isbn="0000000004")
+    assert [l.nombre for l in libro_repo.listar_catalogo_filtrado(session, isbn="000000000")] != []
+    assert libro_repo.listar_catalogo_filtrado(session, titulo="inexistente") == []
+
+
 def test_listar_catalogo_ordenado_por_nombre(session):
     _hacer_libro(session, nombre="Zeta", isbn="0000000001")
     _hacer_libro(session, nombre="Alfa", isbn="0000000002")
-    libros = libro_repo.listar_catalogo(session)
+    libros = libro_repo.listar_catalogo_filtrado(session)
     assert [l.nombre for l in libros] == ["Alfa", "Zeta"]
 
 
-def test_buscar_por_titulo(session):
+def test_listar_catalogo_texto_titulo(session):
     _hacer_libro(session, nombre="Cien años de soledad", isbn="0000000003")
-    assert len(libro_repo.buscar_por_titulo(session, "cien")) == 1
-    assert len(libro_repo.buscar_por_titulo(session, "soledad")) == 1
-    assert len(libro_repo.buscar_por_titulo(session, "inexistente")) == 0
+    assert len(libro_repo.listar_catalogo_filtrado(session, titulo="cien")) == 1
+    assert len(libro_repo.listar_catalogo_filtrado(session, titulo="soledad")) == 1
+    assert libro_repo.listar_catalogo_filtrado(session, titulo="inexistente") == []
 
 
-def test_buscar_por_autor(session):
+def test_listar_catalogo_texto_autor(session):
     autor = autor_repo.add(session, Autor(nombre="García Márquez"))
     libro = _hacer_libro(session, nombre="Ficciones", isbn="0000000004")
     libro.autores.append(autor)
     session.flush()
-    assert len(libro_repo.buscar_por_autor(session, "garc")) == 1  # subcadena, sin depender de tildes
+    assert len(libro_repo.listar_catalogo_filtrado(session, autor="garc")) == 1  # subcadena, sin depender de tildes
 
 
-def test_listar_catalogo_filtrado_texto(session):
+def test_listar_catalogo_filtrado_texto_titulo_isbn(session):
     _hacer_libro(session, nombre="Rayuela", isbn="0000000005")
     _hacer_libro(session, nombre="Cien años de soledad", isbn="0000000006")
-    assert [l.nombre for l in libro_repo.listar_catalogo_filtrado(session, texto="ray")] == ["Rayuela"]
-    assert libro_repo.listar_catalogo_filtrado(session, texto="000000000") != []
+    assert [l.nombre for l in libro_repo.listar_catalogo_filtrado(session, titulo="ray")] == ["Rayuela"]
+    assert [l.nombre for l in libro_repo.listar_catalogo_filtrado(session, isbn="000000000")] != []
+
+
+def test_listar_catalogo_filtrado_titulo_autor_combinado(session):
+    autor = autor_repo.add(session, Autor(nombre="Borges"))
+    l1 = _hacer_libro(session, nombre="Rayuela", isbn="0000000016")
+    l1.autores.append(autor)
+    l2 = _hacer_libro(session, nombre="Ficciones", isbn="0000000017")
+    session.flush()
+    assert [l.nombre for l in libro_repo.listar_catalogo_filtrado(session, titulo="rayuela", autor="borge")] == ["Rayuela"]
+    assert [l.nombre for l in libro_repo.listar_catalogo_filtrado(session, titulo="finciones", autor="borge")] == []
 
 
 def test_listar_catalogo_filtrado_por_autor(session):
@@ -66,6 +82,8 @@ def test_listar_catalogo_filtrado_por_autor(session):
     libro1.autores.append(autor)
     _hacer_libro(session, nombre="Rayuela", isbn="0000000008")  # sin autor
     session.flush()
+    assert [l.nombre for l in libro_repo.listar_catalogo_filtrado(session, autor="borge")] == ["Ficciones"]
+    # texto también apunta al autor
     assert [l.nombre for l in libro_repo.listar_catalogo_filtrado(session, autor="borge")] == ["Ficciones"]
 
 
@@ -104,8 +122,7 @@ def test_listar_catalogo_filtrado_orden_populares(session):
                   libro_id=l2.id, sede_origen_id=sede.id, sede_actual_id=sede.id)
     session.add(ej)
     session.flush()
-    socio = None  # necesitaremos un socio para prestamo; solo nos interesa contar prestamos, hacemos nested
-    from app.repositories.socio_repository import SocioRepository
+    socio = None
     from app.models.socio import Socio
     from app.models.usuario import Usuario
     from app.models.rol import Rol
