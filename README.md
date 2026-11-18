@@ -1,4 +1,4 @@
-# Sistema de Gestión de Biblioteca
+﻿# Sistema de Gestión de Biblioteca
 
 TP integrador de Desarrollo de Aplicaciones con Objetos, FRC UTN. Grupo 7.
 
@@ -72,8 +72,8 @@ TP_DAO_G7/
 |---|---|---|
 | GET | `/health` | Health check (fuera del namespace API, para smoke tests del proxy/infra) |
 | GET | `/api/v1/libros/lookup?isbn=...` | Autocompletado por ISBN: local → Google Books → `MANUAL` (la vista pide carga manual) |
-| GET | `/api/v1/catalogo` · `?titulo=&isbn=&autor=&genero=&sedes=1,2,3&orden=default\|populares\|recientes` | Catálogo filtrable: AND entre todos los parámetros. `titulo` (título parcial), `isbn` (ISBN parcial), `autor` (nombre parcial), género (exacto), disponibilidad por sede, orden por popularidad o fecha de publicación. Sin parámetros devuelve todo ordenado por nombre. |
-| GET | `/api/v1/catalogo/{id}` | Detalle de un libro |
+| GET | `/api/v1/libros/catalogo` · `?titulo=&isbn=&autor=&genero=&sedes=1,2,3&orden=default\|populares\|recientes` | Catálogo filtrable: AND entre todos los parámetros. `titulo` (título parcial), `isbn` (ISBN parcial), `autor` (nombre parcial), género (exacto), disponibilidad por sede, orden por popularidad o fecha de publicación. Sin parámetros devuelve todo ordenado por nombre. |
+| GET | `/api/v1/libros/catalogo/{id}` | Detalle de un libro |
 | POST | `/api/v1/libros` | Alta de libro; dedupa por ISBN (devuelve el existente) |
 | GET | `/api/v1/ejemplares/disponibles?libro_id=&sede_id=` | Consulta de disponibilidad filtrada por sede actual |
 | GET | `/api/v1/ejemplares/por-libro/{id}` | Todos los ejemplares de un libro |
