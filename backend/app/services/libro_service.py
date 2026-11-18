@@ -60,6 +60,7 @@ def crear_libro(session: Session, datos: LibroCreate) -> tuple[Libro, bool]:
         editorial=datos.editorial,
         fecha_publicacion=datos.fecha_publicacion,
         imagen_url=datos.imagen_url,
+        genero=datos.genero,
         autores=autores,
     )
     return libro_repo.add(session, libro), True
@@ -68,6 +69,21 @@ def crear_libro(session: Session, datos: LibroCreate) -> tuple[Libro, bool]:
 def listar_catalogo(session: Session) -> list[Libro]:
     """Catálogo con autores precargados (1 + 1 queries, sin N+1)."""
     return libro_repo.listar_catalogo(session)
+
+
+def listar_catalogo_filtrado(
+    session: Session,
+    *,
+    texto: str | None = None,
+    autor: str | None = None,
+    genero: str | None = None,
+    sedes: list[int] | None = None,
+    orden: str = "default",
+) -> list[Libro]:
+    """Catálogo filtrable por texto/título/ISBN, autor, género, sedes (disponibles) y orden."""
+    return libro_repo.listar_catalogo_filtrado(
+        session, texto=texto, autor=autor, genero=genero, sedes=sedes, orden=orden
+    )
 
 
 def buscar_libros(session: Session, texto: str) -> list[Libro]:
@@ -96,5 +112,6 @@ def _local_a_dto(libro: Libro) -> LibroLookupDTO:
         editorial=libro.editorial,
         fecha_publicacion=libro.fecha_publicacion,
         imagen_url=libro.imagen_url,
+        genero=libro.genero,
         autores=[a.nombre for a in libro.autores],  # lazy load dentro de la sesión
     )

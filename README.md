@@ -72,7 +72,7 @@ TP_DAO_G7/
 |---|---|---|
 | GET | `/health` | Health check (fuera del namespace API, para smoke tests del proxy/infra) |
 | GET | `/api/v1/libros/lookup?isbn=...` | Autocompletado por ISBN: local → Google Books → `MANUAL` (la vista pide carga manual) |
-| GET | `/api/v1/catalogo` | Catálogo de libros (con autores precargados) |
+| GET | `/api/v1/catalogo` · `?texto=&autor=&genero=&sedes=1,2,3&orden=default\|populares\|recientes` | Catálogo con filtros combinados: título/ISBN/autor (parcial), género (exacto), disponibilidad por sede (al menos una copia, ANY), orden por popularidad (`count(prestamo)` desc) o fecha de publicación desc. Sin parámetros devuelve todo por nombre. |
 | GET | `/api/v1/catalogo/{id}` | Detalle de un libro |
 | GET | `/api/v1/libros/buscar?texto=…` · `/titulo` · `/autor` | Búsqueda libre por título/ISBN/autor |
 | POST | `/api/v1/libros` | Alta de libro; dedupa por ISBN (devuelve el existente) |

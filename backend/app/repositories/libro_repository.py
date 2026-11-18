@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session, selectinload
 
 from app.models.autor import Autor
 from app.models.ejemplar import Ejemplar
-from app.models.enums import TipoPrestamo
+from app.models.enums import EstadoEjemplar, TipoPrestamo
 from app.models.libro import Libro
 from app.models.prestamo import Prestamo
 from app.repositories.base_repository import BaseRepository
@@ -34,6 +34,66 @@ class LibroRepository(BaseRepository[Libro]):
     def listar_catalogo(self, session: Session) -> list[Libro]:
         """Catalogo completo con autores (1 query de libros + 1 de autores, sin N+1)."""
         stmt = select(Libro).options(selectinload(Libro.autores)).order_by(Libro.nombre)
+        return list(session.scalars(stmt))
+
+    def listar_catalogo_filtrado(
+        self,
+        session: Session,
+        *,
+        texto: str | None = None,
+        autor: str | None = None,
+        genero: str | None = None,
+        sedes: list[int] | None = None,
+        orden: str = "default",
+    ) -> list[Libro]:
+        """Busqueda compuesta del catalogo. Todos los filtros son AND; `sedes` aplica
+        EXISTS (al menos una copia DISPONIBLE en una de las sedes seleccionadas)."""
+        stmt = select(Libro).options(selectinload(Libro.autores))
+
+        if texto:
+            patron = f"%{texto.strip()}%"
+            stmt = stmt.where(
+                or_(Libro.nombre.ilike(patron), Libro.isbn.ilike(patron))
+            )
+
+        if autor:
+            patron = f"%{autor.strip()}%"
+            stmt = (
+                stmt.outerjoin(Libro.autores)
+                .where(Autor.nombre.ilike(patron))
+                .distinct()
+            )
+
+        if genero:
+            stmt = stmt.where(Libro.genero == genero.strip())
+
+        if sedes:
+            existe_disponible = (
+                select(Ejemplar.id)
+                .where(
+                    Ejemplar.libro_id == Libro.id,
+                    Ejemplar.estado == EstadoEjemplar.DISPONIBLE,
+                    Ejemplar.sede_actual_id.in_(sedes),
+                )
+                .exists()
+            )
+            stmt = stmt.where(existe_disponible)
+
+        if orden == "populares":
+            popularidad = (
+                select(Ejemplar.libro_id, func.count(Prestamo.id).label("n"))
+                .join(Prestamo, Prestamo.ejemplar_id == Ejemplar.id)
+                .group_by(Ejemplar.libro_id)
+                .subquery()
+            )
+            stmt = stmt.outerjoin(popularidad, popularidad.c.libro_id == Libro.id).order_by(
+                func.coalesce(popularidad.c.n, 0).desc(), Libro.nombre
+            )
+        elif orden == "recientes":
+            stmt = stmt.order_by(Libro.fecha_publicacion.desc())
+        else:
+            stmt = stmt.order_by(Libro.nombre)
+
         return list(session.scalars(stmt))
 
     def buscar(self, session: Session, texto: str) -> list[Libro]:

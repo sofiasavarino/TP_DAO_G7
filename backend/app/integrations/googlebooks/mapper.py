@@ -39,6 +39,15 @@ def _imagen_url(image_links: dict | None) -> str | None:
     return url.replace("http://", "https://", 1)
 
 
+def _categorias(categories: list[str] | None) -> str | None:
+    if not categories:
+        return None
+    for c in categories:
+        if isinstance(c, str) and c.strip():
+            return c.strip()
+    return None
+
+
 def item_a_libro_dto(item: dict, origen: Literal["LOCAL", "GOOGLE", "MANUAL"] = "GOOGLE") -> LibroLookupDTO:
     vi = item.get("volumeInfo", {})
     return LibroLookupDTO(
@@ -49,5 +58,6 @@ def item_a_libro_dto(item: dict, origen: Literal["LOCAL", "GOOGLE", "MANUAL"] = 
         editorial=(vi.get("publisher") or "").strip() or None,
         fecha_publicacion=_parse_fecha(vi.get("publishedDate")),
         imagen_url=_imagen_url(vi.get("imageLinks")),
+        genero=_categorias(vi.get("categories")),
         autores=[a for a in (vi.get("authors") or []) if isinstance(a, str)],
     )

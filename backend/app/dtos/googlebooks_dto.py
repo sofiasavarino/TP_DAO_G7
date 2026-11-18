@@ -14,4 +14,5 @@ class LibroLookupDTO(BaseModel):
     editorial: str | None = None
     fecha_publicacion: date | None = None
     imagen_url: str | None = None
+    genero: str | None = None
     autores: list[str] = []

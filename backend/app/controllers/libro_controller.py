@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.config.database import get_session
@@ -12,6 +12,7 @@ from app.services.libro_service import (
     buscar_por_titulo,
     crear_libro,
     listar_catalogo,
+    listar_catalogo_filtrado,
     to_listado_dto,
 )
 
@@ -25,9 +26,24 @@ def lookup_libro(isbn: str, session: Session = Depends(get_session)) -> LibroLoo
     return buscar_libro_por_isbn(session, isbn)
 
 
+ORDENES_VALIDOS = {"default", "populares", "recientes"}
+
+
 @libro_router.get("/catalogo", response_model=list[LibroListadoDTO])
-def listar_libros(session: Session = Depends(get_session)) -> list[LibroListadoDTO]:
-    return [to_listado_dto(l) for l in listar_catalogo(session)]
+def listar_libros(
+    texto: str | None = Query(None, description="Búsqueda parcial por título o ISBN"),
+    autor: str | None = Query(None, description="Búsqueda parcial por nombre de autor"),
+    genero: str | None = Query(None, description="Filtrar por género (exacto)"),
+    sedes: list[int] = Query(default=[], description="IDs de sede donde debe haber al menos una copia disponible"),
+    orden: str = Query("default", description="default | populares (préstamos) | recientes (fecha de publicación)"),
+    session: Session = Depends(get_session),
+) -> list[LibroListadoDTO]:
+    if orden not in ORDENES_VALIDOS:
+        raise HTTPException(400, f"orden debe ser uno de {sorted(ORDENES_VALIDOS)}")
+    libros = listar_catalogo_filtrado(
+        session, texto=texto, autor=autor, genero=genero, sedes=sedes or None, orden=orden
+    )
+    return [to_listado_dto(l) for l in libros]
 
 
 @libro_router.get("/catalogo/{libro_id}", response_model=LibroDTO)
