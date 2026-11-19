@@ -1,4 +1,4 @@
-# Cambios con respecto a la presentación original (grupo 7)
+﻿# Cambios con respecto a la presentación original (grupo 7)
 
 Resumen de todo lo decidido/implementado con respecto a la presentación y a los primeros modelos.
 Conviene para mantener actualizado el diagrama de clases y la doc.
@@ -38,6 +38,10 @@ El proyecto pasó de un único paquete Python suelto a un **monorepo con `backen
 | 9.2 | Service de libro | `crear_libro(datos)` con dedup por ISBN y resolución de autores; `buscar/listar/to_listado_dto`. Cuando el ISBN existe se devuelve el existente sin duplicar. |
 | 9.3 | Reportes `mas_solicitados` y `disponibilidad_por_sede` | Atributos relevantes para el módulo de reportes del TP (ver reportes) |
 | 9.4 | Tests mínimos de pytest | `conftest.py` con `:memory:` + `TestClient` + dependency-override; 10 tests verdes (libro service + repo) |
+| 10 | Columna `genero` en `libro` | `String(50)` NULL; `LibroCreate`, `LibroDTO`, `LibroListadoDTO` y `LibroLookupDTO` la exponen; el mapper de Google Books llena `genero` desde `categories[0]`. Seeds con género precargado (se aplicó `UPDATE` al local dev) |
+| 12 | UDF `unaccent(TEXT)` en SQLite | `app.config.database` registra `unaccent` al conectar; los repos (`libro`, `autor`, `socio`) usan `func.unaccent(columna).ilike(unaccent_patron)` para búsquedas con tildes. `app.utils.texto.unaccent()` para construir el patrón desde Python. La DB seed Semillas no incluye autores todavía; el `test_listar_catalogo_texto_autor` cubre el caso con `García Márquez` que verifica que `"garc"` matchea |
+| 11.1 | `listar_catalogo_filtrado` | Método en `LibroRepository` con todos los filtros opcionales combinados AND: texto (título/ISBN), autor (JOIN), género, `sedes` (al menos un ejemplar DISPONIBLE en ellas, EXISTS), orden (`default`, `populares` con OUTER JOIN sobre préstamos para no perder los sin préstamos, o `recientes`) |
+| 11.2 | Endpoint `GET /api/v1/libros/catalogo` con query params | `?titulo&isbn&autor&genero&sedes=1,2,3&orden=default\|populares\|recientes`. Cada uno AND al resto. `titulo`, `isbn` y `autor` son parciales; la unificación de la búsqueda previa quedó en `/catalogo` con `texto` eliminado (era ambigua semánticamente). `orden` desconocido → 400 |
 | 9.1.1 | Integración Google Books + ruta de lookup | `integrations/googlebooks/client.py` + `mapper.py`; service `libro_service.buscar_libro_por_isbn` (local → Google → manual); expuesta por `GET /api/v1/libros/lookup?isbn=…`. La API key vive en `backend/.env` (`GOOGLE_BOOKS_API_KEY`), nunca en el frontend. `app/main.py` con app FastAPI + CORS para localhost:5173/5174. |
 
 ## 2. Máquina de estados (inventario flotante)

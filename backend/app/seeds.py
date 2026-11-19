@@ -43,10 +43,10 @@ USUARIOS = [
 ]
 
 CATALOGO = [
-    # (nombre, isbn, cant_paginas, editorial, imagen_url-or-None)
-    ("Cien años de soledad", "9780307474725", 417, "Sudamericana", None),
-    ("Ficciones", "9789507370057", 199, "Emecé", None),
-    ("Rayuela", "9788466323223", 560, "Sudamericana", None),
+    # (nombre, isbn, cant_paginas, editorial, imagen_url-or-None, genero)
+    ("Cien años de soledad", "9780307474725", 417, "Sudamericana", None, "Realismo mágico"),
+    ("Ficciones", "9789507370057", 199, "Emecé", None, "Cuento"),
+    ("Rayuela", "9788466323223", 560, "Sudamericana", None, "Novela"),
 ]
 
 
@@ -102,11 +102,11 @@ def main() -> None:
 
         # Catálogo + ejemplares por libro
         libros = []
-        for nombre, isbn, cant_paginas, editorial, imagen_url in CATALOGO:
+        for nombre, isbn, cant_paginas, editorial, imagen_url, genero in CATALOGO:
             libros.append(
                 Libro(
                     nombre=nombre, isbn=isbn, cant_paginas=cant_paginas,
-                    editorial=editorial, imagen_url=imagen_url,
+                    editorial=editorial, imagen_url=imagen_url, genero=genero,
                 )
             )
         session.add_all(libros)

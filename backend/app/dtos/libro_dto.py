@@ -14,6 +14,7 @@ class LibroCreate(BaseModel):
     editorial: str | None = None
     fecha_publicacion: date | None = None
     imagen_url: str | None = None
+    genero: str | None = None
     autor_ids: list[int] = []  # N:N; vacío = sin autor asignado todavía
 
 
@@ -29,6 +30,7 @@ class LibroDTO(BaseModel):
     editorial: str | None = None
     fecha_publicacion: date | None = None
     imagen_url: str | None = None
+    genero: str | None = None
     autores: list[AutorDTO] = []
 
 
@@ -42,4 +44,5 @@ class LibroListadoDTO(BaseModel):
     editorial: str | None = None
     isbn: str | None = None
     imagen_url: str | None = None
+    genero: str | None = None
     autores: list[AutorDTO] = []

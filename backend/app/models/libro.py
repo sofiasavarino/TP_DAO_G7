@@ -31,6 +31,7 @@ class Libro(Base):
     editorial: Mapped[str | None] = mapped_column(String(100))
     fecha_publicacion: Mapped[date | None]
     imagen_url: Mapped[str | None] = mapped_column(String(500))
+    genero: Mapped[str | None] = mapped_column(String(50))
 
     autores: Mapped[list["Autor"]] = relationship(
         secondary=libro_autor, back_populates="libros"

@@ -1,3 +1,4 @@
+import unicodedata
 from collections.abc import Iterator
 
 from sqlalchemy import create_engine, event
@@ -5,8 +6,29 @@ from sqlalchemy.orm import sessionmaker
 
 from app.config.settings import DATABASE_URL
 
+
+def _unaccent(value: str | None) -> str | None:
+    """UDF de SQLite: quita tildes/acentos (NFKD + filtra categoría Mn) y pasa a lower."""
+    if value is None:
+        return None
+    return "".join(
+        char
+        for char in unicodedata.normalize("NFKD", value.lower())
+        if unicodedata.category(char) != "Mn"
+    )
+
+
+def registrar_unaccent(engine):
+    """Registra `unaccent` como función escalar UDF nativa de SQLite."""
+
+    @event.listens_for(engine, "connect")
+    def _registrar(dbapi_connection, _):
+        dbapi_connection.create_function("unaccent", 1, _unaccent)
+
+
 # Un modulo se ejecuta una sola vez: engine y SessionLocal funcionan como singletons.
 engine = create_engine(DATABASE_URL, echo=False)
+registrar_unaccent(engine)
 SessionLocal = sessionmaker(bind=engine)
 
 

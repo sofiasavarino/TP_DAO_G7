@@ -1,4 +1,4 @@
-# Sistema de Gestión de Biblioteca
+﻿# Sistema de Gestión de Biblioteca
 
 TP integrador de Desarrollo de Aplicaciones con Objetos, FRC UTN. Grupo 7.
 
@@ -72,9 +72,8 @@ TP_DAO_G7/
 |---|---|---|
 | GET | `/health` | Health check (fuera del namespace API, para smoke tests del proxy/infra) |
 | GET | `/api/v1/libros/lookup?isbn=...` | Autocompletado por ISBN: local → Google Books → `MANUAL` (la vista pide carga manual) |
-| GET | `/api/v1/catalogo` | Catálogo de libros (con autores precargados) |
-| GET | `/api/v1/catalogo/{id}` | Detalle de un libro |
-| GET | `/api/v1/libros/buscar?texto=…` · `/titulo` · `/autor` | Búsqueda libre por título/ISBN/autor |
+| GET | `/api/v1/libros/catalogo` · `?titulo=&isbn=&autor=&genero=&sedes=1,2,3&orden=default\|populares\|recientes` | Catálogo filtrable: AND entre todos los parámetros. `titulo` (título parcial), `isbn` (ISBN parcial), `autor` (nombre parcial), género (exacto), disponibilidad por sede, orden por popularidad o fecha de publicación. Sin parámetros devuelve todo ordenado por nombre. |
+| GET | `/api/v1/libros/catalogo/{id}` | Detalle de un libro |
 | POST | `/api/v1/libros` | Alta de libro; dedupa por ISBN (devuelve el existente) |
 | GET | `/api/v1/ejemplares/disponibles?libro_id=&sede_id=` | Consulta de disponibilidad filtrada por sede actual |
 | GET | `/api/v1/ejemplares/por-libro/{id}` | Todos los ejemplares de un libro |
@@ -140,7 +139,7 @@ Si un service necesita llamar a otro, le pasa la misma sesión. Si cada uno abre
 
 **Excepciones.** Las reglas de negocio lanzan excepciones de `exceptions`. El controller las captura y la vista muestra el mensaje.
 
-**SQLite.** Las claves foráneas vienen apagadas por defecto. Se activan en `config` con `PRAGMA foreign_keys=ON`.
+**SQLite y tildes.** El motor `SQLite` no es accent-insensitive: `ilike "%cortazar%"` no matchea `"Cortázar"`. Para evitarlo se registra una UDF `unaccent(TEXT)` al momento de iniciar la conexión vía `app.config.database`; conviene usar `func.unaccent(<columna>).ilike(...)` en las búsquedas de texto. La UDF es un `NFKD + filter mn + lower`, no Postgres-grade. La mejor vía es funciones similares basadas en collation en el futuro; mientras tanto, esto evita bugs por errores tipográficos en los usuarios.
 
 ## Instalación
 

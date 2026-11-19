@@ -1,9 +1,10 @@
-from sqlalchemy import ColumnElement, or_, select
+from sqlalchemy import ColumnElement, func, or_, select
 from sqlalchemy.orm import Session, selectinload
 
 from app.models.enums import EstadoSocio
 from app.models.socio import Socio
 from app.repositories.base_repository import BaseRepository
+from app.utils.texto import unaccent
 
 
 class SocioRepository(BaseRepository[Socio]):
@@ -37,13 +38,13 @@ class SocioRepository(BaseRepository[Socio]):
 
     def buscar(self, session: Session, texto: str) -> list[Socio]:
         """Busqueda por nombre, apellido o DNI (pantalla del bibliotecario)."""
-        patron = f"%{texto.strip()}%"
+        patron = f"%{unaccent(texto)}%"
         stmt = (
             self._select()
             .where(
                 or_(
-                    Socio.nombre.ilike(patron),
-                    Socio.apellido.ilike(patron),
+                    func.unaccent(Socio.nombre).ilike(patron),
+                    func.unaccent(Socio.apellido).ilike(patron),
                     Socio.dni.ilike(patron),
                 )
             )
