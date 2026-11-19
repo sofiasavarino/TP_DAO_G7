@@ -8,8 +8,13 @@ BACKEND_ROOT = Path(__file__).resolve().parents[2]
 # `.env` es opcional en prod; los placeholders de DB caen a `biblioteca.db` local.
 load_dotenv(BACKEND_ROOT / ".env", override=False)
 
-# Base de datos
-DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///biblioteca.db")
+# Si DATABASE_URL es relativo, lo anclamos a BACKEND_ROOT (la carpeta que contiene a `app/`)
+# para que el engine no dependa del cwd desde el que se levanta la app.
+_database_url = os.getenv("DATABASE_URL", "sqlite:///biblioteca.db").strip()
+if _database_url.startswith("sqlite:///") and not Path(_database_url[10:]).is_absolute():
+    DATABASE_URL = f"sqlite:///{BACKEND_ROOT / _database_url[10:]}"
+else:
+    DATABASE_URL = _database_url
 
 # Integración externa
 GOOGLE_BOOKS_API_KEY: str = os.getenv("GOOGLE_BOOKS_API_KEY", "").strip()
