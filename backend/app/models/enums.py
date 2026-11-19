@@ -30,7 +30,7 @@ class EstadoRemito(enum.Enum):
 
 class EstadoReserva(enum.Enum):
     PENDIENTE = "PENDIENTE"
-    EN_CAMINO = "EN_CAMINO"
+    EN_TRANSITO = "EN_TRANSITO"
     LISTA_PARA_RETIRO = "LISTA_PARA_RETIRO"
     CUMPLIDA = "CUMPLIDA"
     VENCIDA = "VENCIDA"
