@@ -76,7 +76,14 @@ TP_DAO_G7/
 | GET | `/api/v1/libros/catalogo/{id}` | Detalle de un libro |
 | POST | `/api/v1/libros` | Alta de libro; dedupa por ISBN (devuelve el existente) |
 | GET | `/api/v1/prestamos` | Listado general de préstamos |
-| POST | `/api/v1/prestamos` | Alta de préstamo (`DIAS_PRESTAMO=15` calculado por backend; `LimitePrestamosExcedido`, `SocioSancionado`, `EjemplarNoDisponible`) |
+| POST | `/api/v1/prestamos` | Alta de préstamo (`DIAS_PRESTAMO=15` calculado por backend; `LimitePrestamosExcedido`, `SocioSancionado`, `EjemplarNoDisponible`)
+| POST | `/api/v1/reservas?responsable_creacion_id=` | Alta de reserva: asigna ejemplar DISPONIBLE local (`LISTA_PARA_RETIRO`); si sólo hay en otra sede encola remito IDA (`EN_TRANSITO`); si no hay nada, `PENDIENTE`. Body: `socio_id, libro_id, sede_retiro_id` |
+| POST | `/api/v1/reservas/procesar-vencimientos?responsable_proceso_id=` | Cierra `LISTA_PARA_RETIRO` vencidas (FIFO): reserva → `VENCIDA`; ejemplar RESERVADO se libera y se sirve la siguiente reserva más vieja FIFO del libro (o queda DISPONIBLE). Devuelve la lista de vencidas |
+| GET | `/api/v1/reservas/mios?socio_id=` | Reservas del socio, de la más reciente a la más vieja (cualquier estado) |
+| GET | `/api/v1/reservas/pendientes?libro_id=&sede_id=` | Cola de espera SIN ejemplar (`PENDIENTE`) de toda la red, FIFO. Filtros combinan con AND (`?libro_id=1&sede_id=2` = pendientes del libro 1 para retirar en sede 2) |
+| DELETE | `/api/v1/reservas/{id}?responsable_cancelacion_id=` | Cancelación de reserva viva (`PENDIENTE`/`EN_TRANSITO`/`LISTA_PARA_RETIRO`) → `CANCELADA`. Si el ejemplar pre-asignado no viaja en un remito, se libera y se sirve la siguiente reserva FIFO; si viaja, se reasigna al llegar al destino. `CUMPLIDA`/`VENCIDA`/`CANCELADA` → 400 |
+| POST | `/api/v1/reservas/{id}/retira?sede_id=&responsable_retiro_id=&tipo=LOCAL` | El socio retira la reserva `LISTA_PARA_RETIRO` (dentro de las 48hs hábiles): reserva → `CUMPLIDA` y nace el préstamo real (`P-NNNNNN`, `DIAS_PRESTAMO=15`); falla si no está en LISTA_PARA_RETIRO, la ventana venció, la sede no es la de retiro, o el socio está sancionado/sin cupo |
+| GET | `/api/v1/reservas/eta?libro_id=&sede_retiro_id=` | Vista previa SIN crear la reserva: `disponible_ahora` y `eta` (fecha mínima estimada o null). Para que el front muestre "Podés esperarlo para…" antes de reservar | |
 | GET | `/api/v1/prestamos/mios?socio_id=` | Préstamos del socio (sin auth todavía, `?socio_id=` hasta implementar `get_current_user`) |
 | GET | `/api/v1/prestamos/vencidos` | Préstamos en estado VENCIDO |
 | PUT | `/api/v1/prestamos/{id}/devolucion?sede_id=&responsable_devolucion_id=` | Cierra préstamo; aplica sanción por retraso si la hay; si hay reserva más vieja de ese libro en otra sede, encola el ejemplar en un remito `CREADO` (o lo crea) rumbo a esa sede y la reserva queda `EN_TRANSITO`; si la reserva es en la misma sede, la asigna (`LISTA_PARA_RETIRO`) |
