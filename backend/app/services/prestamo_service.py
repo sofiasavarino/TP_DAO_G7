@@ -10,7 +10,7 @@ from app.exceptions import (
     LimitePrestamosExcedido,
     SocioSancionado,
 )
-from app.models.enums import EstadoEjemplar, EstadoPrestamo, TipoSancion
+from app.models.enums import EstadoEjemplar, EstadoPrestamo, TipoPrestamo, TipoSancion
 from app.models.prestamo import Prestamo
 from app.models.sancion import Sancion
 from app.repositories.ejemplar_repository import EjemplarRepository
@@ -59,20 +59,51 @@ def listar_vencidos(session: Session) -> list[PrestamoListadoDTO]:
     return [_to_listado(p) for p in prestamo_repo.listar(session, estados=[EstadoPrestamo.VENCIDO])]
 
 
-def crear_prestamo(session: Session, datos: PrestamoCreate) -> Prestamo:
-    socio = socio_repo.get_by_id(session, datos.socio_id, incluir_inactivos=True)
+def _validar_socio_y_limite(session: Session, socio_id: int):
+    """Socio existe, sin sanción vigente y sin alcanzar el cupo de préstamos abiertos."""
+    socio = socio_repo.get_by_id(session, socio_id, incluir_inactivos=True)
     if socio is None:
-        raise ValueError(f"socio {datos.socio_id} no existe")
+        raise ValueError(f"socio {socio_id} no existe")
 
-    if sancion_repo.tiene_vigentes(session, datos.socio_id):
+    if sancion_repo.tiene_vigentes(session, socio_id):
         raise SocioSancionado(
-            f"socio {datos.socio_id} tiene sanción vigente; no puede retirar libros"
+            f"socio {socio_id} tiene sanción vigente; no puede retirar libros"
         )
 
-    if prestamo_repo.contar_abiertos_socio(session, datos.socio_id) >= MAX_PRESTAMOS_ABIERTOS:
+    if prestamo_repo.contar_abiertos_socio(session, socio_id) >= MAX_PRESTAMOS_ABIERTOS:
         raise LimitePrestamosExcedido(
-            f"socio {datos.socio_id} alcanza el límite de {MAX_PRESTAMOS_ABIERTOS} préstamos activos"
+            f"socio {socio_id} alcanza el límite de {MAX_PRESTAMOS_ABIERTOS} préstamos activos"
         )
+    return socio
+
+
+def _nuevo_prestamo(
+    session: Session,
+    socio_id: int,
+    ejemplar_id: int,
+    tipo: TipoPrestamo,
+    observaciones: str | None,
+) -> Prestamo:
+    numero = int(session.scalar(select(func.count(Prestamo.id))) or 0) + 1
+    ahora = date.today()
+    prestamo = Prestamo(
+        numero=f"P-{numero:06d}",
+        tipo=tipo,
+        estado=EstadoPrestamo.ACTIVO,
+        fecha_inicio=ahora,
+        fecha_vencimiento=ahora + timedelta(days=DIAS_PRESTAMO),
+        observaciones=observaciones,
+        socio_id=socio_id,
+        ejemplar_id=ejemplar_id,
+    )
+    prestamo_repo.add(session, prestamo)
+    session.flush()
+    session.refresh(prestamo)
+    return prestamo
+
+
+def crear_prestamo(session: Session, datos: PrestamoCreate) -> Prestamo:
+    _validar_socio_y_limite(session, datos.socio_id)
 
     ejemplar = ejemplar_repo.get_by_id(session, datos.ejemplar_id, incluir_inactivos=True)
     if ejemplar is None:
@@ -83,22 +114,34 @@ def crear_prestamo(session: Session, datos: PrestamoCreate) -> Prestamo:
         )
 
     ejemplar.estado = EstadoEjemplar.PRESTADO
-    numero = int(session.scalar(select(func.count(Prestamo.id))) or 0) + 1
-    ahora = date.today()
-    prestamo = Prestamo(
-        numero=f"P-{numero:06d}",
-        tipo=datos.tipo,
-        estado=EstadoPrestamo.ACTIVO,
-        fecha_inicio=ahora,
-        fecha_vencimiento=ahora + timedelta(days=DIAS_PRESTAMO),
-        observaciones=datos.observaciones,
-        socio_id=datos.socio_id,
-        ejemplar_id=datos.ejemplar_id,
-    )
-    prestamo_repo.add(session, prestamo)
-    session.flush()
-    session.refresh(prestamo)
-    return prestamo
+    return _nuevo_prestamo(session, datos.socio_id, datos.ejemplar_id, datos.tipo, datos.observaciones)
+
+
+def crear_prestamo_para_reserva(
+    session: Session,
+    socio_id: int,
+    ejemplar_id: int,
+    tipo: TipoPrestamo = TipoPrestamo.LOCAL,
+    observaciones: str | None = None,
+) -> Prestamo:
+    """Préstamo que nace cuando el socio retira una reserva LISTA_PARA_RETIRO.
+
+    A diferencia de `crear_prestamo`, el ejemplar viene RESERVADO para ese socio
+    (no DISPONIBLE), por eso el estado aceptado cambia.
+    """
+    _validar_socio_y_limite(session, socio_id)
+
+    ejemplar = ejemplar_repo.get_by_id(session, ejemplar_id, incluir_inactivos=True)
+    if ejemplar is None:
+        raise ValueError(f"ejemplar {ejemplar_id} no existe")
+    if ejemplar.estado != EstadoEjemplar.RESERVADO:
+        raise EjemplarNoDisponible(
+            f"ejemplar {ejemplar.codigo_inventario} no está reservado "
+            f"(estado: {ejemplar.estado.value})"
+        )
+
+    ejemplar.estado = EstadoEjemplar.PRESTADO
+    return _nuevo_prestamo(session, socio_id, ejemplar_id, tipo, observaciones)
 
 
 def crear_sancion_por_retraso(
