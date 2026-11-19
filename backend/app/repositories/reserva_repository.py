@@ -1,7 +1,7 @@
 from collections.abc import Sequence
 from datetime import date
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session, selectinload
 
 from app.models.enums import EstadoReserva
@@ -50,11 +50,14 @@ class ReservaRepository(BaseRepository[Reserva]):
         return list(session.scalars(stmt))
 
     def listar_por_estado(
-        self, session: Session, estado: EstadoReserva, sede_retiro_id: int | None = None
+        self, session: Session, estado: EstadoReserva, sede_retiro_id: int | None = None, libro_id: int | None = None
     ) -> list[Reserva]:
+        """Reservas en el estado dado, FIFO. Filtros opcionales que combinan con AND."""
         stmt = select(Reserva).where(Reserva.estado == estado)
         if sede_retiro_id is not None:
             stmt = stmt.where(Reserva.sede_retiro_id == sede_retiro_id)
+        if libro_id is not None:
+            stmt = stmt.where(Reserva.libro_id == libro_id)
         stmt = stmt.options(
             selectinload(Reserva.libro),
             selectinload(Reserva.socio),
@@ -142,3 +145,15 @@ class ReservaRepository(BaseRepository[Reserva]):
             .order_by(*_orden_fifo())
         )
         return list(session.scalars(stmt))
+
+    def contar_en_cola(self, session: Session, libro_id: int) -> int:
+        """Reservas esperando `libro_id` (PENDIENTE), en toda la red.
+
+        Se usan para descontar candidatos de la ETA: cada reserva que ya está en la
+        fila consumirá el candidato más cercano antes que el socio que está mirando.
+        """
+        stmt = select(func.count(Reserva.id)).where(
+            Reserva.libro_id == libro_id,
+            Reserva.estado == EstadoReserva.PENDIENTE,
+        )
+        return session.scalar(stmt) or 0
