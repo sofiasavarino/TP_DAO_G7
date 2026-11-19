@@ -11,12 +11,14 @@ if TYPE_CHECKING:
 
 
 class PrestamoCreate(BaseModel):
-    """Entrada: lo que manda la vista/controller para dar de alta un préstamo."""
+    """Entrada: lo que manda la vista/controller para dar de alta un préstamo.
+
+    La fecha de vencimiento NO la decide el cliente — se calcula en el service
+    como `today() + DIAS_PRESTAMO`."""
 
     socio_id: int
     ejemplar_id: int
     tipo: TipoPrestamo
-    fecha_vencimiento: date
     observaciones: str | None = None
 
 
