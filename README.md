@@ -75,6 +75,19 @@ TP_DAO_G7/
 | GET | `/api/v1/libros/catalogo` · `?titulo=&isbn=&autor=&genero=&sedes=1,2,3&orden=default\|populares\|recientes` | Catálogo filtrable: AND entre todos los parámetros. `titulo` (título parcial), `isbn` (ISBN parcial), `autor` (nombre parcial), género (exacto), disponibilidad por sede, orden por popularidad o fecha de publicación. Sin parámetros devuelve todo ordenado por nombre. |
 | GET | `/api/v1/libros/catalogo/{id}` | Detalle de un libro |
 | POST | `/api/v1/libros` | Alta de libro; dedupa por ISBN (devuelve el existente) |
+| GET | `/api/v1/prestamos` | Listado general de préstamos |
+| POST | `/api/v1/prestamos` | Alta de préstamo (`DIAS_PRESTAMO=15` calculado por backend; `LimitePrestamosExcedido`, `SocioSancionado`, `EjemplarNoDisponible`) |
+| GET | `/api/v1/prestamos/mios?socio_id=` | Préstamos del socio (sin auth todavía, `?socio_id=` hasta implementar `get_current_user`) |
+| GET | `/api/v1/prestamos/vencidos` | Préstamos en estado VENCIDO |
+| PUT | `/api/v1/prestamos/{id}/devolucion?sede_id=&responsable_devolucion_id=` | Cierra préstamo; aplica sanción por retraso si la hay; si hay reserva más vieja de ese libro en otra sede, encola el ejemplar en un remito `CREADO` (o lo crea) rumbo a esa sede y la reserva queda `EN_TRANSITO`; si la reserva es en la misma sede, la asigna (`LISTA_PARA_RETIRO`) |
+| PUT | `/api/v1/prestamos/{id}/renovacion` | Extiende `fecha_vencimiento` 15 días; bloqueado si está vencido o hay reserva esperando ese libro |
+| POST | `/api/v1/remitos` | Crea un remito con ejemplares (`responsable_creacion_id` en query); queda `CREADO`. `numero_remito` opcional: si no viene, el backend lo autogenera `R-YYYYMMDD-NNN` |
+| GET | `/api/v1/remitos/de-despacho?sede_id=` | Tablero: remitos `CREADO` (filtrable por sede de origen) con `ejemplares_count` |
+| GET | `/api/v1/remitos/de-recepcion?sede_id=` | Tablero: remitos `EN_TRANSITO` (filtrable por sede de destino) con `ejemplares_count` |
+| GET | `/api/v1/remitos/con-incidencia?sede_id=` | Tablero: remitos `CON_INCIDENCIA` (filtrable por sede de destino) con `ejemplares_count` |
+| GET | `/api/v1/remitos/{id}` | Detalle del remito (incluye `ejemplares[]` con info para validar en mostrador) |
+| PUT | `/api/v1/remitos/{id}/despacho?responsable_despacho_id=` | Despacho: pasa a `EN_TRANSITO`, `fecha_despacho=hoy`, ejemplares a `EN_TRANSITO` |
+| PUT | `/api/v1/remitos/{id}/recepcion?responsable_recepcion_id=&observaciones=` · body opcional `[{"ejemplar_id":n,"estado":"EN_REPARACION"\|"INUTILIZABLE"}]` | Recepción: pasa a `RECIBIDO` (o `CON_INCIDENCIA` si hay body de incidencias), actualiza `sede_actual` de cada ejemplar, asigna reservas si corresponde (reserva pre-asignada a un ejemplar dañado vuelve a `PENDIENTE`) |
 | GET | `/api/v1/ejemplares/disponibles?libro_id=&sede_id=` | Consulta de disponibilidad filtrada por sede actual |
 | GET | `/api/v1/ejemplares/por-libro/{id}` | Todos los ejemplares de un libro |
 | POST | `/api/v1/ejemplares` | Alta de ejemplar físico (código único) |
