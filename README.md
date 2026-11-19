@@ -102,6 +102,7 @@ TP_DAO_G7/
 
 - `/docs` — Swagger UI generado por FastAPI. `/openapi.json` — spec OpenAPI.
 - Versionado: todas las rutas de negocio cuelgan de `/api/v1/<recurso>` (`/api/v1/libros`, `/api/v1/prestamos`, ...). Cambios incompatibles a `v2` en el futuro.
+- **Seed de catálogo masivo (una sola corrida, opcional)**: con `GOOGLE_BOOKS_API_KEY` en `backend/.env`, después de `python -m app.seeds`, ejecutar `python -m app.seed_catalogo_google`. Consulta Google Books por título/autor (108 títulos clásicos/latinoamericanos/españoles/universales, incluye los 8 de Harry Potter), crea libros (dedup por ISBN o nombre) + autores, y 3 ejemplares por libro (1 por sede). Idempotente.
 - CORS: abierto a `localhost:5173`/`5174` para el frontend; ajustar `allow_origins` en `app/main.py` al deployear.
 
 ## Arquitectura
