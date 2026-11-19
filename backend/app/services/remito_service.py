@@ -26,10 +26,12 @@ from datetime import date
 
 from sqlalchemy.orm import Session
 
-from app.dtos.remito_dto import RemitoCreate
+from app.services.reserva_service import asignar_ejemplar_a_reserva_mas_vieja
+
+from app.dtos.remito_dto import EjemplarEnRemitoDTO, RemitoCreate, RemitoDetalleDTO, RemitoListadoDTO
 from app.exceptions import RemitoNoEncontrado
 from app.models.ejemplar import Ejemplar
-from app.models.enums import EstadoEjemplar, EstadoRemito
+from app.models.enums import EstadoEjemplar, EstadoRemito, EstadoReserva
 from app.models.remito import Remito
 from app.repositories.ejemplar_repository import EjemplarRepository
 from app.repositories.remito_repository import RemitoRepository
@@ -48,6 +50,66 @@ ESTADOS_TRANSFERIBLES = (EstadoEjemplar.DISPONIBLE, EstadoEjemplar.RESERVADO)
 ESTADOS_INCIDENCIA = (EstadoEjemplar.EN_REPARACION, EstadoEjemplar.INUTILIZABLE)
 
 
+def generar_numero_remito(session: Session, hoy: date | None = None) -> str:
+    """Genera un R-YYYYMMDD-NNN libre, incrementando el sufijo hasta encontrar hueco."""
+    hoy = hoy or date.today()
+    base = hoy.strftime("R-%Y%m%d-")
+    for sufijo in range(1, 1000):
+        numero = f"{base}{sufijo:03d}"
+        if not remito_repo.existe_numero(session, numero):
+            return numero
+    raise ValueError(f"No hay números de remito libres para hoy ({base}). Reporte el problema.")
+
+
+def to_detalle(session: Session, remito_id: int) -> RemitoDetalleDTO:
+    """Remito con ejemplares, sedes y responsables (para la pantalla de detalle)."""
+    remito = _get_remito(session, remito_id)
+    return _to_detalle_dto(remito)
+
+
+def _to_detalle_dto(remito: Remito) -> RemitoDetalleDTO:
+    """Arma el DTO con la lista de ejemplares embebida (info necesaria para validar despacho/recepción)."""
+    return RemitoDetalleDTO(
+        id=remito.id,
+        numero_remito=remito.numero_remito,
+        motivo_traslado=remito.motivo_traslado,
+        estado=remito.estado,
+        observaciones=remito.observaciones,
+        sede_origen_id=remito.sede_origen_id,
+        sede_destino_id=remito.sede_destino_id,
+        responsable_creacion_id=remito.responsable_creacion_id,
+        responsable_despacho_id=remito.responsable_despacho_id,
+        responsable_recepcion_id=remito.responsable_recepcion_id,
+        fecha_creacion=remito.fecha_creacion,
+        fecha_despacho=remito.fecha_despacho,
+        fecha_recepcion=remito.fecha_recepcion,
+        ejemplares=[
+            EjemplarEnRemitoDTO(
+                id=e.id,
+                codigo_inventario=e.codigo_inventario,
+                descripcion_fisica=e.descripcion_fisica,
+                libro_nombre=e.libro.nombre,
+            )
+            for e in remito.ejemplares
+        ],
+    )
+
+
+def _to_listado_dto(remito: Remito) -> RemitoListadoDTO:
+    return RemitoListadoDTO(
+        id=remito.id,
+        numero_remito=remito.numero_remito,
+        motivo_traslado=remito.motivo_traslado,
+        estado=remito.estado,
+        sede_origen_id=remito.sede_origen_id,
+        sede_destino_id=remito.sede_destino_id,
+        ejemplares_count=len(remito.ejemplares),
+        fecha_creacion=remito.fecha_creacion,
+        fecha_despacho=remito.fecha_despacho,
+        fecha_recepcion=remito.fecha_recepcion,
+    )
+
+
 # --------------------------------------------------------------------- operaciones
 
 
@@ -55,12 +117,13 @@ def crear_remito(session: Session, datos: RemitoCreate, usuario_id: int) -> Remi
     """Arma un remito en estado CREADO con los ejemplares indicados.
 
     `usuario_id` es quien lo crea (sale del usuario logueado, no del body).
-    Valida: número único, origen distinto de destino, ambas sedes activas y que
-    cada ejemplar exista, esté DISPONIBLE/RESERVADO, esté en la sede de origen
+    Valida: número único (o lo autogenera `R-YYYYMMDD-NNN` si no viene), origen distinto de destino,
+    ambas sedes activas y que cada ejemplar exista, esté DISPONIBLE/RESERVADO, esté en la sede de origen
     y no viaje ya en otro remito abierto.
     """
-    if remito_repo.existe_numero(session, datos.numero_remito):
-        raise ValueError(f"Ya existe el remito {datos.numero_remito}.")
+    numero = (datos.numero_remito or "").strip() or generar_numero_remito(session)
+    if remito_repo.existe_numero(session, numero):
+        raise ValueError(f"Ya existe el remito {numero}.")
     if datos.sede_origen_id == datos.sede_destino_id:
         raise ValueError("La sede de origen y la de destino no pueden ser la misma.")
     if not datos.ejemplar_ids:
@@ -73,7 +136,7 @@ def crear_remito(session: Session, datos: RemitoCreate, usuario_id: int) -> Remi
     _validar_ejemplares_transferibles(session, ejemplares, datos.sede_origen_id)
 
     remito = Remito(
-        numero_remito=datos.numero_remito,
+        numero_remito=numero,
         motivo_traslado=datos.motivo_traslado,
         observaciones=datos.observaciones,
         estado=EstadoRemito.CREADO,
@@ -83,6 +146,37 @@ def crear_remito(session: Session, datos: RemitoCreate, usuario_id: int) -> Remi
         ejemplares=ejemplares,  # SQLAlchemy genera las filas de remito_ejemplar
     )
     return remito_repo.add(session, remito)
+
+
+def agregar_ejemplares(session: Session, remito_id: int, ejemplar_ids: list[int]) -> Remito:
+    """Agrega ejemplares a un remito en estado CREADO.
+
+    - Incluye ejemplares que viajan a otra sede (reserva en otra sede, etc.).
+    - Valida que el remito exista y esté CREADO.
+    - Descarta los ejemplares que ya están en este remito.
+    - Son validos: existen, están en la sede de origen, están en estado DISPONIBLE/RESERVADO
+      y no viajan ya en otro remito abierto.
+    """
+    remito = _get_remito(session, remito_id)
+    _validar_estado(remito, EstadoRemito.CREADO, "agregar ejemplares")
+
+    if not ejemplar_ids:
+        raise ValueError("No se indicaron ejemplares para agregar.")
+    if len(set(ejemplar_ids)) != len(ejemplar_ids):
+        raise ValueError(f"Hay ejemplares repetidos en {ejemplar_ids}.")
+
+    ya = {e.id for e in remito.ejemplares}
+    ejemplar_ids = [eid for eid in ejemplar_ids if eid not in ya]
+    if not ejemplar_ids:
+        raise ValueError(f"Todos los ejemplares indicados ya están en el remito {remito.numero_remito}.")
+
+    ejemplares = _buscar_ejemplares(session, ejemplar_ids)
+    _validar_ejemplares_transferibles(
+        session, ejemplares, remito.sede_origen_id, excluir_remito_id=remito.id
+    )
+    remito.ejemplares = remito.ejemplares + ejemplares
+    session.flush()
+    return remito
 
 
 def despachar(session: Session, remito_id: int, usuario_id: int) -> Remito:
@@ -119,14 +213,13 @@ def recibir(
     """EN_TRANSITO -> RECIBIDO (o CON_INCIDENCIA si se informa algún problema).
 
     - Todos los ejemplares quedan en la sede de destino (inventario flotante).
-    - Si un ejemplar tiene una reserva vigente asignada queda RESERVADO; si no, DISPONIBLE.
+    - Si un ejemplar no llegó con incidencia, se busca la reserva más vieja (FIFO global)
+      en estado PENDIENTE/EN_TRANSITO para ese libro, misma sede: se asigna
+      → LISTA_PARA_RETIRO, ventana de retiro de 2 días hábiles.
+      Si la reserva es en otra sede, pasa EN_TRANSITO esperando función que la atienda.
     - `incidencias` = {ejemplar_id: EN_REPARACION | INUTILIZABLE} para los que llegaron
       dañados o destruidos. Esos quedan en ese estado y el remito pasa a CON_INCIDENCIA.
     - `observaciones` se agrega a las del remito (p. ej. "tapa rota del E-0012").
-
-    Ojo: esto NO cambia el estado de las reservas (EN_CAMINO -> LISTA_PARA_RETIRO,
-    plazo de 48 hs, aviso al socio). Eso le toca a reserva_service.llegada_a_sede(),
-    que se tiene que llamar con la misma session después de recibir.
     """
     incidencias = dict(incidencias or {})
     remito = _get_remito(session, remito_id)
@@ -142,17 +235,24 @@ def recibir(
             f"Estado de incidencia inválido para {invalidos}: solo EN_REPARACION o INUTILIZABLE."
         )
 
+    hoy = date.today()
     for ejemplar in remito.ejemplares:
         ejemplar.sede_actual_id = remito.sede_destino_id
         if ejemplar.id in incidencias:
             ejemplar.estado = incidencias[ejemplar.id]
-        elif reserva_repo.get_vigente_de_ejemplar(session, ejemplar.id) is not None:
-            ejemplar.estado = EstadoEjemplar.RESERVADO
-        else:
-            ejemplar.estado = EstadoEjemplar.DISPONIBLE
+            # Si el ejemplar estaba preasignado a una reserva, la liberamos para que
+            # el siguiente ejemplar disponible la atienda (el dañado no sirve).
+            reserva = reserva_repo.get_vigente_de_ejemplar(session, ejemplar.id)
+            if reserva is not None:
+                reserva.estado = EstadoReserva.PENDIENTE
+                reserva.ejemplar_id = None
+                reserva.fecha_asignacion = None
+                reserva.fecha_vencimiento_retiro = None
+            continue
+        asignar_ejemplar_a_reserva_mas_vieja(session, ejemplar, hoy, usuario_id=usuario_id)
 
     remito.estado = EstadoRemito.CON_INCIDENCIA if incidencias else EstadoRemito.RECIBIDO
-    remito.fecha_recepcion = date.today()
+    remito.fecha_recepcion = hoy
     remito.responsable_recepcion_id = usuario_id
     if observaciones:
         remito.observaciones = (
@@ -166,9 +266,9 @@ def recibir(
 # ------------------------------------------------------------------------ consultas
 
 
-def obtener_remito(session: Session, remito_id: int) -> Remito:
+def obtener_remito(session: Session, remito_id: int) -> RemitoDetalleDTO:
     """Remito con ejemplares, sedes y responsables (para la pantalla de detalle)."""
-    return _get_remito(session, remito_id)
+    return to_detalle(session, remito_id)
 
 
 def historial_de_ejemplar(session: Session, ejemplar_id: int) -> list[Remito]:
@@ -176,19 +276,19 @@ def historial_de_ejemplar(session: Session, ejemplar_id: int) -> list[Remito]:
     return remito_repo.historial_de_ejemplar(session, ejemplar_id)
 
 
-def listar_pendientes_de_despacho(session: Session, sede_id: int | None = None) -> list[Remito]:
+def listar_pendientes_de_despacho(session: Session, sede_id: int | None = None) -> list[RemitoListadoDTO]:
     """Remitos CREADO que tiene que despachar la sede (de origen) indicada."""
-    return remito_repo.pendientes_de_despacho(session, sede_origen_id=sede_id)
+    return [_to_listado_dto(r) for r in remito_repo.pendientes_de_despacho(session, sede_origen_id=sede_id)]
 
 
-def listar_pendientes_de_recepcion(session: Session, sede_id: int | None = None) -> list[Remito]:
+def listar_pendientes_de_recepcion(session: Session, sede_id: int | None = None) -> list[RemitoListadoDTO]:
     """Remitos EN_TRANSITO que tiene que recibir la sede (de destino) indicada."""
-    return remito_repo.pendientes_de_recepcion(session, sede_destino_id=sede_id)
+    return [_to_listado_dto(r) for r in remito_repo.pendientes_de_recepcion(session, sede_destino_id=sede_id)]
 
 
-def listar_con_incidencia(session: Session, sede_id: int | None = None) -> list[Remito]:
+def listar_con_incidencia(session: Session, sede_id: int | None = None) -> list[RemitoListadoDTO]:
     """Remitos que llegaron con algún ejemplar dañado (filtrable por sede de destino)."""
-    return remito_repo.listar(session, [EstadoRemito.CON_INCIDENCIA], sede_destino_id=sede_id)
+    return [_to_listado_dto(r) for r in remito_repo.listar(session, [EstadoRemito.CON_INCIDENCIA], sede_destino_id=sede_id)]
 
 
 # ------------------------------------------------------------------------- helpers
