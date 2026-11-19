@@ -11,7 +11,7 @@ from app.repositories.base_repository import BaseRepository
 # Reservas que siguen "vivas" (todavia pueden terminar en prestamo).
 ESTADOS_VIGENTES = (
     EstadoReserva.PENDIENTE,
-    EstadoReserva.EN_CAMINO,
+    EstadoReserva.EN_TRANSITO,
     EstadoReserva.LISTA_PARA_RETIRO,
 )
 
@@ -72,21 +72,48 @@ class ReservaRepository(BaseRepository[Reserva]):
         return list(session.scalars(stmt))
 
     def primera_en_cola(self, session: Session, libro_id: int) -> Reserva | None:
-        """La siguiente reserva a la que hay que asignarle un ejemplar."""
+        """Primera reserva PENDIENTE para ese libro (toda la red, FIFO)."""
+        return self.primera_por_estado(session, libro_id, (EstadoReserva.PENDIENTE,))
+
+    def primera_por_estado(
+        self, session: Session, libro_id: int, estados: tuple[EstadoReserva, ...]
+    ) -> Reserva | None:
+        """Primera reserva para `libro_id` que coincida en alguno de `estados`, FIFO."""
         stmt = (
             select(Reserva)
-            .where(Reserva.libro_id == libro_id, Reserva.estado == EstadoReserva.PENDIENTE)
+            .where(Reserva.libro_id == libro_id, Reserva.estado.in_(estados))
+            .order_by(*_orden_fifo())
+            .limit(1)
+        )
+        return session.scalars(stmt).first()
+
+    def primera_en_sede(self, session: Session, libro_id: int, sede_retiro_id: int) -> Reserva | None:
+        """Primera reserva pendiente o en tránsito para `libro_id` cuyo retiro es en `sede_retiro_id` (FIFO).
+
+        Se consideran ambas estados desde que un ejemplar puede estar disponible o viajando
+        (algunos ejemplares vendrán asignados internamente antes de que el remito arribe).
+        Asigna al más viejo del par por fecha_reserva + id.
+        """
+        stmt = (
+            select(Reserva)
+            .where(
+                Reserva.libro_id == libro_id,
+                Reserva.sede_retiro_id == sede_retiro_id,
+                Reserva.estado.in_((EstadoReserva.PENDIENTE, EstadoReserva.EN_TRANSITO)),
+            )
             .order_by(*_orden_fifo())
             .limit(1)
         )
         return session.scalars(stmt).first()
 
     def get_vigente_de_ejemplar(self, session: Session, ejemplar_id: int) -> Reserva | None:
-        """La reserva que tiene asignado este ejemplar (EN_CAMINO o LISTA_PARA_RETIRO).
-        La usa el service al recibir un remito para saber si el ejemplar tiene dueño."""
+        """La reserva que tiene asignado este ejemplar (EN_TRANSITO o LISTA_PARA_RETIRO).
+
+    Se usa al recibir un remito para saber si el ejemplar tiene dueño.
+    """
         stmt = select(Reserva).where(
             Reserva.ejemplar_id == ejemplar_id,
-            Reserva.estado.in_((EstadoReserva.EN_CAMINO, EstadoReserva.LISTA_PARA_RETIRO)),
+            Reserva.estado.in_((EstadoReserva.EN_TRANSITO, EstadoReserva.LISTA_PARA_RETIRO)),
         )
         return session.scalars(stmt).first()
 
