@@ -13,11 +13,9 @@ from datetime import date
 
 from sqlalchemy.orm import Session
 
-from app.models.enums import EstadoEjemplar, EstadoRemito, EstadoReserva, MotivoTraslado
-from sqlalchemy import select
+from app.models.enums import EstadoEjemplar, EstadoReserva
 
 from app.models.ejemplar import Ejemplar
-from app.models.remito import Remito
 from app.models.reserva import Reserva
 from app.repositories.ejemplar_repository import EjemplarRepository
 from app.repositories.reserva_repository import ReservaRepository
@@ -27,41 +25,6 @@ from app.utils.fechas import sumar_dias_habiles
 ejemplar_repo = EjemplarRepository()
 reserva_repo = ReservaRepository()
 remito_repo = RemitoRepository()
-
-
-def _encolumnar_en_remito(
-    session: Session,
-    ejemplar: Ejemplar,
-    reserva: Reserva,
-    hoy: date,
-    usuario_id: int,
-) -> Remito:
-    """Encola el ejemplar en un remito CREADO hacia la sede retirar de `reserva.sede_retiro_id`.
-
-    Si no existe uno, crea uno nuevo con `motivo_traslado=IDA` y número autogenerado.
-    Devuelve el remito elegido (para despacho más adelante).
-    """
-    from app.services.remito_service import agregar_ejemplares, crear_remito
-    from app.dtos.remito_dto import RemitoCreate
-
-    candidatos = [
-        r for r in remito_repo.pendientes_de_despacho(session, sede_origen_id=ejemplar.sede_actual_id)
-        if r.sede_destino_id == reserva.sede_retiro_id and r.estado == EstadoRemito.CREADO
-    ]
-    if candidatos:
-        return agregar_ejemplares(session, candidatos[0].id, [ejemplar.id])
-
-    return crear_remito(
-        session,
-        RemitoCreate(
-            # sin numero_remito: lo autogenera el service de remitos (R-YYYYMMDD-NNN)
-            motivo_traslado=MotivoTraslado.IDA,
-            sede_origen_id=ejemplar.sede_actual_id,
-            sede_destino_id=reserva.sede_retiro_id,
-            ejemplar_ids=[ejemplar.id],
-        ),
-        usuario_id=usuario_id,
-    )
 
 
 def asignar_ejemplar_a_reserva_mas_vieja(
@@ -94,7 +57,12 @@ def asignar_ejemplar_a_reserva_mas_vieja(
     if reserva.sede_retiro_id != ejemplar.sede_actual_id:
         if usuario_id is None:
             raise ValueError("usuario_id requerido para encolumnar en remito interbibliotecario")
-        _encolumnar_en_remito(session, ejemplar, reserva, hoy, usuario_id)
+        # import diferido: remito_service importa de este módulo (asignar_ejemplar_a_reserva_mas_vieja)
+        from app.services.remito_service import encolar_ejemplar_en_ruta
+
+        encolar_ejemplar_en_ruta(
+            session, ejemplar, sede_destino_id=reserva.sede_retiro_id, usuario_id=usuario_id
+        )
         reserva.estado = EstadoReserva.EN_TRANSITO
         reserva.ejemplar_id = ejemplar.id
         ejemplar.estado = EstadoEjemplar.RESERVADO

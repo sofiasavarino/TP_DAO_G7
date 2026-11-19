@@ -31,7 +31,7 @@ from app.services.reserva_service import asignar_ejemplar_a_reserva_mas_vieja
 from app.dtos.remito_dto import EjemplarEnRemitoDTO, RemitoCreate, RemitoDetalleDTO, RemitoListadoDTO
 from app.exceptions import RemitoNoEncontrado
 from app.models.ejemplar import Ejemplar
-from app.models.enums import EstadoEjemplar, EstadoRemito, EstadoReserva
+from app.models.enums import EstadoEjemplar, EstadoRemito, EstadoReserva, MotivoTraslado
 from app.models.remito import Remito
 from app.repositories.ejemplar_repository import EjemplarRepository
 from app.repositories.remito_repository import RemitoRepository
@@ -177,6 +177,38 @@ def agregar_ejemplares(session: Session, remito_id: int, ejemplar_ids: list[int]
     remito.ejemplares = remito.ejemplares + ejemplares
     session.flush()
     return remito
+
+
+def encolar_ejemplar_en_ruta(
+    session: Session,
+    ejemplar: Ejemplar,
+    sede_destino_id: int,
+    usuario_id: int,
+    motivo_traslado: MotivoTraslado = MotivoTraslado.IDA,
+) -> Remito:
+    """Encola el ejemplar en el remito CREADO que sale de su sede hacia `sede_destino_id`.
+
+    Si ya hay uno abierto para la ruta, le agrega el ejemplar; si no, crea uno con
+    número autogenerado (`R-YYYYMMDD-NNN`). Devuelve el remito elegido.
+    """
+    candidatos = [
+        r
+        for r in remito_repo.pendientes_de_despacho(session, sede_origen_id=ejemplar.sede_actual_id)
+        if r.sede_destino_id == sede_destino_id
+    ]
+    if candidatos:
+        return agregar_ejemplares(session, candidatos[0].id, [ejemplar.id])
+
+    return crear_remito(
+        session,
+        RemitoCreate(
+            motivo_traslado=motivo_traslado,
+            sede_origen_id=ejemplar.sede_actual_id,
+            sede_destino_id=sede_destino_id,
+            ejemplar_ids=[ejemplar.id],
+        ),
+        usuario_id=usuario_id,
+    )
 
 
 def despachar(session: Session, remito_id: int, usuario_id: int) -> Remito:
