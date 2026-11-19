@@ -13,6 +13,19 @@ class ReservaCreate(BaseModel):
     sede_retiro_id: int
 
 
+class ReservaEtaDTO(BaseModel):
+    """Vista previa para el socio ANTES de reservar: ¿lo tenés ya o para cuándo?
+
+    `eta` es la fecha mínima estimada (o null si no hay nada estimable).
+    `disponible_ahora` indica si hay un ejemplar en la sede de retiro hoy mismo.
+    """
+
+    libro_id: int
+    sede_retiro_id: int
+    disponible_ahora: bool
+    eta: date | None = None
+
+
 class ReservaDTO(BaseModel):
     """Salida de ficha/listado de reservas (ventana de retiro por 48 hs)."""
 

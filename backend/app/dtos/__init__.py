@@ -4,7 +4,7 @@ from app.dtos.ejemplar_dto import EjemplarCreate, EjemplarDTO, EjemplarEstadoUpd
 from app.dtos.libro_dto import LibroCreate, LibroDTO, LibroListadoDTO
 from app.dtos.notificacion_dto import NotificacionCreate, NotificacionDTO
 from app.dtos.prestamo_dto import PrestamoCreate, PrestamoDTO, PrestamoListadoDTO
-from app.dtos.reserva_dto import ReservaCreate, ReservaDTO
+from app.dtos.reserva_dto import ReservaCreate, ReservaDTO, ReservaEtaDTO
 from app.dtos.remito_dto import EjemplarEnRemitoDTO, IncidenciaItemDTO, RemitoCreate, RemitoDetalleDTO, RemitoListadoDTO
 from app.dtos.resena_dto import ResenaCreate, ResenaDTO
 from app.dtos.rol_dto import RolDTO
@@ -20,7 +20,7 @@ __all__ = [
     "LibroCreate", "LibroDTO", "LibroListadoDTO",
     "NotificacionCreate", "NotificacionDTO",
     "PrestamoCreate", "PrestamoDTO", "PrestamoListadoDTO",
-    "ReservaCreate", "ReservaDTO",
+    "ReservaCreate", "ReservaDTO", "ReservaEtaDTO",
     "RemitoCreate", "RemitoDetalleDTO", "RemitoListadoDTO", "EjemplarEnRemitoDTO", "IncidenciaItemDTO",
     "ResenaCreate", "ResenaDTO",
     "RolDTO",
