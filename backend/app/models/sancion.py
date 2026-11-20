@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 from sqlalchemy import Enum, ForeignKey, Numeric, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.models.base import Base
+from app.models.base import Base, BajaLogicaMixin
 from app.models.enums import TipoSancion
 
 if TYPE_CHECKING:
@@ -12,11 +12,12 @@ if TYPE_CHECKING:
     from app.models.socio import Socio
 
 
-class Sancion(Base):
+class Sancion(Base, BajaLogicaMixin):
     __tablename__ = "sancion"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     tipo: Mapped[TipoSancion] = mapped_column(Enum(TipoSancion, native_enum=False))
+    activo: Mapped[bool] = mapped_column(default=True)
     fecha_inicio: Mapped[date] = mapped_column(default=date.today)
     fecha_fin: Mapped[date | None]
     motivo: Mapped[str] = mapped_column(String(300))
