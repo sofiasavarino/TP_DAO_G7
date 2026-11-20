@@ -84,6 +84,10 @@ TP_DAO_G7/
 | DELETE | `/api/v1/reservas/{id}?responsable_cancelacion_id=` | Cancelación de reserva viva (`PENDIENTE`/`EN_TRANSITO`/`LISTA_PARA_RETIRO`) → `CANCELADA`. Si el ejemplar pre-asignado no viaja en un remito, se libera y se sirve la siguiente reserva FIFO; si viaja, se reasigna al llegar al destino. `CUMPLIDA`/`VENCIDA`/`CANCELADA` → 400 |
 | POST | `/api/v1/reservas/{id}/retira?sede_id=&responsable_retiro_id=&tipo=LOCAL` | El socio retira la reserva `LISTA_PARA_RETIRO` (dentro de las 48hs hábiles): reserva → `CUMPLIDA` y nace el préstamo real (`P-NNNNNN`, `DIAS_PRESTAMO=15`); falla si no está en LISTA_PARA_RETIRO, la ventana venció, la sede no es la de retiro, o el socio está sancionado/sin cupo |
 | GET | `/api/v1/reservas/eta?libro_id=&sede_retiro_id=` | Vista previa SIN crear la reserva: `disponible_ahora` y `eta` (fecha mínima estimada o null). Para que el front muestre "Podés esperarlo para…" antes de reservar | |
+| POST | `/api/v1/sanciones?responsable_id=` | Alta de sanción manual sobre un préstamo (`MULTA` con `monto` o `SUSPENSION` con `dias_suspension`); valida socio activo y que el préstamo no tenga ya sanción |
+| GET | `/api/v1/sanciones?socio_id=` | Sanciones vigentes hoy (filtrables por socio) |
+| GET | `/api/v1/sanciones/{socio_id}` | Sanciones vigentes de un socio |
+| PUT | `/api/v1/sanciones/{id}/levantar?responsable_id=` | Levanta la sanción (marca inactiva + `fecha_fin=hoy`); el socio vuelve a poder reservar/prestar |
 | GET | `/api/v1/prestamos/mios?socio_id=` | Préstamos del socio (sin auth todavía, `?socio_id=` hasta implementar `get_current_user`) |
 | GET | `/api/v1/prestamos/vencidos` | Préstamos en estado VENCIDO |
 | PUT | `/api/v1/prestamos/{id}/devolucion?sede_id=&responsable_devolucion_id=` | Cierra préstamo; aplica sanción por retraso si la hay; si hay reserva más vieja de ese libro en otra sede, encola el ejemplar en un remito `CREADO` (o lo crea) rumbo a esa sede y la reserva queda `EN_TRANSITO`; si la reserva es en la misma sede, la asigna (`LISTA_PARA_RETIRO`) |
