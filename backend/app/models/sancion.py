@@ -17,7 +17,6 @@ class Sancion(Base, BajaLogicaMixin):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     tipo: Mapped[TipoSancion] = mapped_column(Enum(TipoSancion, native_enum=False))
-    activo: Mapped[bool] = mapped_column(default=True)
     fecha_inicio: Mapped[date] = mapped_column(default=date.today)
     fecha_fin: Mapped[date | None]
     motivo: Mapped[str] = mapped_column(String(300))
