@@ -6,6 +6,7 @@ from app.controllers.libro_controller import libro_router
 from app.controllers.prestamo_controller import prestamo_router
 from app.controllers.remito_controller import remito_router
 from app.controllers.reserva_controller import reserva_router
+from app.controllers.sancion_controller import sancion_router
 
 API_PREFIX = "/api/v1"
 
@@ -24,6 +25,7 @@ app.include_router(ejemplar_router, prefix=API_PREFIX)
 app.include_router(prestamo_router, prefix=API_PREFIX)
 app.include_router(remito_router, prefix=API_PREFIX)
 app.include_router(reserva_router, prefix=API_PREFIX)
+app.include_router(sancion_router, prefix=API_PREFIX)
 
 
 @app.get("/health")
