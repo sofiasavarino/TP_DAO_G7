@@ -96,7 +96,7 @@ def levantar(session: Session, sancion_id: int, usuario_id: int) -> Sancion:
     Devuelve la sanción actualizada. El socio vuelve a poder reservar/prestar
     inmediatamente (ya no tiene sanción vigente).
     """
-    sancion = sancion_repo.get_by_id(session, sancion_id)
+    sancion = sancion_repo.get_by_id(session, sancion_id, incluir_inactivos=True)
     if sancion is None:
         raise ValueError(f"sanción {sancion_id} no existe")
     if not sancion.activo:
