@@ -8,10 +8,11 @@ from __future__ import annotations
 
 from sqlalchemy.orm import Session
 
-from app.dtos.notificacion_dto import NotificacionCreate
+from app.dtos.notificacion_dto import NotificacionCreate, NotificacionDTO
 from app.models.enums import NotificacionTipo
 from app.models.notificacion import Notificacion
 from app.models.socio import Socio
+from app.repositories.notificacion_repository import NotificacionRepository
 from app.repositories.usuario_repository import UsuarioRepository
 from app.notifications.event_manager import EventManager
 from app.notifications.listeners import (
@@ -22,6 +23,7 @@ from app.notifications.listeners import (
 )
 
 usuario_repo = UsuarioRepository()
+notificacion_repo = NotificacionRepository()
 
 
 class NotificacionService:
@@ -37,6 +39,45 @@ class NotificacionService:
     def subscribe(self, tipo: NotificacionTipo, listener: EventListener) -> None:
         """Permite agregar listeners por tipo de evento en runtime (como en el ejemplo)."""
         self.events.subscribe(tipo.value, listener)
+
+    # ------------------------------------------------------------------ consultas
+
+    def _validar_usuario(self, session: Session, usuario_id: int) -> None:
+        if usuario_repo.get_by_id(session, usuario_id, incluir_inactivos=True) is None:
+            raise ValueError(f"usuario {usuario_id} no existe")
+
+    def listar_historial(self, session: Session, usuario_id: int) -> list[NotificacionDTO]:
+        """Todas las notificaciones del usuario, de la más nueva a la más vieja."""
+        self._validar_usuario(session, usuario_id)
+        return [
+            NotificacionDTO.model_validate(n)
+            for n in notificacion_repo.listar_por_usuario(session, usuario_id)
+        ]
+
+    def listar_no_leidas(self, session: Session, usuario_id: int) -> list[NotificacionDTO]:
+        """Solo las no leídas (bandeja)."""
+        self._validar_usuario(session, usuario_id)
+        return [
+            NotificacionDTO.model_validate(n)
+            for n in notificacion_repo.listar_por_usuario(session, usuario_id, solo_no_leidas=True)
+        ]
+
+    def contar_no_leidas(self, session: Session, usuario_id: int) -> int:
+        """Para el globito de la campanita del frontend."""
+        self._validar_usuario(session, usuario_id)
+        return notificacion_repo.contar_no_leidas(session, usuario_id)
+
+    def marcar_leida(self, session: Session, notificacion_id: int, usuario_id: int) -> Notificacion:
+        """Marca una notificación como leída. Valida que exista y sea del usuario."""
+        notificacion = notificacion_repo.get_by_id(session, notificacion_id)
+        if notificacion is None:
+            raise ValueError(f"notificación {notificacion_id} no existe")
+        if notificacion.usuario_id != usuario_id:
+            raise ValueError(
+                f"la notificación {notificacion_id} no pertenece al usuario {usuario_id}"
+            )
+        notificacion_repo.marcar_leida(session, notificacion_id)
+        return notificacion
 
     def notificar_a_socio(
         self, session: Session, socio: Socio, tipo: NotificacionTipo, titulo: str, cuerpo: str

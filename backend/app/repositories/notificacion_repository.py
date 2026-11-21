@@ -1,6 +1,9 @@
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session
+from typing import Any, cast
 
+from sqlalchemy import select, update
+from sqlalchemy.engine import CursorResult
 from app.models.notificacion import Notificacion
 from app.repositories.base_repository import BaseRepository
 
@@ -33,4 +36,14 @@ class NotificacionRepository(BaseRepository[Notificacion]):
             .where(Notificacion.usuario_id == usuario_id, Notificacion.leida.is_(False))
             .values(leida=True)
         )
-        return session.execute(stmt).rowcount or 0
+        resultado = cast(CursorResult[Any], session.execute(stmt))
+        return resultado.rowcount or 0
+
+    def marcar_leida(self, session: Session, notificacion_id: int) -> Notificacion | None:
+        """Marca UNA notificación como leída (si ya estaba, no toca nada)."""
+        notificacion = self.get_by_id(session, notificacion_id)
+        if notificacion is None or notificacion.leida:
+            return notificacion
+        notificacion.leida = True
+        session.flush()
+        return notificacion
