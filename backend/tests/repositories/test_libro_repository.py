@@ -129,10 +129,10 @@ def test_listar_catalogo_filtrado_orden_populares(session):
     rol = Rol(nombre="Socio", descripcion="x")
     session.add(rol)
     session.flush()
-    u = Usuario(nombre_usuario="test_orden", hash="x", rol_id=rol.id, sede_id=sede.id)
+    u = Usuario(nombre_usuario="test_orden", email="t@t.com", hash="x", rol_id=rol.id, sede_id=sede.id)
     session.add(u)
     session.flush()
-    socio = Socio(nombre="T", apellido="T", dni="99999998", email="t@t.com", usuario_id=u.id)
+    socio = Socio(nombre="T", apellido="T", dni="99999998", usuario_id=u.id)
     session.add(socio)
     session.flush()
     session.add(Prestamo(

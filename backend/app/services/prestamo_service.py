@@ -19,6 +19,7 @@ from app.repositories.reserva_repository import ReservaRepository
 from app.repositories.sancion_repository import SancionRepository
 from app.repositories.socio_repository import SocioRepository
 from app.services.reserva_service import asignar_ejemplar_a_reserva_mas_vieja
+from app.services.notificacion import mensajes
 from app.utils.fechas import dias_habiles_entre
 
 DIAS_PRESTAMO = 15
@@ -175,7 +176,9 @@ def crear_sancion_por_retraso(
         socio_id=prestamo.socio_id,
         prestamo_id=prestamo.id,
     )
-    return sancion_repo.add(session, sancion)
+    sancion = sancion_repo.add(session, sancion)
+    mensajes.avisar_sancion_aplicada(session, prestamo.socio, sancion)
+    return sancion
 
 
 def devolver_prestamo(session: Session, prestamo_id: int, sede_id: int, usuario_id: int) -> Prestamo:

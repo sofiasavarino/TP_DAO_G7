@@ -19,6 +19,7 @@ class Usuario(Base, BajaLogicaMixin):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     nombre_usuario: Mapped[str] = mapped_column(String(50), unique=True)
+    email: Mapped[str] = mapped_column(String(100))
     hash: Mapped[str] = mapped_column(String(255))
     rol_id: Mapped[int] = mapped_column(ForeignKey("rol.id"))
     sede_id: Mapped[int] = mapped_column(ForeignKey("sede.id"))

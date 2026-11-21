@@ -1,0 +1,8 @@
+Hola {usuario},
+
+{titulo}
+
+{cuerpo}
+
+---
+Biblioteca Grupo 7

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, EmailStr
+from pydantic import BaseModel, ConfigDict
 
 from app.models.enums import EstadoSocio
 
@@ -9,7 +9,6 @@ class SocioCreate(BaseModel):
     nombre: str
     apellido: str
     dni: str
-    email: EmailStr
     telefono: str | None = None
 
 
@@ -22,6 +21,5 @@ class SocioDTO(BaseModel):
     nombre: str
     apellido: str
     dni: str
-    email: EmailStr
     telefono: str | None = None
     estado: EstadoSocio

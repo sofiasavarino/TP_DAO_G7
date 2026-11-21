@@ -17,6 +17,7 @@ from app.models.socio import Socio
 from app.repositories.prestamo_repository import PrestamoRepository
 from app.repositories.sancion_repository import SancionRepository
 from app.repositories.socio_repository import SocioRepository
+from app.services.notificacion import mensajes
 
 sancion_repo = SancionRepository()
 prestamo_repo = PrestamoRepository()
@@ -66,7 +67,9 @@ def crear_sancion(session: Session, datos: SancionCreate, usuario_id: int) -> Sa
         socio_id=prestamo.socio_id,
         prestamo_id=datos.prestamo_id,
     )
-    return sancion_repo.add(session, sancion)
+    sancion = sancion_repo.add(session, sancion)
+    mensajes.avisar_sancion_aplicada(session, socio, sancion)
+    return sancion
 
 
 def listar_activas(
@@ -104,4 +107,8 @@ def levantar(session: Session, sancion_id: int, usuario_id: int) -> Sancion:
     sancion.activo = False
     sancion.fecha_fin = date.today()
     session.flush()
+
+    socio = socio_repo.get_by_id(session, sancion.socio_id, incluir_inactivos=True)
+    if socio is not None:
+        mensajes.avisar_sancion_levantada(session, socio, sancion)
     return sancion

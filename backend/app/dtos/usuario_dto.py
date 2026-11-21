@@ -11,6 +11,7 @@ class UsuarioSesionDTO(BaseModel):
 
     id: int
     nombre_usuario: str
+    email: str
     activo: bool
     rol: RolDTO
     sede: SedeDTO
@@ -32,6 +33,7 @@ class UsuarioCreate(BaseModel):
     """Entrada: alta de credenciales (la crea la app, no semilla)."""
 
     nombre_usuario: str
+    email: EmailStr
     hash: str  # lo hashea el service; jamás se recibe como texto plano de la vista
     rol_id: int
     sede_id: int
