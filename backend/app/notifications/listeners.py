@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 from app.models.notificacion import Notificacion
 from app.models.usuario import Usuario
 from app.utils.despues_del_commit import despues_del_commit
-from app.utils.mail import enviar_mail, renderizar_mail
+from app.notifications.mail import enviar_mail, renderizar_mail
 
 
 @dataclass

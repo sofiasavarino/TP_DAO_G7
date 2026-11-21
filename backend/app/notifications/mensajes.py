@@ -16,7 +16,7 @@ from app.models.enums import NotificacionTipo, TipoSancion
 from app.models.reserva import Reserva
 from app.models.sancion import Sancion
 from app.models.socio import Socio
-from app.services.notificacion.service import notificacion_service
+from app.notifications.service import notificacion_service
 
 
 # ------------------------------------------------------------------------ reservas

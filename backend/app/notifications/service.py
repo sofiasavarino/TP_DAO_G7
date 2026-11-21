@@ -13,8 +13,8 @@ from app.models.enums import NotificacionTipo
 from app.models.notificacion import Notificacion
 from app.models.socio import Socio
 from app.repositories.usuario_repository import UsuarioRepository
-from app.services.notificacion.event_manager import EventManager
-from app.services.notificacion.listeners import (
+from app.notifications.event_manager import EventManager
+from app.notifications.listeners import (
     EventListener,
     MailListener,
     NotificacionEvento,

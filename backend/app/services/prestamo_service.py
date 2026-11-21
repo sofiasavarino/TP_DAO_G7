@@ -19,7 +19,7 @@ from app.repositories.reserva_repository import ReservaRepository
 from app.repositories.sancion_repository import SancionRepository
 from app.repositories.socio_repository import SocioRepository
 from app.services.reserva_service import asignar_ejemplar_a_reserva_mas_vieja
-from app.services.notificacion import mensajes
+from app.notifications import mensajes
 from app.utils.fechas import dias_habiles_entre
 
 DIAS_PRESTAMO = 15

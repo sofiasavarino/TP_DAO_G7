@@ -17,7 +17,7 @@ from app.models.socio import Socio
 from app.repositories.prestamo_repository import PrestamoRepository
 from app.repositories.sancion_repository import SancionRepository
 from app.repositories.socio_repository import SocioRepository
-from app.services.notificacion import mensajes
+from app.notifications import mensajes
 
 sancion_repo = SancionRepository()
 prestamo_repo = PrestamoRepository()

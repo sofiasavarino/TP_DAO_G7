@@ -33,7 +33,7 @@ from app.repositories.remito_repository import RemitoRepository
 from app.repositories.sancion_repository import SancionRepository
 from app.repositories.sede_repository import SedeRepository
 from app.repositories.socio_repository import SocioRepository
-from app.services.notificacion import mensajes
+from app.notifications import mensajes
 from app.utils.fechas import sumar_dias_habiles
 
 ejemplar_repo = EjemplarRepository()

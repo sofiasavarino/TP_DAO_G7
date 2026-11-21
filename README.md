@@ -60,10 +60,10 @@ TP_DAO_G7/
 | `dtos` | Objetos de transferencia con Pydantic. Son también el modelo request/response de la API (FastAPI los valida igual automáticamente). |
 | `states` | Pensado para el patrón State. Se agrega al final, solo si se termina implementando. |
 | `reports` | Reportes y estadísticas. Opcional, se agrega al final. |
-| `notifications` | Envío de notificaciones (Observer o Strategy). Opcional, se agrega al final. |
+| `notifications` | Envío de notificaciones con patrón **Observer**: `EventManager` (suscripción por tipo de evento), `EventListener`/`PersistirListener`/`MailListener`, `NotificacionService` (publisher concreto) y `mensajes.py` (qué se dice y a quién). El mail se envía después del commit vía `despues_del_commit`. |
 | `integrations/googlebooks` | Cliente HTTP de Google Books y mapper de la respuesta a `Libro` y `Autor`. Solo lo usa el service de libro. |
 | `exceptions` | Excepciones de dominio (`LimitePrestamosExcedido`, `SocioSancionado`, etc.). |
-| `utils` | Funciones auxiliares (fechas, etc.). |
+| `utils` | Funciones auxiliares (fechas, `despues_del_commit` para correr acciones recién después del commit, etc.). |
 | `tests` | Tests de services y repositories. |
 
 ## Endpoints disponibles (FastAPI + Uvicorn)
