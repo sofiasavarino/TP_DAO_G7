@@ -105,6 +105,12 @@ TP_DAO_G7/
 | GET | `/api/v1/ejemplares/disponibles?libro_id=&sede_id=` | Consulta de disponibilidad filtrada por sede actual |
 | GET | `/api/v1/ejemplares/por-libro/{id}` | Todos los ejemplares de un libro |
 | POST | `/api/v1/ejemplares` | Alta de ejemplar físico (código único) |
+| GET | `/api/v1/ejemplares?libro_id=&sede_id=&estado=` | Inventario físico (todos los estados) con libro y sedes resueltos; filtros AND por libro, sede actual y estado. Bibliotecario/Admin |
+| POST | `/api/v1/ejemplares/lote` | Alta rápida de 1..50 copias de un libro en una sede (origen = actual). Códigos `I-<sede>-<libro>`, `-2`, `-3`… o uno manual si es 1 copia. El Bibliotecario solo en su sede (403); el Administrador en cualquiera |
+| PATCH | `/api/v1/ejemplares/{id}/reparacion` | `DISPONIBLE` → `EN_REPARACION`. 409 si el estado no lo admite; 403 si un Bibliotecario lo intenta sobre un ejemplar de otra sede |
+| PATCH | `/api/v1/ejemplares/{id}/reincorporacion` | `EN_REPARACION` → `DISPONIBLE`. 409 si el estado no lo admite; 403 si un Bibliotecario lo intenta sobre un ejemplar de otra sede |
+| PATCH | `/api/v1/ejemplares/{id}/inutilizable` | `DISPONIBLE`/`EN_REPARACION` → `INUTILIZABLE` (terminal). 409 si el estado no lo admite; 403 si un Bibliotecario lo intenta sobre un ejemplar de otra sede |
+| GET | `/api/v1/sedes` | Sedes activas (para selectores). Requiere sesión |
 | PATCH | `/api/v1/ejemplares/{id}/estado` | Cambio de estado de un ejemplar |
 
 - `/docs` — Swagger UI generado por FastAPI. `/openapi.json` — spec OpenAPI.

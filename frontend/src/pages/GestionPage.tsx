@@ -2,7 +2,11 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import AdminLayout, { SECCIONES_GESTION } from '../components/admin/AdminLayout';
 import SeccionPendiente from '../components/admin/SeccionPendiente';
 import { RUTA_GESTION, RUTAS_GESTION } from '../utils/rutas';
+import EjemplaresPage from './gestion/EjemplaresPage';
 import LibrosPage from './gestion/LibrosPage';
+
+/** Secciones que ya tienen pantalla propia; el resto muestra un placeholder. */
+const IMPLEMENTADAS: string[] = [RUTAS_GESTION.catalogo, RUTAS_GESTION.ejemplares];
 
 /** Rutas hijas de /gestion/* (App.tsx ya restringe a Bibliotecario y Administrador). */
 export default function GestionPage() {
@@ -13,7 +17,8 @@ export default function GestionPage() {
       <Route element={<AdminLayout />}>
         <Route index element={<Navigate to={RUTAS_GESTION.catalogo} replace />} />
         <Route path={relativa(RUTAS_GESTION.catalogo)} element={<LibrosPage />} />
-        {SECCIONES_GESTION.filter((s) => s.to !== RUTAS_GESTION.catalogo).map((s) => (
+        <Route path={relativa(RUTAS_GESTION.ejemplares)} element={<EjemplaresPage />} />
+        {SECCIONES_GESTION.filter((s) => !IMPLEMENTADAS.includes(s.to)).map((s) => (
           <Route
             key={s.to}
             path={relativa(s.to)}
