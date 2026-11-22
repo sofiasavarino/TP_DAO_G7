@@ -34,7 +34,7 @@ El proyecto pasó de un único paquete Python suelto a un **monorepo con `backen
 | 8 | `libro.imagen_url` nueva | Columna `String(500)` NULL con el link a la portada; se llena igualmente en el alta por Google Books (autocompletable con ISBN). No estaba en el diagrama original. |
 | 9 | Namespace `/api/v1/<recurso>` | Todas las rutas de negocio pasan por env `API_PREFIX = "/api/v1"` en `app/main.py` (ver README). Health check en `/health` fuera del namespace, reservado para infra. |
 | 9.1 | Tabla `libro` | CRUD completo demostrado como patrón para copiar al resto: servicios Pydantic, resymbol layer, endpoints `Catálogo`/`Libro` + `buscar`, y Pydantic E2E. |
-| 9.1.2 | Migrado config/settings.py | `config/settings.py` ahora lee `.env` para todas las credenciales (DB, Google, JWT, SMTP). `DATABASE_URL` ya no es un string hardcodeado. `config/database.py` ahora depende de settings. `app/utils/security.py` con `hash_password`/`verify_password` (PBKDF2-SHA256). Seeds v1 (`app/seeds.py`): idempotentes, crea 3 sedes, 3 roles, 3 usuarios con passwords hasheados (`socio1/socio123`, `bibliotecario1/biblio123`, `admin1/admin123`), vinculación usuario→perfil (Socio/Empleado) y 3 libros con 9 ejemplares × libro × sede. |
+| 9.1.2 | Migrado config/settings.py | `config/settings.py` ahora lee `.env` para todas las credenciales (DB, Google, JWT, SMTP). `DATABASE_URL` ya no es un string hardcodeado. `config/database.py` ahora depende de settings. `app/utils/security.py` con `hash_password`/`verify_password` (argon2id, vía `argon2-cffi`). Seeds v1 (`app/seeds.py`): idempotentes, crea 3 sedes, 3 roles, 3 usuarios con passwords hasheados (`socio1/socio123`, `bibliotecario1/biblio123`, `admin1/admin123`), vinculación usuario→perfil (Socio/Empleado) y 3 libros con 9 ejemplares × libro × sede. |
 | 9.2 | Service de libro | `crear_libro(datos)` con dedup por ISBN y resolución de autores; `buscar/listar/to_listado_dto`. Cuando el ISBN existe se devuelve el existente sin duplicar. |
 | 9.3 | Reportes `mas_solicitados` y `disponibilidad_por_sede` | Atributos relevantes para el módulo de reportes del TP (ver reportes) |
 | 9.4 | Tests mínimos de pytest | `conftest.py` con `:memory:` + `TestClient` + dependency-override; 10 tests verdes (libro service + repo) |
@@ -77,3 +77,13 @@ DISPONIBLE → RESERVADO → EN_TRANSITO → RESERVADO → PRESTADO → DISPONIB
 - **Partido de capas** (documentado en el README): repos precargan con `selectinload`/`func`; navegación a-uno por lazy load en el service; DTOs se arman dentro de la sesión.
 - **Frontend React + Vite + TypeScript**: consume API FastAPI con JWT simple (access token); la API key de libros vive en backend (proxy Google Books); CORS habilitado para origen de desarrollo con IP privada.
 - **Pendiente seeds**: `backend/seeds.py` con 3 sedes (ej. Centro, Norte, Sur) y 1 usuario por rol — `socio1`, `bibliotecario1`, `admin1` (rol = Socio/Bibliotecario/Administrador, password de prueba). Obligatorio para el primer arranque después del próximo reset de la DB.
+
+
+## Auth (JWT + roles)
+
+- `POST /api/v1/auth/login` (`{usuario, password}` → `{access_token, token_type}`) y `GET /api/v1/auth/me` (usuario, rol, sede y `socio_id`/`empleado_id`).
+- `app/utils/security.py`: hash de contraseñas con **argon2id** (`argon2-cffi`) + `crear_access_token` / `decodificar_access_token` (JWT HS256, `sub` = id de usuario, vence a los `JWT_EXPIRE_MINUTES`).
+- `app/controllers/dependencies.py`: `get_current_user` y `require_roles(...)`. Constantes `SOCIO`, `BIBLIOTECARIO`, `ADMINISTRADOR`. El Administrador siempre pasa. 401 = sin token / inválido / usuario dado de baja; 403 = rol insuficiente.
+- Requiere `JWT_SECRET` en `backend/.env`. Se agregaron `PyJWT` y `argon2-cffi` a `pyproject.toml`.
+- Si cambió el algoritmo de hash, hay que borrar `biblioteca.db` y correr `python -m app.seeds` de nuevo.
+- Frontend: `AuthContext` (token y usuario en `localStorage`), `LoginPage`, `ProtectedRoute` y rutas por rol (`/` Socio, `/gestion` Bibliotecario y Administrador).

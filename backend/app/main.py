@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.controllers.ejemplar_controller import ejemplar_router
 from app.controllers.libro_controller import libro_router
-
+from app.controllers.auth_controller import auth_router
 API_PREFIX = "/api/v1"
 
 app = FastAPI(title="Sistema de Gestión de Biblioteca — Grupo 7")
@@ -18,6 +18,7 @@ app.add_middleware(
 
 app.include_router(libro_router, prefix=API_PREFIX)
 app.include_router(ejemplar_router, prefix=API_PREFIX)
+app.include_router(auth_router, prefix=API_PREFIX)
 
 
 @app.get("/health")
