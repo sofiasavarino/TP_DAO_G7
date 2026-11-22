@@ -8,6 +8,7 @@ from app.controllers.remito_controller import remito_router
 from app.controllers.reserva_controller import reserva_router
 from app.controllers.sancion_controller import sancion_router
 
+from app.controllers.auth_controller import auth_router
 API_PREFIX = "/api/v1"
 
 app = FastAPI(title="Sistema de Gestión de Biblioteca — Grupo 7")
@@ -26,6 +27,7 @@ app.include_router(prestamo_router, prefix=API_PREFIX)
 app.include_router(remito_router, prefix=API_PREFIX)
 app.include_router(reserva_router, prefix=API_PREFIX)
 app.include_router(sancion_router, prefix=API_PREFIX)
+app.include_router(auth_router, prefix=API_PREFIX)
 
 
 @app.get("/health")
