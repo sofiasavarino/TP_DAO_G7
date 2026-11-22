@@ -35,6 +35,7 @@ from app.repositories.sede_repository import SedeRepository
 from app.repositories.socio_repository import SocioRepository
 from app.notifications import mensajes
 from app.states.ejemplar_state import estado_de
+from app.states.reserva_state import estado_de_reserva
 from app.utils.fechas import sumar_dias_habiles
 
 ejemplar_repo = EjemplarRepository()
@@ -65,8 +66,8 @@ def calcular_eta(session: Session, libro_id: int, sede_retiro_id: int) -> date |
       (retraso medio de devolución) y, si está en otra sede, + DIAS_TRANSITO más
     - El resto (RESERVADO, EN_TRANSITO, EN_REPARACION, INUTILIZABLE) → no estimable, se salta.
 
-    Candidatos ordenados por fecha ascendente. Las reservas PENDIENTE del libro que ya
-    están en la fila consumirán los primeros candidatos (una cada uno, en orden FIFO),
+    Candidatos ordenados por fecha ascendente. Las reservas PENDIENTE sin ejemplar asignado
+    del libro que ya están en la fila consumirán los primeros candidatos (una cada uno, en orden FIFO),
     así que quien pregunta ve el (N+1)-ésimo: N = cantidad de reservas esperando ese libro.
 
     Devuelve None si no alcanzan los candidatos para la cantidad de reservas en fila.
@@ -152,7 +153,7 @@ def crear_reserva(session: Session, datos: ReservaCreate, usuario_id: int) -> Re
     if local is not None:
         estado_de(local).reservar(local)
         reserva.ejemplar_id = local.id
-        reserva.estado = EstadoReserva.LISTA_PARA_RETIRO
+        estado_de_reserva(reserva).habilitar_retiro(reserva)  # PENDIENTE -> LISTA_PARA_RETIRO
         reserva.fecha_asignacion = hoy
         reserva.fecha_vencimiento_retiro = sumar_dias_habiles(hoy, 2)
         reserva = reserva_repo.add(session, reserva)
@@ -199,10 +200,7 @@ def procesar_retiro(
         raise ReservaNoEncontrada(f"No existe la reserva {reserva_id}.")
     if reserva.ejemplar_id is None:
         raise ValueError(f"La reserva {reserva_id} no tiene ejemplar asignado; no se puede retirar.")
-    if reserva.estado != EstadoReserva.LISTA_PARA_RETIRO:
-        raise ValueError(
-            f"La reserva {reserva_id} no está lista para retirar (estado: {reserva.estado.value})."
-        )
+    estado_de_reserva(reserva).exigir(reserva, "retirar")  # solo si está LISTA_PARA_RETIRO
     hoy = date.today()
     if reserva.fecha_vencimiento_retiro is not None and hoy > reserva.fecha_vencimiento_retiro:
         raise ValueError(
@@ -224,7 +222,7 @@ def procesar_retiro(
         tipo=tipo,
         observaciones=f"Retiro de reserva {reserva_id} (confirmado por usuario {usuario_id})",
     )
-    reserva.estado = EstadoReserva.CUMPLIDA
+    estado_de_reserva(reserva).retirar(reserva)  # LISTA_PARA_RETIRO -> CUMPLIDA
     return prestamo
 
 
@@ -249,7 +247,11 @@ def listar_pendientes(
     return [
         ReservaDTO.model_validate(r)
         for r in reserva_repo.listar_por_estado(
-            session, EstadoReserva.PENDIENTE, sede_retiro_id=sede_id, libro_id=libro_id
+            session,
+            EstadoReserva.PENDIENTE,
+            sede_retiro_id=sede_id,
+            libro_id=libro_id,
+            solo_sin_ejemplar=True,
         )
     ]
 
@@ -277,7 +279,7 @@ def procesar_vencimientos(
         ejemplar = None
         if reserva.ejemplar_id is not None:
             ejemplar = ejemplar_repo.get_by_id(session, reserva.ejemplar_id, incluir_inactivos=True)
-        reserva.estado = EstadoReserva.VENCIDA
+        estado_de_reserva(reserva).vencer(reserva)  # LISTA_PARA_RETIRO -> VENCIDA
         mensajes.avisar_reserva_vencida(session, reserva)
         if ejemplar is None or ejemplar.estado != EstadoEjemplar.RESERVADO:
             continue
@@ -301,23 +303,13 @@ def cancelar_reserva(session: Session, reserva_id: int, usuario_id: int | None =
     reserva = reserva_repo.get_con_detalle(session, reserva_id)
     if reserva is None:
         raise ReservaNoEncontrada(f"No existe la reserva {reserva_id}.")
-    cancelables = (
-        EstadoReserva.PENDIENTE,
-        EstadoReserva.EN_TRANSITO,
-        EstadoReserva.LISTA_PARA_RETIRO,
-    )
-    if reserva.estado == EstadoReserva.CANCELADA:
-        raise ValueError(f"La reserva {reserva_id} ya está cancelada.")
-    if reserva.estado not in cancelables:
-        raise ValueError(
-            f"No se puede cancelar la reserva {reserva_id} en estado {reserva.estado.value}."
-        )
+    estado_de_reserva(reserva).exigir(reserva, "cancelar")  # solo reservas vivas
 
     hoy = date.today()
     ejemplar = None
     if reserva.ejemplar_id is not None:
         ejemplar = ejemplar_repo.get_by_id(session, reserva.ejemplar_id, incluir_inactivos=True)
-    reserva.estado = EstadoReserva.CANCELADA
+    estado_de_reserva(reserva).cancelar(reserva)
 
     if ejemplar is not None and ejemplar.estado == EstadoEjemplar.RESERVADO:
         if remito_repo.get_en_transito_de_ejemplar(session, ejemplar.id) is None:
@@ -379,7 +371,7 @@ def asignar_ejemplar_a_reserva_mas_vieja(
             estado_de(viejo).liberar(viejo)  # si ya viaja (EN_TRANSITO) sigue viajando
 
     reserva.ejemplar_id = ejemplar.id
-    reserva.estado = EstadoReserva.LISTA_PARA_RETIRO
+    estado_de_reserva(reserva).habilitar_retiro(reserva)  # PENDIENTE o EN_TRANSITO -> LISTA_PARA_RETIRO
     reserva.fecha_asignacion = hoy
     reserva.fecha_vencimiento_retiro = sumar_dias_habiles(hoy, 2)
     estado_de(ejemplar).reservar(ejemplar)

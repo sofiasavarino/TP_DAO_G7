@@ -50,10 +50,21 @@ class ReservaRepository(BaseRepository[Reserva]):
         return list(session.scalars(stmt))
 
     def listar_por_estado(
-        self, session: Session, estado: EstadoReserva, sede_retiro_id: int | None = None, libro_id: int | None = None
+        self,
+        session: Session,
+        estado: EstadoReserva,
+        sede_retiro_id: int | None = None,
+        libro_id: int | None = None,
+        solo_sin_ejemplar: bool = False,
     ) -> list[Reserva]:
-        """Reservas en el estado dado, FIFO. Filtros opcionales que combinan con AND."""
+        """Reservas en el estado dado, FIFO. Filtros opcionales que combinan con AND.
+
+        `solo_sin_ejemplar` deja afuera las que ya tienen ejemplar asignado: una PENDIENTE con
+        ejemplar solo espera que se despache su remito, no está esperando un ejemplar.
+        """
         stmt = select(Reserva).where(Reserva.estado == estado)
+        if solo_sin_ejemplar:
+            stmt = stmt.where(Reserva.ejemplar_id.is_(None))
         if sede_retiro_id is not None:
             stmt = stmt.where(Reserva.sede_retiro_id == sede_retiro_id)
         if libro_id is not None:
@@ -66,17 +77,31 @@ class ReservaRepository(BaseRepository[Reserva]):
         return list(session.scalars(stmt))
 
     def cola_pendiente_de_libro(self, session: Session, libro_id: int) -> list[Reserva]:
-        """Cola de espera del titulo (PENDIENTE), en orden FIFO."""
+        """Cola de espera del titulo (PENDIENTE y sin ejemplar asignado), en orden FIFO."""
         stmt = (
             select(Reserva)
-            .where(Reserva.libro_id == libro_id, Reserva.estado == EstadoReserva.PENDIENTE)
+            .where(
+                Reserva.libro_id == libro_id,
+                Reserva.estado == EstadoReserva.PENDIENTE,
+                Reserva.ejemplar_id.is_(None),
+            )
             .order_by(*_orden_fifo())
         )
         return list(session.scalars(stmt))
 
     def primera_en_cola(self, session: Session, libro_id: int) -> Reserva | None:
-        """Primera reserva PENDIENTE para ese libro (toda la red, FIFO)."""
-        return self.primera_por_estado(session, libro_id, (EstadoReserva.PENDIENTE,))
+        """Primera reserva PENDIENTE sin ejemplar asignado para ese libro (toda la red, FIFO)."""
+        stmt = (
+            select(Reserva)
+            .where(
+                Reserva.libro_id == libro_id,
+                Reserva.estado == EstadoReserva.PENDIENTE,
+                Reserva.ejemplar_id.is_(None),
+            )
+            .order_by(*_orden_fifo())
+            .limit(1)
+        )
+        return session.scalars(stmt).first()
 
     def primera_por_estado(
         self, session: Session, libro_id: int, estados: tuple[EstadoReserva, ...]
@@ -147,7 +172,7 @@ class ReservaRepository(BaseRepository[Reserva]):
         return list(session.scalars(stmt))
 
     def contar_en_cola(self, session: Session, libro_id: int) -> int:
-        """Reservas esperando `libro_id` (PENDIENTE), en toda la red.
+        """Reservas esperando `libro_id` (PENDIENTE y sin ejemplar asignado), en toda la red.
 
         Se usan para descontar candidatos de la ETA: cada reserva que ya está en la
         fila consumirá el candidato más cercano antes que el socio que está mirando.
@@ -155,6 +180,7 @@ class ReservaRepository(BaseRepository[Reserva]):
         stmt = select(func.count(Reserva.id)).where(
             Reserva.libro_id == libro_id,
             Reserva.estado == EstadoReserva.PENDIENTE,
+            Reserva.ejemplar_id.is_(None),
         )
         return session.scalar(stmt) or 0
 

@@ -31,7 +31,7 @@ from app.services.reserva_service import asignar_ejemplar_a_reserva_mas_vieja
 from app.dtos.remito_dto import EjemplarEnRemitoDTO, RemitoCreate, RemitoDetalleDTO, RemitoListadoDTO
 from app.exceptions import RemitoNoEncontrado
 from app.models.ejemplar import Ejemplar
-from app.models.enums import EstadoEjemplar, EstadoRemito, EstadoReserva, MotivoTraslado
+from app.models.enums import EstadoEjemplar, EstadoRemito, MotivoTraslado
 from app.models.remito import Remito
 from app.repositories.ejemplar_repository import EjemplarRepository
 from app.repositories.remito_repository import RemitoRepository
@@ -39,6 +39,7 @@ from app.repositories.reserva_repository import ReservaRepository
 from app.repositories.sede_repository import SedeRepository
 from app.notifications import mensajes
 from app.states.ejemplar_state import estado_de
+from app.states.reserva_state import estado_de_reserva
 
 remito_repo = RemitoRepository()
 ejemplar_repo = EjemplarRepository()
@@ -232,7 +233,7 @@ def despachar(session: Session, remito_id: int, usuario_id: int) -> Remito:
         estado_de(ejemplar).despachar(ejemplar)
         reserva = reserva_repo.get_pendiente_con_ejemplar(session, ejemplar.id)
         if reserva is not None:
-            reserva.estado = EstadoReserva.EN_TRANSITO
+            estado_de_reserva(reserva).despachar(reserva)  # PENDIENTE -> EN_TRANSITO
             mensajes.avisar_ejemplar_asignado(session, reserva)
 
     session.flush()
@@ -283,7 +284,7 @@ def recibir(
             # el siguiente ejemplar disponible la atienda (el dañado no sirve).
             reserva = reserva_repo.get_vigente_de_ejemplar(session, ejemplar.id)
             if reserva is not None:
-                reserva.estado = EstadoReserva.PENDIENTE
+                estado_de_reserva(reserva).perder_ejemplar(reserva)  # EN_TRANSITO -> PENDIENTE
                 reserva.ejemplar_id = None
                 reserva.fecha_asignacion = None
                 reserva.fecha_vencimiento_retiro = None
