@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 from sqlalchemy import Column, ForeignKey, String, Table
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.models.base import Base
+from app.models.base import Base, BajaLogicaMixin
 
 if TYPE_CHECKING:
     from app.models.autor import Autor
@@ -21,7 +21,9 @@ libro_autor = Table(
 )
 
 
-class Libro(Base):
+class Libro(Base, BajaLogicaMixin):
+    """Título del catálogo. Baja lógica con `activo` (nunca se borra: tiene ejemplares e historial)."""
+
     __tablename__ = "libro"
 
     id: Mapped[int] = mapped_column(primary_key=True)

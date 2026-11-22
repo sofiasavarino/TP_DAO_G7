@@ -8,7 +8,12 @@ Juntas todas las importa y exportadas para conveniencia:
 """
 from app.exceptions.auth import CredencialesInvalidas
 from app.exceptions.base import BibliotecaError
-from app.exceptions.catalogo import LibroConPrestamosActivos, LibroNoEncontrado
+from app.exceptions.catalogo import (
+    GoogleBooksNoDisponible,
+    IsbnDuplicado,
+    LibroConPrestamosActivos,
+    LibroNoEncontrado,
+)
 from app.exceptions.prestamo import (
     EjemplarNoDisponible,
     LimitePrestamosExcedido,
@@ -22,6 +27,8 @@ __all__ = [
     "CredencialesInvalidas"
     "EjemplarNoDisponible",
     "EjemplarNoDisponibleParaAsignar",
+    "GoogleBooksNoDisponible",
+    "IsbnDuplicado",
     "LibroConPrestamosActivos",
     "LibroNoEncontrado",
     "LimitePrestamosExcedido",

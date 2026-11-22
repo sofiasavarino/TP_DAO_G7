@@ -74,7 +74,10 @@ TP_DAO_G7/
 | GET | `/api/v1/libros/lookup?isbn=...` | Autocompletado por ISBN: local → Google Books → `MANUAL` (la vista pide carga manual) |
 | GET | `/api/v1/libros/catalogo` · `?titulo=&isbn=&autor=&genero=&sedes=1,2,3&orden=default\|populares\|recientes` | Catálogo filtrable: AND entre todos los parámetros. `titulo` (título parcial), `isbn` (ISBN parcial), `autor` (nombre parcial), género (exacto), disponibilidad por sede, orden por popularidad o fecha de publicación. Sin parámetros devuelve todo ordenado por nombre. |
 | GET | `/api/v1/libros/catalogo/{id}` | Detalle de un libro |
-| POST | `/api/v1/libros` | Alta de libro; dedupa por ISBN (devuelve el existente) |
+| POST | `/api/v1/libros` | Alta de libro; dedupa por ISBN (devuelve el existente y lo reactiva si estaba de baja). Acepta `autores` por nombre: reutiliza los existentes y crea los que falten |
+| GET | `/api/v1/libros/google?q=&max_resultados=` | Proxy a Google Books por título, autor o ISBN (lista de resultados para el formulario de alta). Bibliotecario/Admin. 503 si falta la API key o Google no responde |
+| PUT | `/api/v1/libros/{id}` | Edición de un libro (reemplaza datos y autores). 409 si el ISBN ya lo tiene otro libro. Bibliotecario/Admin |
+| PATCH | `/api/v1/libros/{id}/baja` | Baja lógica (`activo = false`): deja de aparecer en `/catalogo`. 409 si tiene ejemplares prestados, reservados o en tránsito. Bibliotecario/Admin |
 | GET | `/api/v1/prestamos` | Listado general de préstamos |
 | POST | `/api/v1/prestamos` | Alta de préstamo (`DIAS_PRESTAMO=15` calculado por backend; `LimitePrestamosExcedido`, `SocioSancionado`, `EjemplarNoDisponible`)
 | POST | `/api/v1/reservas?responsable_creacion_id=` | Alta de reserva: asigna ejemplar DISPONIBLE local (`LISTA_PARA_RETIRO`); si sólo hay en otra sede encola remito IDA (`EN_TRANSITO`); si no hay nada, `PENDIENTE`. Body: `socio_id, libro_id, sede_retiro_id` |

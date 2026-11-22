@@ -89,7 +89,10 @@ frontend/
     ├── context/
     │   └── AuthContext.tsx # Estado global de sesión, token JWT y rol del usuario
     ├── components/       # Componentes reutilizables (modales, tarjetas, rutas protegidas)
+    │   ├── admin/        # AdminLayout (barra lateral + cabecera del panel), íconos, placeholders
+    │   └── libros/       # GoogleBooksBuscador y LibroFormModal (alta/edición de libros)
     └── pages/            # Pantallas separadas por vista (Socio vs. Bibliotecario/Admin)
+        └── gestion/      # Secciones del panel (/gestion/catalogo, /gestion/ejemplares, ...)
 ```
 
 ---
