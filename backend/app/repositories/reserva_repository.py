@@ -157,3 +157,11 @@ class ReservaRepository(BaseRepository[Reserva]):
             Reserva.estado == EstadoReserva.PENDIENTE,
         )
         return session.scalar(stmt) or 0
+
+    def get_pendiente_con_ejemplar(self, session: Session, ejemplar_id: int) -> Reserva | None:
+        """Reserva PENDIENTE que ya tiene este ejemplar asignado (todavía sin despachar)."""
+        stmt = select(Reserva).where(
+            Reserva.ejemplar_id == ejemplar_id,
+            Reserva.estado == EstadoReserva.PENDIENTE,
+        )
+        return session.scalars(stmt).first()

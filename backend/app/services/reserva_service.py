@@ -34,6 +34,7 @@ from app.repositories.sancion_repository import SancionRepository
 from app.repositories.sede_repository import SedeRepository
 from app.repositories.socio_repository import SocioRepository
 from app.notifications import mensajes
+from app.states.ejemplar_state import estado_de
 from app.utils.fechas import sumar_dias_habiles
 
 ejemplar_repo = EjemplarRepository()
@@ -116,8 +117,9 @@ def crear_reserva(session: Session, datos: ReservaCreate, usuario_id: int) -> Re
     - Ejemplar DISPONIBLE en la sede de retiro → asignado: RESERVADO + LISTA_PARA_RETIRO
       (`fecha_asignacion=hoy`, ventana de retiro de 2 días hábiles).
     - Sin ejemplar local pero DISPONIBLE en otra sede → se encola (o crea) un remito IDA
-      con responsable = quien crea la reserva; el ejemplar queda RESERVADO y la reserva
-      EN_TRANSITO hasta que el remito arribe.
+      con responsable = quien crea la reserva; el ejemplar queda RESERVADO y la reserva sigue
+      PENDIENTE (con el ejemplar asignado) hasta que el remito se despache: ahí pasa a
+      EN_TRANSITO y se avisa al socio.
     - Sin ejemplar disponible en ninguna sede → queda PENDIENTE.
 
     Valida: socio activo y sin sanción vigente; libro y sede activos.
@@ -148,7 +150,7 @@ def crear_reserva(session: Session, datos: ReservaCreate, usuario_id: int) -> Re
 
     local = ejemplar_repo.primer_disponible(session, datos.libro_id, sede_id=datos.sede_retiro_id)
     if local is not None:
-        local.estado = EstadoEjemplar.RESERVADO
+        estado_de(local).reservar(local)
         reserva.ejemplar_id = local.id
         reserva.estado = EstadoReserva.LISTA_PARA_RETIRO
         reserva.fecha_asignacion = hoy
@@ -167,15 +169,11 @@ def crear_reserva(session: Session, datos: ReservaCreate, usuario_id: int) -> Re
         encolar_ejemplar_en_ruta(
             session, disponible_fuera, sede_destino_id=datos.sede_retiro_id, usuario_id=usuario_id
         )
-        disponible_fuera.estado = EstadoEjemplar.RESERVADO
+        estado_de(disponible_fuera).reservar(disponible_fuera)
         reserva.ejemplar_id = disponible_fuera.id
-        reserva.estado = EstadoReserva.EN_TRANSITO
-    # Si no hay disponible en ningún lado, la reserva queda PENDIENTE (sin aviso).
-    reserva = reserva_repo.add(session, reserva)
-    if reserva.estado == EstadoReserva.EN_TRANSITO:
-        session.flush()  # persistida: ya se pueden navegar socio / libro / sede_retiro
-        mensajes.avisar_ejemplar_asignado(session, reserva)
-    return reserva
+    # Con ejemplar en otra sede la reserva sigue PENDIENTE hasta que se despache el remito
+    # (ahí pasa a EN_TRANSITO y se avisa); sin ejemplar en ningún lado, también queda PENDIENTE.
+    return reserva_repo.add(session, reserva)
 
 
 def procesar_retiro(
@@ -283,7 +281,9 @@ def procesar_vencimientos(
         mensajes.avisar_reserva_vencida(session, reserva)
         if ejemplar is None or ejemplar.estado != EstadoEjemplar.RESERVADO:
             continue
-        # asignar_* libera el ejemplar (DISPONIBLE) y sirve la siguiente reserva más vieja FIFO del libro.
+        # Se libera el ejemplar (RESERVADO -> DISPONIBLE) y se sirve la siguiente reserva más
+        # vieja FIFO del libro.
+        estado_de(ejemplar).liberar(ejemplar)
         asignar_ejemplar_a_reserva_mas_vieja(session, ejemplar, hoy, usuario_id=usuario_id)
     return vencidas
 
@@ -321,7 +321,8 @@ def cancelar_reserva(session: Session, reserva_id: int, usuario_id: int | None =
 
     if ejemplar is not None and ejemplar.estado == EstadoEjemplar.RESERVADO:
         if remito_repo.get_en_transito_de_ejemplar(session, ejemplar.id) is None:
-            # asignar_* libera (DISPONIBLE) y sirve la siguiente reserva más vieja FIFO del libro
+            # Se libera (RESERVADO -> DISPONIBLE) y se sirve la siguiente reserva más vieja FIFO del libro
+            estado_de(ejemplar).liberar(ejemplar)
             asignar_ejemplar_a_reserva_mas_vieja(session, ejemplar, hoy, usuario_id=usuario_id)
         # si está en un remito abierto, al llegar al destino la recepción lo reasigna FIFO
     return reserva
@@ -338,13 +339,13 @@ def asignar_ejemplar_a_reserva_mas_vieja(
       Si había otro ejemplar asignado a esa reserva, sale moviéndose a su siguiente estado
       (EN_TRANSITO si viaja, DISPONIBLE si en sucursal).
     - si la reserva está en otra sede, se encola el ejemplar en el remito CREADO más
-      antiguo de esa ruta (o se crea uno si no hay) — la reserva queda EN_TRANSITO.
+      antiguo de esa ruta (o se crea uno si no hay). La reserva conserva su estado: pasa a
+      EN_TRANSITO (y se avisa) cuando se despacha el remito.
     - si no hay reserva en el sistema para este libro, el ejemplar queda DISPONIBLE.
     """
     hoy = hoy or date.today()
-    # Cuando nos llaman, el ejemplar acaba de devolver: lo ponemos a DISPONIBLE
-    # y cada rama puede volver a RESERVADO si corresponde.
-    ejemplar.estado = EstadoEjemplar.DISPONIBLE
+    # Precondición: el ejemplar ya está DISPONIBLE. Quien llama hizo antes la transición que
+    # corresponde (devolver, recibir o liberar). Cada rama puede pasarlo a RESERVADO.
     reserva = reserva_repo.primera_por_estado(
         session, ejemplar.libro_id, (EstadoReserva.PENDIENTE, EstadoReserva.EN_TRANSITO)
     )
@@ -363,12 +364,10 @@ def asignar_ejemplar_a_reserva_mas_vieja(
         encolar_ejemplar_en_ruta(
             session, ejemplar, sede_destino_id=reserva.sede_retiro_id, usuario_id=usuario_id
         )
-        era_pendiente = reserva.estado == EstadoReserva.PENDIENTE
-        reserva.estado = EstadoReserva.EN_TRANSITO
+        # La reserva conserva su estado: PENDIENTE (pasa a EN_TRANSITO y avisa al despachar el
+        # remito) o EN_TRANSITO (otro ejemplar ya viaja para ella y el socio ya fue avisado).
         reserva.ejemplar_id = ejemplar.id
-        ejemplar.estado = EstadoEjemplar.RESERVADO
-        if era_pendiente:  # si ya estaba EN_TRANSITO, el socio ya fue avisado
-            mensajes.avisar_ejemplar_asignado(session, reserva)
+        estado_de(ejemplar).reservar(ejemplar)
         return
 
     # Branch A2: misma sede — asignar
@@ -376,16 +375,12 @@ def asignar_ejemplar_a_reserva_mas_vieja(
         viejo = ejemplar_repo.get_by_id(
             session, reserva.ejemplar_id, incluir_inactivos=True
         )
-        if viejo is not None:
-            viejo.estado = (
-                EstadoEjemplar.EN_TRANSITO
-                if remito_repo.get_en_transito_de_ejemplar(session, viejo.id) is not None
-                else EstadoEjemplar.DISPONIBLE
-            )
+        if viejo is not None and viejo.estado == EstadoEjemplar.RESERVADO:
+            estado_de(viejo).liberar(viejo)  # si ya viaja (EN_TRANSITO) sigue viajando
 
     reserva.ejemplar_id = ejemplar.id
     reserva.estado = EstadoReserva.LISTA_PARA_RETIRO
     reserva.fecha_asignacion = hoy
     reserva.fecha_vencimiento_retiro = sumar_dias_habiles(hoy, 2)
-    ejemplar.estado = EstadoEjemplar.RESERVADO
+    estado_de(ejemplar).reservar(ejemplar)
     mensajes.avisar_reserva_lista(session, reserva, ejemplar)

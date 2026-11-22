@@ -18,6 +18,7 @@ class EstadoEjemplar(enum.Enum):
     EN_TRANSITO = "EN_TRANSITO"
     PRESTADO = "PRESTADO"
     EN_REPARACION = "EN_REPARACION"
+    PERDIDO = "PERDIDO"          # prestado y vencido sin devolverse (se marca a mano en el mostrador)
     INUTILIZABLE = "INUTILIZABLE"
 
 
@@ -46,6 +47,7 @@ class EstadoSocio(enum.Enum):
 class TipoSancion(enum.Enum):
     MULTA = "MULTA"            # usa `monto`
     SUSPENSION = "SUSPENSION"  # usa `dias_suspension`
+    REPOSICION = "REPOSICION"  # baja del socio hasta que reponga una copia (igual o posterior edición)
 
 
 class MotivoTraslado(enum.Enum):

@@ -61,6 +61,11 @@ def avisar_reserva_vencida(session: Session, reserva: Reserva) -> None:
 def avisar_sancion_aplicada(session: Session, socio: Socio, sancion: Sancion) -> None:
     if sancion.tipo == TipoSancion.MULTA:
         detalle = f"Multa de ${sancion.monto:.2f}."
+    elif sancion.tipo == TipoSancion.REPOSICION:
+        detalle = (
+            "Quedaste dado de baja como socio. Para volver a asociarte tenés que reponer "
+            "una copia del libro, de una edición igual o posterior."
+        )
     else:
         hasta = f" hasta el {sancion.fecha_fin:%d/%m/%Y}" if sancion.fecha_fin else ""
         detalle = f"Suspensión de {sancion.dias_suspension} día(s){hasta}."

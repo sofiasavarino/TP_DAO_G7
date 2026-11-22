@@ -37,14 +37,13 @@ from app.repositories.ejemplar_repository import EjemplarRepository
 from app.repositories.remito_repository import RemitoRepository
 from app.repositories.reserva_repository import ReservaRepository
 from app.repositories.sede_repository import SedeRepository
+from app.notifications import mensajes
+from app.states.ejemplar_state import estado_de
 
 remito_repo = RemitoRepository()
 ejemplar_repo = EjemplarRepository()
 sede_repo = SedeRepository()
 reserva_repo = ReservaRepository()
-
-# Estados desde los que un ejemplar puede subirse a un remito.
-ESTADOS_TRANSFERIBLES = (EstadoEjemplar.DISPONIBLE, EstadoEjemplar.RESERVADO)
 
 # Estados en los que puede quedar un ejemplar que llegó con problemas.
 ESTADOS_INCIDENCIA = (EstadoEjemplar.EN_REPARACION, EstadoEjemplar.INUTILIZABLE)
@@ -213,7 +212,8 @@ def encolar_ejemplar_en_ruta(
 
 def despachar(session: Session, remito_id: int, usuario_id: int) -> Remito:
     """CREADO -> EN_TRANSITO. Registra quién y cuándo despachó; los ejemplares
-    pasan a EN_TRANSITO.
+    pasan a EN_TRANSITO y la reserva PENDIENTE de cada uno (si la tiene) pasa a EN_TRANSITO,
+    avisándole al socio que su ejemplar viaja.
 
     Se vuelven a validar sedes y ejemplares porque entre la creación y el despacho
     pudo cambiar algo (p. ej. alguien prestó un ejemplar o dieron de baja una sede).
@@ -229,7 +229,11 @@ def despachar(session: Session, remito_id: int, usuario_id: int) -> Remito:
     remito.fecha_despacho = date.today()
     remito.responsable_despacho_id = usuario_id
     for ejemplar in remito.ejemplares:
-        ejemplar.estado = EstadoEjemplar.EN_TRANSITO
+        estado_de(ejemplar).despachar(ejemplar)
+        reserva = reserva_repo.get_pendiente_con_ejemplar(session, ejemplar.id)
+        if reserva is not None:
+            reserva.estado = EstadoReserva.EN_TRANSITO
+            mensajes.avisar_ejemplar_asignado(session, reserva)
 
     session.flush()
     return remito
@@ -271,7 +275,10 @@ def recibir(
     for ejemplar in remito.ejemplares:
         ejemplar.sede_actual_id = remito.sede_destino_id
         if ejemplar.id in incidencias:
-            ejemplar.estado = incidencias[ejemplar.id]
+            if incidencias[ejemplar.id] == EstadoEjemplar.INUTILIZABLE:
+                estado_de(ejemplar).dar_de_baja(ejemplar)
+            else:
+                estado_de(ejemplar).enviar_a_reparacion(ejemplar)
             # Si el ejemplar estaba preasignado a una reserva, la liberamos para que
             # el siguiente ejemplar disponible la atienda (el dañado no sirve).
             reserva = reserva_repo.get_vigente_de_ejemplar(session, ejemplar.id)
@@ -281,6 +288,7 @@ def recibir(
                 reserva.fecha_asignacion = None
                 reserva.fecha_vencimiento_retiro = None
             continue
+        estado_de(ejemplar).recibir(ejemplar)  # EN_TRANSITO -> DISPONIBLE
         asignar_ejemplar_a_reserva_mas_vieja(session, ejemplar, hoy, usuario_id=usuario_id)
 
     remito.estado = EstadoRemito.CON_INCIDENCIA if incidencias else EstadoRemito.RECIBIDO
@@ -368,7 +376,7 @@ def _validar_ejemplares_transferibles(
     corrige el remito de una sola vez en vez de ir error por error."""
     problemas: list[str] = []
     for e in ejemplares:
-        if e.estado not in ESTADOS_TRANSFERIBLES:
+        if not estado_de(e).admite("despachar"):
             problemas.append(f"{e.codigo_inventario} está {e.estado.value}")
         elif e.sede_actual_id != sede_origen_id:
             problemas.append(f"{e.codigo_inventario} no está en la sede de origen")

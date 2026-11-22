@@ -23,6 +23,8 @@ sancion_repo = SancionRepository()
 prestamo_repo = PrestamoRepository()
 socio_repo = SocioRepository()
 
+DIAS_SUSPENSION = 15  # suspensión posterior al pago de la multa y por devolver con daños
+
 
 # ---------------------------------------------------------------------- operaciones
 
@@ -39,6 +41,9 @@ def crear_sancion(session: Session, datos: SancionCreate, usuario_id: int) -> Sa
     Para SUSPENSION se calcula `fecha_fin = fecha_inicio + dias_suspension` (hábiles).
     `usuario_id` es quien aplica la sanción (queda en observaciones).
     """
+    if datos.tipo == TipoSancion.REPOSICION:
+        raise ValueError("la baja por pérdida se registra con prestamo_service.marcar_perdido")
+
     prestamo = prestamo_repo.get_by_id(session, datos.prestamo_id)
     if prestamo is None:
         raise ValueError(f"préstamo {datos.prestamo_id} no existe")
@@ -96,6 +101,7 @@ def listar_activas(
 def levantar(session: Session, sancion_id: int, usuario_id: int) -> Sancion:
     """Levanta una sanción: la marca inactiva y cierra su `fecha_fin` en `hoy`.
 
+    Es un perdón: para COBRAR una multa usar `abonar_multa`, que además suspende al socio.
     Devuelve la sanción actualizada. El socio vuelve a poder reservar/prestar
     inmediatamente (ya no tiene sanción vigente).
     """
@@ -104,6 +110,8 @@ def levantar(session: Session, sancion_id: int, usuario_id: int) -> Sancion:
         raise ValueError(f"sanción {sancion_id} no existe")
     if not sancion.activo:
         raise ValueError(f"la sanción {sancion_id} ya está levantada")
+    if sancion.tipo == TipoSancion.REPOSICION:
+        raise ValueError("la baja por pérdida se levanta con prestamo_service.reponer_libro")
     sancion.activo = False
     sancion.fecha_fin = date.today()
     session.flush()
@@ -112,3 +120,38 @@ def levantar(session: Session, sancion_id: int, usuario_id: int) -> Sancion:
     if socio is not None:
         mensajes.avisar_sancion_levantada(session, socio, sancion)
     return sancion
+
+
+def abonar_multa(session: Session, sancion_id: int, usuario_id: int) -> Sancion:
+    """Registra el pago de una MULTA y arranca la suspensión posterior de DIAS_SUSPENSION días.
+
+    La multa queda levantada (inactiva, `fecha_fin` = hoy) y se crea una SUSPENSION sobre el
+    mismo préstamo y socio. Devuelve la suspensión creada.
+    """
+    multa = sancion_repo.get_by_id(session, sancion_id, incluir_inactivos=True)
+    if multa is None:
+        raise ValueError(f"sanción {sancion_id} no existe")
+    if multa.tipo != TipoSancion.MULTA:
+        raise ValueError(f"la sanción {sancion_id} no es una multa")
+    if not multa.activo:
+        raise ValueError(f"la multa {sancion_id} ya fue abonada o levantada")
+
+    hoy = date.today()
+    multa.activo = False
+    multa.fecha_fin = hoy
+
+    suspension = Sancion(
+        tipo=TipoSancion.SUSPENSION,
+        fecha_inicio=hoy,
+        fecha_fin=hoy + timedelta(days=DIAS_SUSPENSION),
+        motivo=f"Suspensión posterior al pago de la multa: {multa.motivo}",
+        dias_suspension=DIAS_SUSPENSION,
+        socio_id=multa.socio_id,
+        prestamo_id=multa.prestamo_id,
+    )
+    suspension = sancion_repo.add(session, suspension)
+
+    socio = socio_repo.get_by_id(session, multa.socio_id, incluir_inactivos=True)
+    if socio is not None:
+        mensajes.avisar_sancion_aplicada(session, socio, suspension)
+    return suspension

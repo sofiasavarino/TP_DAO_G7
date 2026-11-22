@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.config.database import get_session
+from app.dtos.ejemplar_dto import EjemplarCreate
 from app.dtos.prestamo_dto import PrestamoCreate, PrestamoDTO, PrestamoListadoDTO
 from app.exceptions import (
     BibliotecaError,
@@ -15,7 +16,9 @@ from app.services.prestamo_service import (
     listar_mios,
     listar_todos,
     listar_vencidos,
+    marcar_perdido,
     renovar_prestamo,
+    reponer_libro,
 )
 
 prestamo_router = APIRouter(prefix="/prestamos", tags=["prestamos"])
@@ -79,10 +82,17 @@ def devolver_prestamo_endpoint(
     prestamo_id: int,
     sede_id: int = Query(..., description="Sede donde el socio devuelve el ejemplar"),
     responsable_devolucion_id: int = Query(..., description="Usuario bibliotecario/empleado que recibe la devolución"),
+    con_danios: bool = Query(False, description="Devuelto con daños menores: va a reparación y suspende al socio"),
     session: Session = Depends(get_session),
 ) -> PrestamoDTO:
     try:
-        prestamo = devolver_prestamo(session, prestamo_id, sede_id=sede_id, usuario_id=responsable_devolucion_id)
+        prestamo = devolver_prestamo(
+            session,
+            prestamo_id,
+            sede_id=sede_id,
+            usuario_id=responsable_devolucion_id,
+            con_danios=con_danios,
+        )
     except Exception as e:  # noqa: BLE001
         raise _mapear_excepcion(e) from e
     session.commit()
@@ -96,6 +106,44 @@ def renovar_prestamo_endpoint(
 ) -> PrestamoDTO:
     try:
         prestamo = renovar_prestamo(session, prestamo_id)
+    except Exception as e:  # noqa: BLE001
+        raise _mapear_excepcion(e) from e
+    session.commit()
+    return PrestamoDTO.model_validate(prestamo)
+
+
+@prestamo_router.put("/{prestamo_id}/perdida", response_model=PrestamoDTO)
+def marcar_perdido_endpoint(
+    prestamo_id: int,
+    responsable_id: int = Query(..., description="Usuario bibliotecario/empleado que da por perdido el ejemplar"),
+    session: Session = Depends(get_session),
+) -> PrestamoDTO:
+    """Da por perdido el ejemplar de un préstamo que nunca se devolvió (a mano, en el mostrador).
+
+    El ejemplar pasa a PERDIDO, el socio a BAJA y se crea la sanción REPOSICION.
+    """
+    try:
+        prestamo = marcar_perdido(session, prestamo_id, usuario_id=responsable_id)
+    except Exception as e:  # noqa: BLE001
+        raise _mapear_excepcion(e) from e
+    session.commit()
+    return PrestamoDTO.model_validate(prestamo)
+
+
+@prestamo_router.put("/{prestamo_id}/reposicion", response_model=PrestamoDTO)
+def reponer_libro_endpoint(
+    prestamo_id: int,
+    datos: EjemplarCreate,
+    responsable_id: int = Query(..., description="Usuario bibliotecario/empleado que recibe la reposición"),
+    session: Session = Depends(get_session),
+) -> PrestamoDTO:
+    """El socio entrega una copia de reposición (mismo libro o edición posterior).
+
+    Se da de alta el ejemplar nuevo, el perdido pasa a INUTILIZABLE, el préstamo se finaliza
+    y el socio vuelve a ACTIVO.
+    """
+    try:
+        prestamo = reponer_libro(session, prestamo_id, datos, usuario_id=responsable_id)
     except Exception as e:  # noqa: BLE001
         raise _mapear_excepcion(e) from e
     session.commit()
