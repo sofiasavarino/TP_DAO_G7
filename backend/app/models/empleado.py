@@ -15,7 +15,6 @@ class Empleado(Base, BajaLogicaMixin):
     id: Mapped[int] = mapped_column(primary_key=True)
     nombre: Mapped[str] = mapped_column(String(100))
     apellido: Mapped[str] = mapped_column(String(100))
-    email: Mapped[str] = mapped_column(String(100), unique=True)
     legajo: Mapped[str] = mapped_column(String(20), unique=True)
     usuario_id: Mapped[int] = mapped_column(ForeignKey("usuario.id"), unique=True)
 

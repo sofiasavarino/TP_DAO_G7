@@ -10,8 +10,9 @@ from app.repositories.base_repository import BaseRepository
 
 
 def _vigente_en(fecha: date):
-    """Condicion SQL: la sancion ya empezo y no termino (fecha_fin nula = sin fin)."""
+    """Condicion SQL: la sancion ya empezo, esta activa y no termino (fecha_fin nula = sin fin)."""
     return and_(
+        Sancion.activo.is_(True),
         Sancion.fecha_inicio <= fecha,
         or_(Sancion.fecha_fin.is_(None), Sancion.fecha_fin >= fecha),
     )

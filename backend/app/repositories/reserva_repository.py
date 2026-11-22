@@ -1,7 +1,7 @@
 from collections.abc import Sequence
 from datetime import date
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session, selectinload
 
 from app.models.enums import EstadoReserva
@@ -11,7 +11,7 @@ from app.repositories.base_repository import BaseRepository
 # Reservas que siguen "vivas" (todavia pueden terminar en prestamo).
 ESTADOS_VIGENTES = (
     EstadoReserva.PENDIENTE,
-    EstadoReserva.EN_CAMINO,
+    EstadoReserva.EN_TRANSITO,
     EstadoReserva.LISTA_PARA_RETIRO,
 )
 
@@ -50,11 +50,25 @@ class ReservaRepository(BaseRepository[Reserva]):
         return list(session.scalars(stmt))
 
     def listar_por_estado(
-        self, session: Session, estado: EstadoReserva, sede_retiro_id: int | None = None
+        self,
+        session: Session,
+        estado: EstadoReserva,
+        sede_retiro_id: int | None = None,
+        libro_id: int | None = None,
+        solo_sin_ejemplar: bool = False,
     ) -> list[Reserva]:
+        """Reservas en el estado dado, FIFO. Filtros opcionales que combinan con AND.
+
+        `solo_sin_ejemplar` deja afuera las que ya tienen ejemplar asignado: una PENDIENTE con
+        ejemplar solo espera que se despache su remito, no está esperando un ejemplar.
+        """
         stmt = select(Reserva).where(Reserva.estado == estado)
+        if solo_sin_ejemplar:
+            stmt = stmt.where(Reserva.ejemplar_id.is_(None))
         if sede_retiro_id is not None:
             stmt = stmt.where(Reserva.sede_retiro_id == sede_retiro_id)
+        if libro_id is not None:
+            stmt = stmt.where(Reserva.libro_id == libro_id)
         stmt = stmt.options(
             selectinload(Reserva.libro),
             selectinload(Reserva.socio),
@@ -63,30 +77,71 @@ class ReservaRepository(BaseRepository[Reserva]):
         return list(session.scalars(stmt))
 
     def cola_pendiente_de_libro(self, session: Session, libro_id: int) -> list[Reserva]:
-        """Cola de espera del titulo (PENDIENTE), en orden FIFO."""
+        """Cola de espera del titulo (PENDIENTE y sin ejemplar asignado), en orden FIFO."""
         stmt = (
             select(Reserva)
-            .where(Reserva.libro_id == libro_id, Reserva.estado == EstadoReserva.PENDIENTE)
+            .where(
+                Reserva.libro_id == libro_id,
+                Reserva.estado == EstadoReserva.PENDIENTE,
+                Reserva.ejemplar_id.is_(None),
+            )
             .order_by(*_orden_fifo())
         )
         return list(session.scalars(stmt))
 
     def primera_en_cola(self, session: Session, libro_id: int) -> Reserva | None:
-        """La siguiente reserva a la que hay que asignarle un ejemplar."""
+        """Primera reserva PENDIENTE sin ejemplar asignado para ese libro (toda la red, FIFO)."""
         stmt = (
             select(Reserva)
-            .where(Reserva.libro_id == libro_id, Reserva.estado == EstadoReserva.PENDIENTE)
+            .where(
+                Reserva.libro_id == libro_id,
+                Reserva.estado == EstadoReserva.PENDIENTE,
+                Reserva.ejemplar_id.is_(None),
+            )
+            .order_by(*_orden_fifo())
+            .limit(1)
+        )
+        return session.scalars(stmt).first()
+
+    def primera_por_estado(
+        self, session: Session, libro_id: int, estados: tuple[EstadoReserva, ...]
+    ) -> Reserva | None:
+        """Primera reserva para `libro_id` que coincida en alguno de `estados`, FIFO."""
+        stmt = (
+            select(Reserva)
+            .where(Reserva.libro_id == libro_id, Reserva.estado.in_(estados))
+            .order_by(*_orden_fifo())
+            .limit(1)
+        )
+        return session.scalars(stmt).first()
+
+    def primera_en_sede(self, session: Session, libro_id: int, sede_retiro_id: int) -> Reserva | None:
+        """Primera reserva pendiente o en tránsito para `libro_id` cuyo retiro es en `sede_retiro_id` (FIFO).
+
+        Se consideran ambas estados desde que un ejemplar puede estar disponible o viajando
+        (algunos ejemplares vendrán asignados internamente antes de que el remito arribe).
+        Asigna al más viejo del par por fecha_reserva + id.
+        """
+        stmt = (
+            select(Reserva)
+            .where(
+                Reserva.libro_id == libro_id,
+                Reserva.sede_retiro_id == sede_retiro_id,
+                Reserva.estado.in_((EstadoReserva.PENDIENTE, EstadoReserva.EN_TRANSITO)),
+            )
             .order_by(*_orden_fifo())
             .limit(1)
         )
         return session.scalars(stmt).first()
 
     def get_vigente_de_ejemplar(self, session: Session, ejemplar_id: int) -> Reserva | None:
-        """La reserva que tiene asignado este ejemplar (EN_CAMINO o LISTA_PARA_RETIRO).
-        La usa el service al recibir un remito para saber si el ejemplar tiene dueño."""
+        """La reserva que tiene asignado este ejemplar (EN_TRANSITO o LISTA_PARA_RETIRO).
+
+    Se usa al recibir un remito para saber si el ejemplar tiene dueño.
+    """
         stmt = select(Reserva).where(
             Reserva.ejemplar_id == ejemplar_id,
-            Reserva.estado.in_((EstadoReserva.EN_CAMINO, EstadoReserva.LISTA_PARA_RETIRO)),
+            Reserva.estado.in_((EstadoReserva.EN_TRANSITO, EstadoReserva.LISTA_PARA_RETIRO)),
         )
         return session.scalars(stmt).first()
 
@@ -115,3 +170,24 @@ class ReservaRepository(BaseRepository[Reserva]):
             .order_by(*_orden_fifo())
         )
         return list(session.scalars(stmt))
+
+    def contar_en_cola(self, session: Session, libro_id: int) -> int:
+        """Reservas esperando `libro_id` (PENDIENTE y sin ejemplar asignado), en toda la red.
+
+        Se usan para descontar candidatos de la ETA: cada reserva que ya está en la
+        fila consumirá el candidato más cercano antes que el socio que está mirando.
+        """
+        stmt = select(func.count(Reserva.id)).where(
+            Reserva.libro_id == libro_id,
+            Reserva.estado == EstadoReserva.PENDIENTE,
+            Reserva.ejemplar_id.is_(None),
+        )
+        return session.scalar(stmt) or 0
+
+    def get_pendiente_con_ejemplar(self, session: Session, ejemplar_id: int) -> Reserva | None:
+        """Reserva PENDIENTE que ya tiene este ejemplar asignado (todavía sin despachar)."""
+        stmt = select(Reserva).where(
+            Reserva.ejemplar_id == ejemplar_id,
+            Reserva.estado == EstadoReserva.PENDIENTE,
+        )
+        return session.scalars(stmt).first()

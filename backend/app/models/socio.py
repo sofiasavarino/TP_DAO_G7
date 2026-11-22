@@ -20,7 +20,6 @@ class Socio(Base):
     nombre: Mapped[str] = mapped_column(String(100))
     apellido: Mapped[str] = mapped_column(String(100))
     dni: Mapped[str] = mapped_column(String(15), unique=True)
-    email: Mapped[str] = mapped_column(String(100))
     telefono: Mapped[str | None] = mapped_column(String(30))
     estado: Mapped[EstadoSocio] = mapped_column(
         Enum(EstadoSocio, native_enum=False), default=EstadoSocio.ACTIVO

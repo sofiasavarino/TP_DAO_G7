@@ -36,10 +36,10 @@ ROLES = [
 ]
 
 USUARIOS = [
-    # nombre_usuario, password, rol, sede_idx
-    ("admin1", "admin123", "Administrador", 0),
-    ("bibliotecario1", "biblio123", "Bibliotecario", 0),
-    ("socio1", "socio123", "Socio", 1),
+    # nombre_usuario, password, rol, sede_idx, email
+    ("admin1", "admin123", "Administrador", 0, "admin1@biblio.local"),
+    ("bibliotecario1", "biblio123", "Bibliotecario", 0, "bibliotecario1@biblio.local"),
+    ("socio1", "socio123", "Socio", 1, "ana.prueba@example.com"),
 ]
 
 CATALOGO = [
@@ -67,9 +67,10 @@ def main() -> None:
 
         role_map = {r.nombre: r for r in roles}
         usuarios = []
-        for nombre_usuario, password, rol_nombre, sede_idx in USUARIOS:
+        for nombre_usuario, password, rol_nombre, sede_idx, email in USUARIOS:
             u = Usuario(
                 nombre_usuario=nombre_usuario,
+                email=email,
                 hash=hash_password(password),
                 rol_id=role_map[rol_nombre].id,
                 sede_id=sedes[sede_idx].id,
@@ -80,20 +81,18 @@ def main() -> None:
         u_map = {u.nombre_usuario: u for u in usuarios}
 
         # Vincular usuarios con perfiles (Socio / Empleado)
-        socio_email = "ana.prueba@example.com"
         socio = Socio(
             nombre="Ana", apellido="Pérez", dni="20123456",
-            email=socio_email, estado=EstadoSocio.ACTIVO, usuario_id=u_map["socio1"].id,
+            estado=EstadoSocio.ACTIVO, usuario_id=u_map["socio1"].id,
         )
         session.add(socio)
 
-        for nombre_usuario, _a, rol_nombre, _b in USUARIOS:
+        for nombre_usuario, _a, rol_nombre, _b, _email in USUARIOS:
             if rol_nombre == "Socio":
                 continue
             session.add(
                 Empleado(
                     nombre="Personal", apellido=nombre_usuario.capitalize(),
-                    email=f"{nombre_usuario}@biblio.local",
                     legajo=f"LEG-{nombre_usuario}",
                     usuario_id=u_map[nombre_usuario].id,
                 )

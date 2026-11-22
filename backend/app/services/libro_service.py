@@ -1,7 +1,9 @@
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.dtos.googlebooks_dto import LibroLookupDTO
 from app.dtos.libro_dto import LibroCreate, LibroListadoDTO
+from app.models.autor import Autor
 from app.models.libro import Libro
 from app.repositories.autor_repository import AutorRepository
 from app.repositories.libro_repository import LibroRepository
@@ -55,6 +57,49 @@ def crear_libro(session: Session, datos: LibroCreate) -> tuple[Libro, bool]:
 
     libro = Libro(
         nombre=datos.nombre,
+        isbn=datos.isbn,
+        cant_paginas=datos.cant_paginas,
+        editorial=datos.editorial,
+        fecha_publicacion=datos.fecha_publicacion,
+        imagen_url=datos.imagen_url,
+        genero=datos.genero,
+        autores=autores,
+    )
+    return libro_repo.add(session, libro), True
+
+
+def crear_libro_desde_lookup(session: Session, datos: LibroLookupDTO) -> tuple[Libro, bool]:
+    """Alta desde un resultado de Google Books (o MANUAL).
+
+    - Dedup por ISBN: si ya existe, devuelve el libro actual con `es_nuevo=False`.
+    - Resuelve autores por nombre (case-insensitive); crea los que falten.
+    """
+    nombre = (datos.nombre or "").strip()
+    if not nombre:
+        raise ValueError("El libro no tiene nombre.")
+
+    if datos.isbn:
+        existente = libro_repo.get_by_isbn(session, datos.isbn)
+        if existente is not None:
+            return existente, False
+    else:
+        # Sin ISBN no podemos deduplicar por eso; comparamos por nombre para que
+        # la importación masiva sea idempotente.
+        stmt = select(Libro).where(func.lower(Libro.nombre) == nombre.lower())
+        existente = session.scalars(stmt).first()
+        if existente is not None:
+            return existente, False
+
+    nombres = list(dict.fromkeys(a.strip() for a in datos.autores if a and a.strip()))
+    encontrados = autor_repo.get_by_nombres(session, nombres)
+    existe_lower = {a.nombre.strip().lower() for a in encontrados}
+    autores = list(encontrados)
+    for n in nombres:
+        if n.lower() not in existe_lower:
+            autores.append(Autor(nombre=n))
+
+    libro = Libro(
+        nombre=nombre,
         isbn=datos.isbn,
         cant_paginas=datos.cant_paginas,
         editorial=datos.editorial,

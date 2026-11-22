@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.config.database import get_session
 from app.dtos.ejemplar_dto import EjemplarCreate, EjemplarDTO, EjemplarEstadoUpdate
+from app.exceptions import EjemplarNoDisponible
 from app.repositories.ejemplar_repository import EjemplarRepository
 from app.services.ejemplar_service import (
     cambiar_estado,
@@ -50,5 +51,7 @@ def cambiar_estado_endpoint(
         ejemplar = cambiar_estado(session, ejemplar_id, body.estado)
     except ValueError as e:
         raise HTTPException(400, str(e)) from e
+    except EjemplarNoDisponible as e:  # TransicionInvalida: el estado actual no admite el cambio
+        raise HTTPException(409, str(e)) from e
     session.commit()
     return EjemplarDTO.model_validate(ejemplar)
