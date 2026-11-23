@@ -15,6 +15,7 @@ class UsuarioSesionDTO(BaseModel):
     activo: bool
     rol: RolDTO
     sede: SedeDTO
+    email: str | None = None
 
 
 class UsuarioListadoDTO(BaseModel):

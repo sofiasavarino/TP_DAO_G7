@@ -1,7 +1,7 @@
 import unicodedata
 from collections.abc import Iterator
 
-from sqlalchemy import create_engine, event
+from sqlalchemy import create_engine, event, inspect, text
 from sqlalchemy.orm import sessionmaker
 
 from app.config.settings import DATABASE_URL
@@ -50,3 +50,16 @@ def crear_tablas() -> None:
     from app.models import Base  # importa todos los modelos
 
     Base.metadata.create_all(engine)
+    _agregar_columnas_nuevas()
+
+
+def _agregar_columnas_nuevas() -> None:
+    """Mini-migración para DBs locales creadas antes de que existiera una columna.
+
+    `create_all` no modifica tablas existentes; acá se agregan a mano las columnas
+    nuevas (idempotente: si ya están, no hace nada).
+    """
+    columnas_libro = {c["name"] for c in inspect(engine).get_columns("libro")}
+    if "activo" not in columnas_libro:
+        with engine.begin() as conn:
+            conn.execute(text("ALTER TABLE libro ADD COLUMN activo BOOLEAN NOT NULL DEFAULT 1"))

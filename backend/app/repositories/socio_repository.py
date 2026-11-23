@@ -31,6 +31,10 @@ class SocioRepository(BaseRepository[Socio]):
             filtros.append(Socio.id != excluir_id)
         return self.exists(session, *filtros)
 
+    def existe_email(self, session: Session, email: str) -> bool:
+        """Un email por socio (incluye los dados de baja)."""
+        return self.exists(session, func.lower(Socio.email) == email.strip().lower())
+
     def get_by_usuario_id(self, session: Session, usuario_id: int) -> Socio | None:
         """El socio logueado: el token trae el usuario, de ahi se saca el socio."""
         stmt = select(Socio).where(Socio.usuario_id == usuario_id)

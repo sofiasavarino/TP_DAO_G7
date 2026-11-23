@@ -45,7 +45,11 @@ class LibroRepository(BaseRepository[Libro]):
     ) -> list[Libro]:
         """Busqueda compuesta del catalogo. Todos los filtros son AND; `sedes` aplica
         EXISTS (al menos una copia DISPONIBLE en una de las sedes seleccionadas)."""
-        stmt = select(Libro).options(selectinload(Libro.autores))
+        stmt = (
+            select(Libro)
+            .options(selectinload(Libro.autores))
+            .where(Libro.activo.is_(True))  # los dados de baja no aparecen en el catálogo
+        )
 
         if titulo:
             stmt = stmt.where(func.unaccent(Libro.nombre).ilike(f"%{unaccent(titulo)}%"))

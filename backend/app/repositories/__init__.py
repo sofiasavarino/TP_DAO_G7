@@ -11,6 +11,7 @@ Uso tipico desde un service:
 from app.repositories.autor_repository import AutorRepository
 from app.repositories.base_repository import BaseRepository
 from app.repositories.ejemplar_repository import EjemplarRepository
+from app.repositories.empleado_repository import EmpleadoRepository
 from app.repositories.libro_repository import LibroRepository
 from app.repositories.notificacion_repository import NotificacionRepository
 from app.repositories.prestamo_repository import PrestamoRepository
@@ -23,7 +24,8 @@ from app.repositories.socio_repository import SocioRepository
 from app.repositories.usuario_repository import UsuarioRepository
 
 __all__ = [
-    "AutorRepository", "BaseRepository", "EjemplarRepository", "LibroRepository",
+    "AutorRepository", "BaseRepository", "EjemplarRepository", "EmpleadoRepository",
+    "LibroRepository",
     "NotificacionRepository", "PrestamoRepository", "RemitoRepository",
     "ReservaRepository", "RolRepository", "SancionRepository", "SedeRepository",
     "SocioRepository", "UsuarioRepository",
