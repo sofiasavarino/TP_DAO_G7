@@ -23,7 +23,11 @@ from app.exceptions.prestamo import (
     SocioSancionado,
 )
 from app.exceptions.remito import RemitoNoEncontrado
-from app.exceptions.reserva import EjemplarNoDisponibleParaAsignar, ReservaNoEncontrada
+from app.exceptions.reserva import (
+    EjemplarNoDisponibleParaAsignar,
+    ReservaDuplicada,
+    ReservaNoEncontrada,
+)
 from app.exceptions.usuario import DatoDuplicado, RolNoConfigurado, SedeInvalida
 
 __all__ = [
@@ -45,5 +49,5 @@ __all__ = [
     "SocioSancionado",
     "SedeNoPermitida",
     "TransicionEjemplarInvalida",
-
+    "ReservaDuplicada",
 ]

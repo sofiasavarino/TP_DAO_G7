@@ -21,7 +21,13 @@ from app.models.enums import (
 )
 
 from app.dtos.reserva_dto import ReservaCreate, ReservaDTO, ReservaEtaDTO
-from app.exceptions import LibroNoEncontrado, ReservaNoEncontrada, SocioSancionado
+from app.exceptions import (
+    LibroNoEncontrado,
+    LimitePrestamosExcedido,
+    ReservaDuplicada,
+    ReservaNoEncontrada,
+    SocioSancionado,
+)
 from app.models.ejemplar import Ejemplar
 from app.models.prestamo import Prestamo
 from app.models.reserva import Reserva
@@ -51,6 +57,10 @@ socio_repo = SocioRepository()
 DIAS_TRANSITO = 3
 # Días hábiles de retraso medio que un socio suele tardar en devolver un libro.
 DIAS_RETRASO_PROMEDIO = 2
+# Libros que un socio puede tener a la vez entre reservas vivas y préstamos abiertos.
+# Mismo cupo que prestamo_service.MAX_PRESTAMOS_ABIERTOS (no se importa de ahí porque
+# prestamo_service importa este módulo).
+MAX_LIBROS_SIMULTANEOS = 2
 
 
 # ------------------------------------------------------------------ reserva vista previa ETA
@@ -123,7 +133,9 @@ def crear_reserva(session: Session, datos: ReservaCreate, usuario_id: int) -> Re
       EN_TRANSITO y se avisa al socio.
     - Sin ejemplar disponible en ninguna sede → queda PENDIENTE.
 
-    Valida: socio activo y sin sanción vigente; libro y sede activos.
+    Valida: socio activo y sin sanción vigente; que no tenga ya una reserva viva del mismo
+    libro; cupo de MAX_LIBROS_SIMULTANEOS entre reservas vivas y préstamos abiertos;
+    libro y sede activos.
     """
     socio = socio_repo.get_by_id(session, datos.socio_id, incluir_inactivos=True)
     if socio is None:
@@ -132,7 +144,18 @@ def crear_reserva(session: Session, datos: ReservaCreate, usuario_id: int) -> Re
         raise ValueError(f"socio {datos.socio_id} no está activo (estado: {socio.estado.value})")
     if sancion_repo.tiene_vigentes(session, datos.socio_id):
         raise SocioSancionado(
-            f"socio {datos.socio_id} tiene sanción vigente; no puede reservar libros"
+            "Tenés una sanción vigente: no podés reservar libros hasta que se levante."
+        )
+
+    if reserva_repo.existe_vigente(session, datos.socio_id, datos.libro_id):
+        raise ReservaDuplicada("Ya tenés una reserva activa de este libro.")
+    en_uso = reserva_repo.contar_vigentes_socio(
+        session, datos.socio_id
+    ) + prestamo_repo.contar_abiertos_socio(session, datos.socio_id)
+    if en_uso >= MAX_LIBROS_SIMULTANEOS:
+        raise LimitePrestamosExcedido(
+            f"Alcanzaste el límite de {MAX_LIBROS_SIMULTANEOS} libros entre reservas activas "
+            "y préstamos; devolvé o cancelá uno para reservar otro."
         )
 
     if libro_repo.get_by_id(session, datos.libro_id, incluir_inactivos=True) is None:

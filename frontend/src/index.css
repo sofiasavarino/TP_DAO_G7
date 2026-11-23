@@ -1584,3 +1584,108 @@ footer > span {
   .ejemplar-form-fila { grid-template-columns: 1fr; }
   .inv-filtros .libro-selector, .inv-filtros .inv-codigo, .inv-select, .inv-select select { flex-basis: 100%; width: 100%; max-width: none; }
 }
+
+
+/* ===== F3 – Catálogo y reserva del portal de socios ===== */
+/* Tapa tipográfica para libros sin imagen */
+.portada-vacia {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  padding: 18px 16px 22px 20px;
+  background: linear-gradient(160deg, #2c5a46, var(--green) 55%, #143226);
+  color: var(--paper);
+}
+.portada-vacia span {
+  font: 600 18px/1.15 "Playfair Display", serif;
+  overflow-wrap: anywhere;
+}
+.book-card > .portada-vacia { transition: filter 0.3s; }
+.book-card:hover > .portada-vacia { filter: brightness(0.35); }
+.detail-grid .portada-vacia {
+  aspect-ratio: 2 / 3;
+  height: auto;
+  border-radius: 6px;
+  box-shadow: 0 24px 50px -24px rgba(29, 36, 32, 0.5);
+}
+.detail-grid .portada-vacia span { font-size: 28px; }
+.weekly-image .portada-vacia span { font-size: 34px; }
+.modal-book .portada-vacia.mini {
+  width: 48px;
+  height: 62px;
+  flex: 0 0 auto;
+  padding: 5px;
+}
+.modal-book .portada-vacia.mini span { font-size: 7px; }
+.modal-book img.mini { flex: 0 0 auto; }
+
+/* Disponibilidad en la tarjeta */
+.availability.sin-copias { background: rgba(245, 241, 232, 0.85); color: var(--rust); }
+.card-sedes {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 3px;
+  font-size: 10px;
+  opacity: 0.9;
+}
+.card-sedes li { display: flex; justify-content: space-between; gap: 8px; }
+.book-overlay button:disabled { opacity: 0.55; cursor: not-allowed; }
+
+/* Disponibilidad por sede en la ficha del libro */
+.disponibilidad-sedes {
+  list-style: none;
+  padding: 0;
+  margin: 6px 0 8px;
+  display: grid;
+  gap: 6px;
+  max-width: 520px;
+}
+.disponibilidad-sedes li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1px solid #d4ccbf;
+}
+.disponibilidad-sedes li.con-copias { border-color: var(--green); background: rgba(31, 74, 56, 0.04); }
+.disponibilidad-sedes strong { display: block; font-size: 13px; }
+.disponibilidad-sedes em { font-style: normal; color: var(--green); font-weight: 500; }
+.disponibilidad-sedes small { color: #697169; font-size: 11px; }
+.disponibilidad-sedes li > span { font-size: 12px; font-weight: 700; color: var(--rust); white-space: nowrap; }
+.disponibilidad-sedes li.con-copias > span { color: var(--green); }
+
+/* Modal de reserva: nota, error del backend y confirmación */
+.reserva-nota { margin: 14px 0 0; font-size: 12px; }
+.reserva-error {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-left: 3px solid var(--rust);
+  background: rgba(188, 90, 56, 0.08);
+  display: grid;
+  gap: 4px;
+  font-size: 13px;
+}
+.reserva-error strong { color: var(--rust); }
+.reserva-ok {
+  padding: 14px 16px;
+  border-left: 3px solid var(--green);
+  background: rgba(31, 74, 56, 0.06);
+  line-height: 1.6;
+  font-size: 14px;
+}
+.modal-close:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Mis reservas con datos reales: tapa tipográfica en la fila */
+.reservation-list article .portada-vacia { width: 120px; height: 150px; padding: 10px; }
+.reservation-list article .portada-vacia span {
+  color: var(--paper);
+  font: 600 13px/1.15 "Playfair Display", serif;
+  letter-spacing: 0;
+}
+@media (max-width: 640px) {
+  .reservation-list article .portada-vacia { width: 85px; height: 120px; }
+}

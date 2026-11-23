@@ -18,7 +18,7 @@ export enum EjemplarEstado {
 // Estados de una reserva
 export enum ReservaEstado {
   PENDIENTE = 'PENDIENTE',
-  EN_CAMINO = 'EN_CAMINO',
+  EN_TRANSITO = 'EN_TRANSITO', 
   LISTA_PARA_RETIRO = 'LISTA_PARA_RETIRO',
   CUMPLIDA = 'CUMPLIDA',
   VENCIDA = 'VENCIDA',

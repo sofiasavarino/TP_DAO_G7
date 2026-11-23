@@ -1,5 +1,5 @@
 import { api } from './api';
-import type { AccionEjemplar, EjemplarInventario, EjemplarLotePayload, Sede } from '../types/ejemplares';
+import type { AccionEjemplar, Ejemplar, EjemplarInventario, EjemplarLotePayload, Sede } from '../types/ejemplares';
 import type { EjemplarEstado } from '../types/enums';
 
 const BASE = '/api/v1/ejemplares';
@@ -14,7 +14,9 @@ export const ejemplaresService = {
   /** Inventario físico (todos los estados), filtrable por libro, sede actual y estado. */
   listar: (filtros: FiltroInventario = {}) =>
     api.get<EjemplarInventario[]>(BASE, filtros as Record<string, string | number | undefined>),
-
+    /** Copias DISPONIBLE (público). Sin filtros trae toda la red. */
+  disponibles: (filtros: { libro_id?: number; sede_id?: number } = {}) =>
+    api.get<Ejemplar[]>(`${BASE}/disponibles`, filtros),
   /** Alta de 1..50 copias de un libro en una sede (los códigos se generan solos). */
   crearLote: (payload: EjemplarLotePayload) => api.post<EjemplarInventario[]>(`${BASE}/lote`, payload),
 

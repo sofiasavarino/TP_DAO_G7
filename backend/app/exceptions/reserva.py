@@ -11,3 +11,5 @@ class EjemplarNoDisponibleParaAsignar(BibliotecaError):
     Se lanza cuando el libro no tiene copias en estado DISPONIBLE en la red;
     la reserva puede quedar como PENDIENTE, pero el sistema no puede prometer nada.
     """
+class ReservaDuplicada(BibliotecaError):
+    """El socio ya tiene una reserva viva (PENDIENTE/EN_TRANSITO/LISTA_PARA_RETIRO) de ese libro."""

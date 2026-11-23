@@ -100,4 +100,7 @@ export const api = {
 
   delete: <T>(endpoint: string) =>
     request<T>(endpoint, { method: 'DELETE' }),
+    /** Llamada libre: para los endpoints que mezclan body y query params (ej. POST /reservas?responsable_creacion_id=). */
+    
+  request: <T>(endpoint: string, options: RequestOptions) => request<T>(endpoint, options),
 };

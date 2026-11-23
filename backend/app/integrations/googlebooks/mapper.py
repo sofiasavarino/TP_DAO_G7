@@ -36,7 +36,10 @@ def _imagen_url(image_links: dict | None) -> str | None:
     if not url:
         return None
     # Google a veces devuelve http://; http->https en el cliente evita mixto.
-    return url.replace("http://", "https://", 1)
+    # `edge=curl` le dibuja una esquina doblada a la tapa: se saca para que se vea limpia.
+    url = url.replace("http://", "https://", 1).replace("&edge=curl", "")
+    # La búsqueda solo trae miniaturas (~128 px); `fife` pide la misma tapa en alta resolución.
+    return f"{url}&fife=w800-h1200"
 
 
 def _categorias(categories: list[str] | None) -> str | None:
