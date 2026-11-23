@@ -9,14 +9,18 @@ Un evento que el estado no admite lanza `TransicionInvalida`.
     RESERVADO  --retirar_reservado--> PRESTADO
     RESERVADO  --liberar------------> DISPONIBLE
     PRESTADO   --devolver-----------> DISPONIBLE
-    DISPONIBLE / RESERVADO --despachar--> EN_TRANSITO
+    DISPONIBLE / RESERVADO --despachar--> EN_TRANSITO  (devuelve si su reserva viaja)
     EN_TRANSITO --recibir-----------> DISPONIBLE
+    EN_TRANSITO --recibir_con_incidencia(EN_REPARACION|INUTILIZABLE)--> según corresponda
     DISPONIBLE / EN_TRANSITO --enviar_a_reparacion--> EN_REPARACION
+    RESERVADO  --soltar-------------> DISPONIBLE   (no-op en los demás; "suelta" sin lanzar)
     EN_REPARACION --reparar---------> DISPONIBLE
     DISPONIBLE / EN_TRANSITO / EN_REPARACION --dar_de_baja--> INUTILIZABLE   (terminal)
     PRESTADO   --dar_por_perdido----> PERDIDO        (vencido y el socio no lo devuelve)
-    PERDIDO    --devolver-----------> DISPONIBLE     (apareció el ejemplar original)
+    PERDIDO    --devolver(al_aparecer)--> DISPONIBLE (apareció el ejemplar original; ejecuta el callback)
     PERDIDO    --dar_de_baja--------> INUTILIZABLE   (el socio repuso una copia: el original se descarta)
+
+    disponible_desde(ejemplar, ctx) → fecha estimada o None (polimorfismo para la ETA).
 
 Uso desde los services:
 
@@ -24,16 +28,19 @@ Uso desde los services:
     estado_de(ejemplar).admite("despachar")     # consulta sin cambiar nada
 
 Los estados no guardan datos (son una instancia compartida por tipo), así que el
-contexto —el Ejemplar— se pasa como argumento. Este módulo no importa el modelo
-`Ejemplar`: usa solo el enum, para no generar imports circulares.
+contexto —el Ejemplar y lo que necesite— se pasa como argumento. Este módulo no importa
+el modelo `Ejemplar` ni repos/services: usa el enum, utilidades puras y callbacks inyectados.
 """
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from dataclasses import dataclass
+from datetime import date
+from typing import TYPE_CHECKING, Callable, NoReturn
 
 from app.exceptions import EjemplarNoDisponible
 from app.models.enums import EstadoEjemplar
+from app.utils.fechas import sumar_dias_habiles
 
 if TYPE_CHECKING:
     from app.models.ejemplar import Ejemplar
@@ -47,10 +54,25 @@ class TransicionInvalida(EjemplarNoDisponible):
     """
 
 
+@dataclass(frozen=True)
+class ContextoEta:
+    """Datos que el service inyecta para calcular cuándo estará disponible un ejemplar.
+
+    El state no consulta la base: `vencimiento_de` es un callable que resuelve el
+    service (devuelve la fecha de vencimiento del préstamo abierto, o None).
+    """
+
+    hoy: date
+    sede_retiro_id: int
+    dias_transito: int
+    dias_retraso_promedio: int
+    vencimiento_de: Callable[[int], date | None]
+
+
 class EstadoEjemplarState:
     """Estado base: todos los eventos son inválidos salvo que el estado concreto los sobrescriba."""
 
-    def _invalida(self, ejemplar: Ejemplar, accion: str) -> None:
+    def _invalida(self, ejemplar: Ejemplar, accion: str) -> NoReturn:
         raise TransicionInvalida(
             f"el ejemplar {ejemplar.codigo_inventario} no puede {accion}: "
             f"está {ejemplar.estado.value}"
@@ -70,11 +92,21 @@ class EstadoEjemplarState:
     def liberar(self, ejemplar: Ejemplar) -> None:
         self._invalida(ejemplar, "liberarse de su reserva")
 
-    def devolver(self, ejemplar: Ejemplar) -> None:
+    def devolver(self, ejemplar: Ejemplar, al_aparecer: Callable[[], None] | None = None) -> None:
         self._invalida(ejemplar, "devolverse")
 
-    def despachar(self, ejemplar: Ejemplar) -> None:
+    def despachar(self, ejemplar: Ejemplar) -> bool:
         self._invalida(ejemplar, "despacharse")
+
+    def soltar(self, ejemplar: Ejemplar) -> None:
+        """Soltar una reserva que ya no aplica. No-op salvo en `Reservado`."""
+
+    def recibir_con_incidencia(self, ejemplar: Ejemplar, tipo: EstadoEjemplar) -> None:
+        self._invalida(ejemplar, "recibirse con incidencia")
+
+    def disponible_desde(self, ejemplar: Ejemplar, ctx: ContextoEta) -> date | None:
+        """Desde cuándo podría retirarse este ejemplar en la sede del contexto."""
+        return None
 
     def recibir(self, ejemplar: Ejemplar) -> None:
         self._invalida(ejemplar, "recibirse")
@@ -105,8 +137,14 @@ class Disponible(EstadoEjemplarState):
     def prestar(self, ejemplar: Ejemplar) -> None:
         ejemplar.estado = EstadoEjemplar.PRESTADO
 
-    def despachar(self, ejemplar: Ejemplar) -> None:
+    def despachar(self, ejemplar: Ejemplar) -> bool:
         ejemplar.estado = EstadoEjemplar.EN_TRANSITO
+        return False  # no tiene reserva que despachar
+
+    def disponible_desde(self, ejemplar: Ejemplar, ctx: ContextoEta) -> date | None:
+        if ejemplar.sede_actual_id == ctx.sede_retiro_id:
+            return ctx.hoy
+        return sumar_dias_habiles(ctx.hoy, ctx.dias_transito)
 
     def enviar_a_reparacion(self, ejemplar: Ejemplar) -> None:
         ejemplar.estado = EstadoEjemplar.EN_REPARACION
@@ -122,13 +160,23 @@ class Reservado(EstadoEjemplarState):
     def liberar(self, ejemplar: Ejemplar) -> None:
         ejemplar.estado = EstadoEjemplar.DISPONIBLE
 
-    def despachar(self, ejemplar: Ejemplar) -> None:
+    def soltar(self, ejemplar: Ejemplar) -> None:
+        ejemplar.estado = EstadoEjemplar.DISPONIBLE
+
+    def despachar(self, ejemplar: Ejemplar) -> bool:
         ejemplar.estado = EstadoEjemplar.EN_TRANSITO
+        return True  # su reserva tiene que pasar a EN_TRANSITO
 
 
 class EnTransito(EstadoEjemplarState):
     def recibir(self, ejemplar: Ejemplar) -> None:
         ejemplar.estado = EstadoEjemplar.DISPONIBLE
+
+    def recibir_con_incidencia(self, ejemplar: Ejemplar, tipo: EstadoEjemplar) -> None:
+        if tipo == EstadoEjemplar.INUTILIZABLE:
+            self.dar_de_baja(ejemplar)
+        else:
+            self.enviar_a_reparacion(ejemplar)
 
     def enviar_a_reparacion(self, ejemplar: Ejemplar) -> None:  # llegó dañado
         ejemplar.estado = EstadoEjemplar.EN_REPARACION
@@ -138,8 +186,17 @@ class EnTransito(EstadoEjemplarState):
 
 
 class Prestado(EstadoEjemplarState):
-    def devolver(self, ejemplar: Ejemplar) -> None:
+    def devolver(self, ejemplar: Ejemplar, al_aparecer: Callable[[], None] | None = None) -> None:
         ejemplar.estado = EstadoEjemplar.DISPONIBLE
+
+    def disponible_desde(self, ejemplar: Ejemplar, ctx: ContextoEta) -> date | None:
+        vencimiento = ctx.vencimiento_de(ejemplar.id)
+        if vencimiento is None:
+            return None
+        base = sumar_dias_habiles(vencimiento, ctx.dias_retraso_promedio)
+        if ejemplar.sede_actual_id == ctx.sede_retiro_id:
+            return base
+        return sumar_dias_habiles(base, ctx.dias_transito)
 
     def dar_por_perdido(self, ejemplar: Ejemplar) -> None:  # vencido y nunca lo devolvieron
         ejemplar.estado = EstadoEjemplar.PERDIDO
@@ -148,8 +205,10 @@ class Prestado(EstadoEjemplarState):
 class Perdido(EstadoEjemplarState):
     """No es terminal: si el ejemplar aparece se devuelve; si se repone, se da de baja."""
 
-    def devolver(self, ejemplar: Ejemplar) -> None:
+    def devolver(self, ejemplar: Ejemplar, al_aparecer: Callable[[], None] | None = None) -> None:
         ejemplar.estado = EstadoEjemplar.DISPONIBLE
+        if al_aparecer is not None:
+            al_aparecer()
 
     def dar_de_baja(self, ejemplar: Ejemplar) -> None:
         ejemplar.estado = EstadoEjemplar.INUTILIZABLE

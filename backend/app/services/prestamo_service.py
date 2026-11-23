@@ -207,9 +207,12 @@ def devolver_prestamo(
 
     ejemplar = prestamo.ejemplar
     ejemplar.sede_actual_id = sede_id
-    if ejemplar.estado == EstadoEjemplar.PERDIDO:
-        _levantar_baja_por_perdida(session, prestamo, hoy)  # apareció el original
-    estado_de(ejemplar).devolver(ejemplar)  # PRESTADO o PERDIDO -> DISPONIBLE
+
+    def al_aparecer() -> None:
+        _levantar_baja_por_perdida(session, prestamo, hoy)
+
+    # Prestado.devolver ignora el callback; Perdido.devolver lo ejecuta (apareció el original).
+    estado_de(ejemplar).devolver(ejemplar, al_aparecer=al_aparecer)
 
     if con_danios:
         estado_de(ejemplar).enviar_a_reparacion(ejemplar)  # DISPONIBLE -> EN_REPARACION

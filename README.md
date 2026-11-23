@@ -58,7 +58,7 @@ TP_DAO_G7/
 | `services` | Reglas de negocio y manejo de transacciones. |
 | `controllers` | Routers de FastAPI: reciben el request HTTP, arman DTOs de entrada, llaman al service y devuelven el DTO de respuesta. |
 | `dtos` | Objetos de transferencia con Pydantic. Son también el modelo request/response de la API (FastAPI los valida igual automáticamente). |
-| `states` | Pensado para el patrón State. Se agrega al final, solo si se termina implementando. |
+| `states` | Patrón **State** aplicado a Ejemplar y Reserva: `estado_de()` / `estado_de_reserva()` devuelven el objeto con el comportamiento del estado; los eventos son los únicos que cambian `estado`. No importan repos ni services: reciben contexto y callbacks por parámetro. |
 | `reports` | Reportes y estadísticas. Opcional, se agrega al final. |
 | `notifications` | Envío de notificaciones con patrón **Observer**: `EventManager` (suscripción por tipo de evento), `EventListener`/`PersistirListener`/`MailListener`, `NotificacionService` (publisher concreto) y `mensajes.py` (qué se dice y a quién). El mail se envía después del commit vía `despues_del_commit`. |
 | `integrations/googlebooks` | Cliente HTTP de Google Books y mapper de la respuesta a `Libro` y `Autor`. Solo lo usa el service de libro. |
@@ -135,6 +135,9 @@ routers (FastAPI, en controllers/) → services → repositories → models
 | `services` | Reglas de negocio y manejo de la transacción | Exponer DTOs crudos de infra o conocer Flet/HTTP |
 | `repositories` | Queries sobre la sesión recibida: colecciones (listados, historiales) y agregados (`count`, `sum`) con `selectinload`/`func` | Hacer `commit()` ni tener reglas de negocio |
 | `models` | Mapeo de tablas y relaciones | Contener lógica de negocio |
+| `states` | Comportamiento por estado del ejemplar y la reserva (transiciones, ETA, soltado) | Importar repos, services o `mensajes`; conocer HTTP |
+
+**Patrón State.** `app/states/` tiene un objeto por estado (instancias compartidas) y `estado_de(ejemplar)` / `estado_de_reserva(reserva)` devuelven el que corresponde. Los eventos (`reservar`, `prestar`, `devolver`, `despachar`, `recibir`, `recibir_con_incidencia`, `soltar`, `dar_por_perdido`, `vencer`, `cancelar`, …) son los únicos que cambian `estado`; uno no admitido lanza `TransicionInvalida` / `TransicionReservaInvalida`. Los states no consultan la base: reciben el contexto como parámetro (`ContextoEta` con `vencimiento_de` inyectado) y los efectos como callbacks (`devolver(al_aparecer=...)`). Así se resuelven polimórficamente la ETA (`disponible_desde`), la liberación del ejemplar al vencer/cancelar y el rumbo en despacho/recepción.
 
 **Navegación del ORM.** Los services pueden navegar relaciones a-uno por lazy loading (`prestamo.ejemplar`, `ejemplar.libro`): son lookups por PK, baratos y quedan dentro de la transacción abierta. Lo que involucra colecciones o agregados lo resuelve siempre el repository: listados con `selectinload` (evita el N+1), conteos para reglas de negocio con `func.count` (p. ej. el límite de préstamos activos de un socio). Si un caso de uso encadena 3 o más lazy loads, se precarga el grafo desde el repository. Los DTOs se arman dentro de la sesión (`PrestamoDTO.model_validate(prestamo)` o `PrestamoListadoDTO.from_model(...)` para enriquecidos); nunca se devuelven objetos ORM vivos al controller ni a la vista.
 
@@ -159,7 +162,7 @@ class Prestamo(Base):
 
 **Baja lógica.** Nunca se borra físicamente. Se marca `activo = False` y los repositories filtran por activos por defecto.
 
-**Enums.** Los valores fijos van como `Enum` de Python en el módulo de enums de `models`. No hay tabla `Estado`: todos los estados (socio, préstamo, ejemplar, reserva, remito) son enums. Más adelante se puede evaluar el patrón State (ver `states` en la estructura del proyecto). La tabla `Rol` sí existe y se usa en `Usuario`, donde el diagrama lo indica.
+**Enums.** Los valores fijos van como `Enum` de Python en el módulo de enums de `models`. No hay tabla `Estado`: todos los estados (socio, préstamo, ejemplar, reserva, remito) son enums. Encima de los enums de `ejemplar` y `reserva` está el patrón State en `app/states/` (ver Arquitectura). La tabla `Rol` sí existe y se usa en `Usuario`, donde el diagrama lo indica.
 
 **Transacciones.** El service abre la transacción y los repositories reciben la sesión:
 

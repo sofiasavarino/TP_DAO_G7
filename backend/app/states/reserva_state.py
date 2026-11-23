@@ -12,6 +12,10 @@ admite lanza `TransicionReservaInvalida`.
     PENDIENTE / EN_TRANSITO / LISTA_PARA_RETIRO --cancelar--> CANCELADA
     CUMPLIDA, VENCIDA y CANCELADA son terminales.
 
+`ListaParaRetiro.vencer` y `.cancelar` sueltan el ejemplar (vía `soltar`, del state del
+ejemplar) si no está viajando en un remito. En `Pendiente`/`EnTransito`, cancelar sólo
+cierra la reserva.
+
 Los estados solo cambian `reserva.estado`. Quien llama (el service) se ocupa del resto:
 fechas, `ejemplar_id`, el ejemplar mismo y los avisos al socio.
 
@@ -25,13 +29,16 @@ Este módulo no importa el modelo `Reserva` (solo el enum), para evitar imports 
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, NoReturn
 
 from app.exceptions import BibliotecaError
 from app.models.enums import EstadoReserva
 
 if TYPE_CHECKING:
+    from app.models.ejemplar import Ejemplar
     from app.models.reserva import Reserva
+
+from app.states.ejemplar_state import estado_de
 
 
 class TransicionReservaInvalida(BibliotecaError):
@@ -41,7 +48,7 @@ class TransicionReservaInvalida(BibliotecaError):
 class EstadoReservaState:
     """Estado base: todos los eventos son inválidos salvo que el estado concreto los sobrescriba."""
 
-    def _invalida(self, reserva: Reserva, accion: str) -> None:
+    def _invalida(self, reserva: Reserva, accion: str) -> NoReturn:
         raise TransicionReservaInvalida(
             f"la reserva {reserva.id} no puede {accion}: está {reserva.estado.value}"
         )
@@ -60,10 +67,12 @@ class EstadoReservaState:
     def retirar(self, reserva: Reserva) -> None:
         self._invalida(reserva, "retirarse")
 
-    def vencer(self, reserva: Reserva) -> None:
+    def vencer(self, reserva: Reserva, ejemplar: Ejemplar | None = None) -> None:
         self._invalida(reserva, "vencer")
 
-    def cancelar(self, reserva: Reserva) -> None:
+    def cancelar(
+        self, reserva: Reserva, ejemplar: Ejemplar | None = None, viaja_en_remito: bool = False
+    ) -> None:
         self._invalida(reserva, "cancelarse")
 
     # -- consulta --------------------------------------------------------------
@@ -88,8 +97,10 @@ class Pendiente(EstadoReservaState):
     def habilitar_retiro(self, reserva: Reserva) -> None:
         reserva.estado = EstadoReserva.LISTA_PARA_RETIRO
 
-    def cancelar(self, reserva: Reserva) -> None:
-        reserva.estado = EstadoReserva.CANCELADA
+    def cancelar(
+        self, reserva: Reserva, ejemplar: Ejemplar | None = None, viaja_en_remito: bool = False
+    ) -> None:
+        reserva.estado = EstadoReserva.CANCELADA  # no tiene ejemplar que soltar
 
 
 class EnTransito(EstadoReservaState):
@@ -99,19 +110,27 @@ class EnTransito(EstadoReservaState):
     def perder_ejemplar(self, reserva: Reserva) -> None:
         reserva.estado = EstadoReserva.PENDIENTE
 
-    def cancelar(self, reserva: Reserva) -> None:
-        reserva.estado = EstadoReserva.CANCELADA
+    def cancelar(
+        self, reserva: Reserva, ejemplar: Ejemplar | None = None, viaja_en_remito: bool = False
+    ) -> None:
+        reserva.estado = EstadoReserva.CANCELADA  # el ejemplar sigue viajando; la recepción lo reasigna
 
 
 class ListaParaRetiro(EstadoReservaState):
     def retirar(self, reserva: Reserva) -> None:
         reserva.estado = EstadoReserva.CUMPLIDA
 
-    def vencer(self, reserva: Reserva) -> None:
+    def vencer(self, reserva: Reserva, ejemplar: Ejemplar | None = None) -> None:
         reserva.estado = EstadoReserva.VENCIDA
+        if ejemplar is not None:
+            estado_de(ejemplar).soltar(ejemplar)
 
-    def cancelar(self, reserva: Reserva) -> None:
+    def cancelar(
+        self, reserva: Reserva, ejemplar: Ejemplar | None = None, viaja_en_remito: bool = False
+    ) -> None:
         reserva.estado = EstadoReserva.CANCELADA
+        if ejemplar is not None and not viaja_en_remito:
+            estado_de(ejemplar).soltar(ejemplar)
 
 
 class Cumplida(EstadoReservaState):

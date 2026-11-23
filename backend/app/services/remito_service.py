@@ -230,9 +230,9 @@ def despachar(session: Session, remito_id: int, usuario_id: int) -> Remito:
     remito.fecha_despacho = date.today()
     remito.responsable_despacho_id = usuario_id
     for ejemplar in remito.ejemplares:
-        estado_de(ejemplar).despachar(ejemplar)
+        despacha_reserva = estado_de(ejemplar).despachar(ejemplar)  # Reservado -> True
         reserva = reserva_repo.get_pendiente_con_ejemplar(session, ejemplar.id)
-        if reserva is not None:
+        if despacha_reserva and reserva is not None:
             estado_de_reserva(reserva).despachar(reserva)  # PENDIENTE -> EN_TRANSITO
             mensajes.avisar_ejemplar_asignado(session, reserva)
 
@@ -276,10 +276,7 @@ def recibir(
     for ejemplar in remito.ejemplares:
         ejemplar.sede_actual_id = remito.sede_destino_id
         if ejemplar.id in incidencias:
-            if incidencias[ejemplar.id] == EstadoEjemplar.INUTILIZABLE:
-                estado_de(ejemplar).dar_de_baja(ejemplar)
-            else:
-                estado_de(ejemplar).enviar_a_reparacion(ejemplar)
+            estado_de(ejemplar).recibir_con_incidencia(ejemplar, incidencias[ejemplar.id])
             # Si el ejemplar estaba preasignado a una reserva, la liberamos para que
             # el siguiente ejemplar disponible la atienda (el dañado no sirve).
             reserva = reserva_repo.get_vigente_de_ejemplar(session, ejemplar.id)

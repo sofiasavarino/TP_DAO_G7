@@ -34,7 +34,7 @@ from app.repositories.sancion_repository import SancionRepository
 from app.repositories.sede_repository import SedeRepository
 from app.repositories.socio_repository import SocioRepository
 from app.notifications import mensajes
-from app.states.ejemplar_state import estado_de
+from app.states.ejemplar_state import ContextoEta, estado_de
 from app.states.reserva_state import estado_de_reserva
 from app.utils.fechas import sumar_dias_habiles
 
@@ -73,24 +73,23 @@ def calcular_eta(session: Session, libro_id: int, sede_retiro_id: int) -> date |
     Devuelve None si no alcanzan los candidatos para la cantidad de reservas en fila.
     """
     hoy = date.today()
+
+    def vencimiento_de(ejemplar_id: int) -> date | None:
+        prestamo = prestamo_repo.get_abierto_de_ejemplar(session, ejemplar_id)
+        return prestamo.fecha_vencimiento if prestamo is not None else None
+
+    ctx = ContextoEta(
+        hoy=hoy,
+        sede_retiro_id=sede_retiro_id,
+        dias_transito=DIAS_TRANSITO,
+        dias_retraso_promedio=DIAS_RETRASO_PROMEDIO,
+        vencimiento_de=vencimiento_de,
+    )
     candidatos: list[date] = []
     for ejemplar in ejemplar_repo.listar_por_libro(session, libro_id):
-        if ejemplar.estado == EstadoEjemplar.DISPONIBLE:
-            candidatos.append(
-                hoy
-                if ejemplar.sede_actual_id == sede_retiro_id
-                else sumar_dias_habiles(hoy, DIAS_TRANSITO)
-            )
-        elif ejemplar.estado == EstadoEjemplar.PRESTADO:
-            prestamo = prestamo_repo.get_abierto_de_ejemplar(session, ejemplar.id)
-            if prestamo is not None:
-                # + retraso medio de devolución; + tránsito si llega de otra sede
-                base = sumar_dias_habiles(prestamo.fecha_vencimiento, DIAS_RETRASO_PROMEDIO)
-                candidatos.append(
-                    base
-                    if ejemplar.sede_actual_id == sede_retiro_id
-                    else sumar_dias_habiles(base, DIAS_TRANSITO)
-                )
+        fecha = estado_de(ejemplar).disponible_desde(ejemplar, ctx)
+        if fecha is not None:
+            candidatos.append(fecha)
     candidatos.sort()
     esperando = reserva_repo.contar_en_cola(session, libro_id)
     if esperando < len(candidatos):
@@ -279,13 +278,13 @@ def procesar_vencimientos(
         ejemplar = None
         if reserva.ejemplar_id is not None:
             ejemplar = ejemplar_repo.get_by_id(session, reserva.ejemplar_id, incluir_inactivos=True)
-        estado_de_reserva(reserva).vencer(reserva)  # LISTA_PARA_RETIRO -> VENCIDA
+        # Se decide ANTES: `vencer` suelta el ejemplar y dejaría de estar RESERVADO.
+        puede_servir_siguiente = ejemplar is not None and estado_de(ejemplar).admite("soltar")
+        estado_de_reserva(reserva).vencer(reserva, ejemplar)  # LISTA_PARA_RETIRO -> VENCIDA (+ suelta)
         mensajes.avisar_reserva_vencida(session, reserva)
-        if ejemplar is None or ejemplar.estado != EstadoEjemplar.RESERVADO:
+        if not puede_servir_siguiente:
             continue
-        # Se libera el ejemplar (RESERVADO -> DISPONIBLE) y se sirve la siguiente reserva más
-        # vieja FIFO del libro.
-        estado_de(ejemplar).liberar(ejemplar)
+        # Se sirve la siguiente reserva más vieja FIFO del libro.
         asignar_ejemplar_a_reserva_mas_vieja(session, ejemplar, hoy, usuario_id=usuario_id)
     return vencidas
 
@@ -309,14 +308,20 @@ def cancelar_reserva(session: Session, reserva_id: int, usuario_id: int | None =
     ejemplar = None
     if reserva.ejemplar_id is not None:
         ejemplar = ejemplar_repo.get_by_id(session, reserva.ejemplar_id, incluir_inactivos=True)
-    estado_de_reserva(reserva).cancelar(reserva)
+    viaja_en_remito = (
+        ejemplar is not None
+        and remito_repo.get_en_transito_de_ejemplar(session, ejemplar.id) is not None
+    )
+    # Se decide ANTES: `cancelar` suelta el ejemplar y dejaría de estar RESERVADO.
+    debe_asignar = (
+        ejemplar is not None and not viaja_en_remito and estado_de(ejemplar).admite("soltar")
+    )
+    estado_de_reserva(reserva).cancelar(reserva, ejemplar, viaja_en_remito)
 
-    if ejemplar is not None and ejemplar.estado == EstadoEjemplar.RESERVADO:
-        if remito_repo.get_en_transito_de_ejemplar(session, ejemplar.id) is None:
-            # Se libera (RESERVADO -> DISPONIBLE) y se sirve la siguiente reserva más vieja FIFO del libro
-            estado_de(ejemplar).liberar(ejemplar)
-            asignar_ejemplar_a_reserva_mas_vieja(session, ejemplar, hoy, usuario_id=usuario_id)
-        # si está en un remito abierto, al llegar al destino la recepción lo reasigna FIFO
+    if debe_asignar:
+        # Se sirve la siguiente reserva más vieja FIFO del libro.
+        asignar_ejemplar_a_reserva_mas_vieja(session, ejemplar, hoy, usuario_id=usuario_id)
+    # si está en un remito abierto, al llegar al destino la recepción lo reasigna FIFO
     return reserva
 
 
@@ -367,8 +372,8 @@ def asignar_ejemplar_a_reserva_mas_vieja(
         viejo = ejemplar_repo.get_by_id(
             session, reserva.ejemplar_id, incluir_inactivos=True
         )
-        if viejo is not None and viejo.estado == EstadoEjemplar.RESERVADO:
-            estado_de(viejo).liberar(viejo)  # si ya viaja (EN_TRANSITO) sigue viajando
+        if viejo is not None:
+            estado_de(viejo).soltar(viejo)  # Reservado -> DISPONIBLE; EnTransito sigue viajando
 
     reserva.ejemplar_id = ejemplar.id
     estado_de_reserva(reserva).habilitar_retiro(reserva)  # PENDIENTE o EN_TRANSITO -> LISTA_PARA_RETIRO
