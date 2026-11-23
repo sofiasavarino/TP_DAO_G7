@@ -40,14 +40,10 @@ __all__ = [
     "LimitePrestamosExcedido",
     "RemitoNoEncontrado",
     "ReservaNoEncontrada",
-<<<<<<< HEAD
     "RolNoConfigurado",
     "SedeInvalida",
     "SocioSancionado",
-=======
     "SedeNoPermitida",
-    "SocioSancionado",
     "TransicionEjemplarInvalida",
 
->>>>>>> 6e771cdd4859ac6d029f066940d403e10c2617b3
 ]
