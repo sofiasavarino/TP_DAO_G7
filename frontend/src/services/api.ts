@@ -3,10 +3,13 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 // Clase de error personalizada para capturar los mensajes de negocio de FastAPI
 export class ApiError extends Error {
   status: number;
+  /** Campo del formulario que causó el error, si el backend lo indica (ej. 'dni' duplicado). */
+  campo?: string;
 
-  constructor(status: number, message: string) {
+  constructor(status: number, message: string, campo?: string) {
     super(message);
     this.status = status;
+    this.campo = campo;
     this.name = 'ApiError';
   }
 }
@@ -49,16 +52,24 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
 
   const data = await response.json().catch(() => null);
 
-  // 4. Si FastAPI devuelve error (400, 401, 403, 404, 422), extraer el mensaje de "detail"
+  // 4. Si FastAPI devuelve error (400, 401, 403, 404, 409, 422), extraer el mensaje de "detail".
+  //    "detail" puede ser un texto, la lista de errores de validación (422) o {campo, mensaje}.
   if (!response.ok) {
-    const errorMessage =
-      typeof data?.detail === 'string'
-        ? data.detail
-        : Array.isArray(data?.detail)
-          ? data.detail.map((err: { msg?: string }) => err.msg).join(', ')
-          : `Error HTTP ${response.status}`;
+    const detail = data?.detail;
+    let errorMessage = `Error HTTP ${response.status}`;
+    let campo: string | undefined;
+    if (typeof detail === 'string') {
+      errorMessage = detail;
+    } else if (Array.isArray(detail)) {
+      errorMessage = detail.map((err: { msg?: string }) => err.msg).join(', ');
+      const loc = detail[0]?.loc;
+      if (Array.isArray(loc)) campo = String(loc[loc.length - 1]);
+    } else if (detail && typeof detail.mensaje === 'string') {
+      errorMessage = detail.mensaje;
+      campo = detail.campo;
+    }
 
-    throw new ApiError(response.status, errorMessage);
+    throw new ApiError(response.status, errorMessage, campo);
   }
 
   return data as T;

@@ -523,7 +523,7 @@ function Shelf({
 }
 
 export default function PortalSocio() {
-  const { logout } = useAuth();
+  const { usuario, logout } = useAuth();
   const [query, setQuery] = useState("");
   const [genre, setGenre] = useState("Todos los géneros");
   const [author, setAuthor] = useState("Todos los autores");
@@ -547,10 +547,16 @@ export default function PortalSocio() {
   const [reviewTarget, setReviewTarget] = useState<Book | null>(null);
   const [stars, setStars] = useState(0);
   const [reviewText, setReviewText] = useState("");
-  const [profile, setProfile] = useState<Profile>({
-    name: "Lucía Méndez", email: "lucia.mendez@email.com", phone: "", branch: "Sede Central",
+   const [profile, setProfile] = useState<Profile>(() => ({
+    name:
+      [usuario?.nombre, usuario?.apellido].filter(Boolean).join(" ") ||
+      usuario?.nombre_usuario ||
+      "",
+    email: usuario?.email ?? "",
+    phone: "",
+    branch: usuario?.sede.nombre ?? "",
     notifyReady: true, notifyDue: true, notifyNews: false,
-  });
+  }));
   const activeRes = reservations.filter((r) => r.status === "activa");
   const nameParts = profile.name.trim().split(/\s+/);
   const shortName = `${nameParts[0]} ${nameParts[1]?.[0] ?? ""}.`.replace(" .", "");

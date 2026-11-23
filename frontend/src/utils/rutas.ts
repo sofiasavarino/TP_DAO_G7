@@ -1,6 +1,7 @@
 import { RolNombre } from '../types/enums';
 
 export const RUTA_LOGIN = '/login';
+export const RUTA_REGISTRO = '/registro';
 export const RUTA_PORTAL_SOCIO = '/';
 export const RUTA_GESTION = '/gestion';
 
@@ -15,4 +16,5 @@ export const RUTAS_GESTION = {
   mostrador: `${RUTA_GESTION}/mostrador`,
   remitos: `${RUTA_GESTION}/remitos`,
   socios: `${RUTA_GESTION}/socios`,
+  personal: `${RUTA_GESTION}/personal`,
 } as const;

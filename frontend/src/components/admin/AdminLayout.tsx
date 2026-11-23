@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { RolNombre } from '../../types/enums';
 import { RUTA_LOGIN, RUTAS_GESTION } from '../../utils/rutas';
 import AdminIcon, { type AdminIconName } from './AdminIcon';
 
@@ -9,6 +10,8 @@ interface Seccion {
   label: string;
   icon: AdminIconName;
   descripcion: string;
+  /** Si se indica, solo esos roles ven la sección (por defecto, todo el personal). */
+  roles?: RolNombre[];
 }
 
 export const SECCIONES_GESTION: Seccion[] = [
@@ -17,7 +20,19 @@ export const SECCIONES_GESTION: Seccion[] = [
   { to: RUTAS_GESTION.mostrador, label: 'Mostrador', icon: 'mostrador', descripcion: 'Préstamos, devoluciones y retiros' },
   { to: RUTAS_GESTION.remitos, label: 'Remitos', icon: 'remitos', descripcion: 'Traslados entre sedes' },
   { to: RUTAS_GESTION.socios, label: 'Socios', icon: 'socios', descripcion: 'Padrón y sanciones' },
+  {
+    to: RUTAS_GESTION.personal,
+    label: 'Personal',
+    icon: 'personal',
+    descripcion: 'Alta de bibliotecarios',
+    roles: [RolNombre.ADMINISTRADOR],
+  },
 ];
+
+/** Secciones que puede ver un rol. */
+export function seccionesPara(rol: RolNombre | null): Seccion[] {
+  return SECCIONES_GESTION.filter((s) => !s.roles || (rol !== null && s.roles.includes(rol)));
+}
 
 function iniciales(nombre: string): string {
   return (
@@ -64,7 +79,7 @@ export default function AdminLayout() {
         </div>
 
         <nav aria-label="Navegación del panel">
-          {SECCIONES_GESTION.map((s) => (
+          {seccionesPara(rol).map((s) => (
             <NavLink key={s.to} to={s.to} className={({ isActive }) => (isActive ? 'active' : '')}>
               <AdminIcon name={s.icon} size={19} />
               <span>{s.label}</span>

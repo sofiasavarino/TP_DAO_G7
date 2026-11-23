@@ -1,8 +1,8 @@
 import { useState, type FormEvent } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { ApiError } from '../services/api';
-import { rutaInicialPorRol } from '../utils/rutas';
+import { RUTA_REGISTRO, rutaInicialPorRol } from '../utils/rutas';
 
 export default function LoginPage() {
   const { usuario, rol, cargando, login } = useAuth();
@@ -76,6 +76,10 @@ export default function LoginPage() {
             {enviando ? 'Ingresando...' : 'Ingresar'}
           </button>
         </form>
+
+        <p className="login-alt">
+          ¿No tenés cuenta? <Link to={RUTA_REGISTRO}>Registrate como socio</Link>
+        </p>
       </section>
     </main>
   );
