@@ -233,6 +233,16 @@ def listar_mios(session: Session, socio_id: int) -> list[ReservaDTO]:
     return [ReservaDTO.model_validate(r) for r in reserva_repo.listar_por_socio(session, socio_id)]
 
 
+def listar_listas_para_retiro(session: Session, sede_id: int) -> list[ReservaDTO]:
+    """Reservas LISTA_PARA_RETIRO que se retiran en la sede dada (bandeja del mostrador, F7.1)."""
+    return [
+        ReservaDTO.model_validate(r)
+        for r in reserva_repo.listar_por_estado(
+            session, EstadoReserva.LISTA_PARA_RETIRO, sede_retiro_id=sede_id
+        )
+    ]
+
+
 def listar_pendientes(
     session: Session,
     libro_id: int | None = None,

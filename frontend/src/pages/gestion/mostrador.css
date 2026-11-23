@@ -1,0 +1,101 @@
+/* ===== F7 · Mostrador (préstamos, devoluciones y retiros) =====
+   Archivo propio para no tocar index.css: reutiliza sus variables y las clases del panel
+   (admin-*, inv-*, estado-pill, pickup-options, reservation-modal, ejemplar-form). */
+
+/* --- Pestañas de los tres bloques --- */
+.mos-tabs { display: flex; gap: 4px; border-bottom: 1px solid rgba(29, 36, 32, .14); margin-bottom: 22px; overflow-x: auto; }
+.mos-tabs button { position: relative; display: inline-flex; align-items: center; gap: 8px; border: 0; background: none; padding: 12px 16px 14px; font-weight: 600; font-size: 14px; color: #697169; cursor: pointer; white-space: nowrap; }
+.mos-tabs button:hover { color: var(--ink); }
+.mos-tabs button.activo { color: var(--ink); }
+.mos-tabs button.activo:after { content: ""; position: absolute; left: 10px; right: 10px; bottom: -1px; height: 2px; background: var(--rust); }
+.mos-tabs b { min-width: 22px; height: 20px; padding: 0 6px; border-radius: 999px; display: inline-grid; place-items: center; font-size: 11px; background: rgba(29, 36, 32, .08); color: var(--ink); font-variant-numeric: tabular-nums; }
+.mos-tabs button.activo b { background: var(--green); color: var(--paper); }
+
+/* --- Selector de sede del administrador --- */
+.mos-sede { display: grid; gap: 4px; }
+.mos-sede > span { font-size: 10px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: #697169; padding-left: 16px; }
+
+/* --- Estado de préstamos (mismo sistema --est que los estados de ejemplar) --- */
+.est-activo { --est: #1f6b47; --est-bg: rgba(31, 107, 71, .12); }
+.est-vencido { --est: #b4532f; --est-bg: rgba(188, 90, 56, .14); }
+.inv-tabla tr.mos-atrasado td:first-child { box-shadow: inset 3px 0 0 var(--rust); }
+.mos-texto-mal { color: var(--rust) !important; font-weight: 600; }
+
+/* --- F7.1 Bandeja de retiros --- */
+.mos-reservas { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.mos-reservas li { display: grid; grid-template-columns: 52px minmax(0, 1fr) auto auto; align-items: center; gap: 20px; padding: 14px 18px; background: #fff; border: 1px solid rgba(29, 36, 32, .12); border-radius: 14px; }
+.mos-reservas li.urgente-hoy { border-color: rgba(196, 140, 40, .6); }
+.mos-reservas li.urgente-vencida { border-color: var(--rust); opacity: .75; }
+.mos-reservas img, .mos-reservas .admin-cover-vacia { width: 52px; height: 76px; object-fit: cover; border-radius: 3px; box-shadow: 0 6px 14px -8px rgba(29, 36, 32, .6); }
+.mos-reserva-info { display: grid; gap: 4px; min-width: 0; }
+.mos-reserva-info strong { font-family: "Playfair Display", serif; font-size: 19px; font-weight: 600; }
+.mos-reserva-info > span { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: 14px; }
+.mos-reserva-info > span small { font-weight: 400; color: #697169; }
+.mos-reserva-info > small { color: #697169; font-size: 12px; }
+.mos-reserva-plazo { display: grid; justify-items: end; gap: 3px; text-align: right; }
+.mos-reserva-plazo small { color: #697169; font-size: 12px; }
+.mos-plazo { padding: 4px 11px; border-radius: 999px; font-size: 12px; font-weight: 700; white-space: nowrap; color: #1f6b47; background: rgba(31, 107, 71, .12); }
+.mos-plazo.hoy { color: #9a6a12; background: rgba(196, 140, 40, .16); }
+.mos-sin-accion { max-width: 150px; text-align: right; line-height: 1.4; }
+.mos-plazo.vencida { color: #8a3a1e; background: rgba(188, 90, 56, .14); }
+
+/* --- Bloque que depende de un endpoint que todavía no existe --- */
+.mos-pendiente code { margin-top: 4px; padding: 8px 14px; border-radius: 8px; background: var(--cream); color: var(--green); font-size: 13px; font-weight: 600; }
+
+/* --- Modales --- */
+.mos-modal-label { margin: 0 0 8px; font-weight: 600; }
+.mos-resumen { margin-top: 16px; }
+.mos-check { display: flex; gap: 12px; align-items: flex-start; margin-top: 16px; padding: 14px 15px; border: 1px solid #d4ccbf; cursor: pointer; transition: .2s; }
+.mos-check.marcado { border-color: var(--rust); background: rgba(188, 90, 56, .05); }
+.mos-check input { margin-top: 3px; accent-color: var(--rust); width: 16px; height: 16px; flex: none; }
+.mos-check span { display: grid; gap: 3px; }
+.mos-check strong { font-size: 13px; }
+.mos-check small { color: #697169; font-size: 12px; }
+
+/* --- F7.2 Préstamo directo --- */
+.mos-form { background: #fff; border: 1px solid rgba(29, 36, 32, .12); border-radius: 14px; padding: clamp(18px, 3vw, 28px); }
+.mos-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+.mos-form-col { display: grid; gap: 16px; align-content: start; min-width: 0; }
+.mos-form .admin-search { max-width: none; }
+.mos-tipos { gap: 6px; }
+.mos-tipos label { min-height: 58px; }
+.mos-socio-elegido { display: flex; align-items: center; gap: 12px; padding: 10px 16px 10px 10px; border: 1px solid var(--green); border-radius: 999px; background: rgba(31, 74, 56, .05); }
+.mos-socio-elegido > div { display: grid; line-height: 1.3; min-width: 0; }
+.mos-socio-elegido strong { font-size: 14px; }
+.mos-socio-elegido small { font-size: 12px; font-weight: 400; color: #697169; }
+.mos-socio-elegido .inv-limpiar { margin-left: auto; }
+.mos-socio-manual { display: grid; gap: 6px; }
+.mos-socio-manual .admin-search { padding-right: 6px; }
+.mos-invalido { border-color: var(--rust) !important; }
+.mos-situacion { display: grid; gap: 10px; }
+.mos-situacion-datos { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid rgba(29, 36, 32, .12); border-radius: 10px; overflow: hidden; }
+.mos-situacion-datos > div { display: grid; gap: 4px; padding: 12px 14px; }
+.mos-situacion-datos > div + div { border-left: 1px solid rgba(29, 36, 32, .12); }
+.mos-situacion-datos span { font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #697169; }
+.mos-situacion-datos strong { font-family: "Playfair Display", serif; font-size: 24px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.mos-situacion-datos strong.mal { color: var(--rust); }
+
+/* --- Alertas de negocio (socio bloqueado, límite, etc.) --- */
+.mos-alerta { display: grid; gap: 3px; padding: 12px 14px 12px 16px; border-radius: 8px; border-left: 4px solid; font-size: 13px; }
+.mos-alerta strong { font-size: 14px; }
+.mos-alerta.error { background: rgba(188, 90, 56, .1); border-color: var(--rust); color: #8a3a1e; }
+.mos-alerta.aviso { background: rgba(196, 140, 40, .12); border-color: #c48c28; color: #7a5410; }
+.mos-alerta.ok { background: rgba(31, 74, 56, .08); border-color: var(--green); color: var(--green); }
+
+@media (max-width: 900px) {
+  .mos-form-grid { grid-template-columns: 1fr; }
+  .mos-reservas li { grid-template-columns: 52px minmax(0, 1fr); }
+  .mos-reserva-plazo { justify-items: start; text-align: left; grid-column: 2; }
+  .mos-reservas li > .admin-primary, .mos-sin-accion { grid-column: 1 / -1; }
+  .mos-sin-accion { max-width: none; text-align: left; }
+}
+/* El panel oculta la 4ª columna de las tablas en pantallas angostas; acá la 4ª es el
+   vencimiento (lo más importante del mostrador), así que se oculta el ejemplar en su lugar. */
+@media (max-width: 760px) {
+  .admin-table.mos-tabla th:nth-child(4), .admin-table.mos-tabla td:nth-child(4) { display: table-cell; }
+  .admin-table.mos-tabla th:nth-child(3), .admin-table.mos-tabla td:nth-child(3) { display: none; }
+}
+@media (max-width: 640px) {
+  .mos-situacion-datos { grid-template-columns: 1fr; }
+  .mos-situacion-datos > div + div { border-left: 0; border-top: 1px solid rgba(29, 36, 32, .12); }
+}
