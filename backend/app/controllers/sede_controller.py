@@ -11,5 +11,9 @@ sede_repo = SedeRepository()
 
 @sede_router.get("", response_model=list[SedeDTO])
 def listar_sedes(session: Session = Depends(get_session)) -> list[SedeDTO]:
-    """Sedes activas. Es público: lo usa el formulario de registro para elegir sede."""
+    """Sedes activas, para los selectores del front (filtros, alta de ejemplares, retiro).
+
+    Es público (sin login) porque también lo usa el formulario de registro de socios.
+    Solo expone datos de contacto de las sedes, nada sensible.
+    """
     return [SedeDTO.model_validate(s) for s in sede_repo.list_activos(session)]

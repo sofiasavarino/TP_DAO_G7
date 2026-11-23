@@ -1493,6 +1493,73 @@ footer > span {
 .chip button { border: 0; background: rgba(31, 74, 56, .12); border-radius: 50%; width: 20px; height: 20px; display: grid; place-items: center; cursor: pointer; color: inherit; }
 .libro-form .login-error { margin-top: 18px; }
 
+/* --- Inventario de ejemplares (F6) --- */
+.inv-filtros { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 14px; }
+.inv-filtros .libro-selector { flex: 1 1 320px; max-width: 420px; }
+.inv-filtros .inv-codigo { flex: 0 1 240px; }
+.inv-select select, .ejemplar-form select { height: 46px; border: 1px solid rgba(29, 36, 32, .18); border-radius: 999px; padding: 0 38px 0 16px; background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%23697169' stroke-width='2'%3E%3Cpath d='m2 4 4 4 4-4'/%3E%3C/svg%3E") no-repeat right 16px center; appearance: none; color: var(--ink); cursor: pointer; }
+.inv-select select:focus, .ejemplar-form select:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 3px rgba(31, 74, 56, .12); }
+.inv-limpiar { border: 0; background: none; color: var(--rust); font-weight: 600; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.inv-estados { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+.inv-estados button { display: inline-flex; align-items: center; gap: 7px; border: 1px solid rgba(29, 36, 32, .16); background: #fff; border-radius: 999px; padding: 7px 14px; font-size: 13px; font-weight: 600; cursor: pointer; color: #4d554f; }
+.inv-estados button b { font-variant-numeric: tabular-nums; color: var(--ink); }
+.inv-estados button:hover { border-color: var(--green); }
+.inv-estados button.activo { background: var(--green); border-color: var(--green); color: var(--paper); }
+.inv-estados button.activo b { color: var(--paper); }
+.inv-estados i, .estado-pill i { width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex: none; }
+.inv-estados button.activo i { box-shadow: 0 0 0 2px var(--paper); }
+
+/* Colores por estado (punto en filtros y pastilla en la tabla) */
+.est-disponible { --est: #1f6b47; --est-bg: rgba(31, 107, 71, .12); }
+.est-reservado { --est: #9a6a12; --est-bg: rgba(196, 140, 40, .16); }
+.est-en_transito { --est: #2f5f86; --est-bg: rgba(47, 95, 134, .12); }
+.est-prestado { --est: #5b4a8a; --est-bg: rgba(91, 74, 138, .12); }
+.est-en_reparacion { --est: #b4532f; --est-bg: rgba(188, 90, 56, .14); }
+.est-inutilizable { --est: #6f746f; --est-bg: rgba(29, 36, 32, .08); }
+.inv-estados button i { background: var(--est, #697169); }
+.estado-pill { display: inline-flex; align-items: center; gap: 7px; padding: 4px 11px 4px 9px; border-radius: 999px; font-size: 12px; font-weight: 700; white-space: nowrap; color: var(--est); background: var(--est-bg); }
+.estado-pill i { background: var(--est); }
+
+.inv-tabla .inv-sub { display: block; font-size: 12px; color: #697169; margin-top: 2px; }
+.inv-tabla strong.mono { font-size: 13px; letter-spacing: .02em; }
+.inv-tabla tr.inv-baja td { color: #8b908b; }
+.inv-tabla tr.inv-baja td strong { text-decoration: line-through; text-decoration-color: rgba(29, 36, 32, .35); }
+.inv-acciones { display: inline-flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap; }
+.inv-accion { border: 1px solid rgba(29, 36, 32, .2); background: transparent; border-radius: 999px; padding: 7px 13px; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; color: var(--ink); transition: background .15s, color .15s, border-color .15s; }
+.inv-accion:hover { background: var(--green); border-color: var(--green); color: var(--paper); }
+.inv-accion.ok { border-color: var(--green); color: var(--green); }
+.inv-accion.ok:hover { background: var(--green); color: var(--paper); }
+.inv-accion.peligro { color: var(--rust); border-color: rgba(188, 90, 56, .45); }
+.inv-accion.peligro:hover { background: var(--rust); border-color: var(--rust); color: #fff; }
+.inv-accion:disabled { opacity: .45; cursor: wait; }
+
+/* Combobox de libros */
+.libro-selector { position: relative; }
+.libro-selector .admin-search { max-width: none; }
+.libro-selector.invalido .admin-search { border-color: var(--rust); }
+.libro-selector-lista { position: absolute; z-index: 30; top: calc(100% + 6px); left: 0; right: 0; list-style: none; margin: 0; padding: 6px; background: #fff; border: 1px solid rgba(29, 36, 32, .14); border-radius: 12px; box-shadow: 0 18px 40px -18px rgba(12, 25, 18, .35); max-height: 320px; overflow-y: auto; }
+.libro-selector-lista li { display: grid; gap: 1px; padding: 9px 12px; border-radius: 8px; cursor: pointer; }
+.libro-selector-lista li.activo { background: var(--cream); }
+.libro-selector-lista li small { color: #697169; font-size: 12px; }
+.libro-selector-lista li.vacio { color: #697169; cursor: default; }
+
+/* Modal de alta de ejemplares */
+.ejemplar-form { display: grid; gap: 16px; }
+.ejemplar-form .campo { display: grid; gap: 6px; font-weight: 600; font-size: 13px; min-width: 0; }
+.ejemplar-form-fila { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.ejemplar-form .campo > input { border: 1px solid rgba(29, 36, 32, .25); border-radius: 8px; padding: 11px 13px; background: #fff; font-weight: 400; color: var(--ink); min-width: 0; }
+.ejemplar-form .campo > input:disabled { background: rgba(233, 225, 211, .45); color: #8b908b; }
+.ejemplar-form select { border-radius: 8px; border-color: rgba(29, 36, 32, .25); font-weight: 400; }
+.ejemplar-form select[aria-invalid="true"] { border-color: var(--rust); }
+.stepper { display: flex; align-items: center; height: 46px; border: 1px solid rgba(29, 36, 32, .25); border-radius: 8px; background: #fff; overflow: hidden; }
+.stepper button { width: 46px; height: 100%; border: 0; background: none; font-size: 20px; cursor: pointer; color: var(--green); }
+.stepper button:hover:not(:disabled) { background: var(--cream); }
+.stepper button:disabled { color: #b9bcb9; cursor: not-allowed; }
+.stepper input { flex: 1; min-width: 0; border: 0; text-align: center; font-weight: 700; font-size: 16px; outline: none; background: transparent; }
+.ejemplar-form select:disabled { background-color: rgba(233, 225, 211, .45); color: #4d554f; cursor: not-allowed; opacity: 1; }
+.campo-ayuda { color: #697169; font-size: 12px; font-weight: 400; }
+.ejemplar-resumen { margin: 0; padding: 12px 14px; border-radius: 8px; background: rgba(31, 74, 56, .08); color: var(--green); font-size: 14px; }
+
 /* --- Responsive --- */
 @media (max-width: 960px) {
   .admin-shell { grid-template-columns: minmax(0, 1fr); }
@@ -1514,4 +1581,6 @@ footer > span {
   .libro-form-campos { grid-template-columns: 1fr; }
   .gb-form { flex-direction: column; }
   .gb-resultados li { flex-wrap: wrap; }
+  .ejemplar-form-fila { grid-template-columns: 1fr; }
+  .inv-filtros .libro-selector, .inv-filtros .inv-codigo, .inv-select, .inv-select select { flex-basis: 100%; width: 100%; max-width: none; }
 }
