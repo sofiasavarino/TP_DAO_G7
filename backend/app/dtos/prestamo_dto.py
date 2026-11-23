@@ -47,8 +47,15 @@ class PrestamoListadoDTO(BaseModel):
     numero: str
     estado: EstadoPrestamo
     tipo: TipoPrestamo
+    fecha_inicio: date
     fecha_vencimiento: date
+    fecha_devolucion: date | None = None
     socio_id: int
     socio_nombre: str
     ejemplar_id: int
     ejemplar_codigo: str
+    # Libro del ejemplar (para "Mis préstamos" del portal de socios)
+    libro_id: int
+    libro_nombre: str
+    libro_isbn: str | None = None
+    libro_imagen_url: str | None = None

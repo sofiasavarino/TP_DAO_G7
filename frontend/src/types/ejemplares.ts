@@ -11,6 +11,18 @@ export interface Sede {
   activo: boolean;
 }
 
+/** GET /api/v1/ejemplares/disponibles (público): ficha simple de una copia DISPONIBLE. */
+export interface Ejemplar {
+  id: number;
+  codigo_inventario: string;
+  signatura_topografica: string | null;
+  descripcion_fisica: string | null;
+  estado: EjemplarEstado;
+  libro_id: number;
+  sede_actual_id: number;
+  sede_origen_id: number;
+}
+
 /** GET /api/v1/ejemplares */
 export interface EjemplarInventario {
   id: number;

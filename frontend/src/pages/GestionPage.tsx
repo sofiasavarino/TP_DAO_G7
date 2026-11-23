@@ -1,12 +1,15 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import AdminLayout, { SECCIONES_GESTION } from '../components/admin/AdminLayout';
 import SeccionPendiente from '../components/admin/SeccionPendiente';
+import ProtectedRoute from '../components/ProtectedRoute';
+import { RolNombre } from '../types/enums';
 import { RUTA_GESTION, RUTAS_GESTION } from '../utils/rutas';
 import EjemplaresPage from './gestion/EjemplaresPage';
 import LibrosPage from './gestion/LibrosPage';
 import MostradorPage from './gestion/MostradorPage';
 import RemitosPage from './gestion/RemitosPage';
 import SociosPage from './gestion/SociosPage';
+import PersonalPage from './gestion/PersonalPage';
 
 /** Secciones que ya tienen pantalla propia; el resto muestra un placeholder. */
 const IMPLEMENTADAS: string[] = [
@@ -15,6 +18,7 @@ const IMPLEMENTADAS: string[] = [
   RUTAS_GESTION.mostrador,
   RUTAS_GESTION.remitos,
   RUTAS_GESTION.socios,
+  RUTAS_GESTION.personal
 ];
 
 /** Rutas hijas de /gestion/* (App.tsx ya restringe a Bibliotecario y Administrador). */
@@ -30,6 +34,10 @@ export default function GestionPage() {
         <Route path={relativa(RUTAS_GESTION.mostrador)} element={<MostradorPage />} />
         <Route path={relativa(RUTAS_GESTION.remitos)} element={<RemitosPage />} />
         <Route path={relativa(RUTAS_GESTION.socios)} element={<SociosPage />} />
+        {/* Personal: solo el Administrador (un Bibliotecario que entre por URL vuelve al catálogo) */}
+        <Route element={<ProtectedRoute roles={[RolNombre.ADMINISTRADOR]} />}>
+          <Route path={relativa(RUTAS_GESTION.personal)} element={<PersonalPage />} />
+        </Route>
         {SECCIONES_GESTION.filter((s) => !IMPLEMENTADAS.includes(s.to)).map((s) => (
           <Route
             key={s.to}

@@ -11,4 +11,5 @@ export interface UsuarioSesion {
   apellido: string | null;
   socio_id: number | null;
   empleado_id: number | null;
+  email: string | null;
 }

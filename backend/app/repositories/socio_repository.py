@@ -31,6 +31,7 @@ class SocioRepository(BaseRepository[Socio]):
             filtros.append(Socio.id != excluir_id)
         return self.exists(session, *filtros)
 
+
     def get_by_usuario_id(self, session: Session, usuario_id: int) -> Socio | None:
         """El socio logueado: el token trae el usuario, de ahi se saca el socio."""
         stmt = select(Socio).where(Socio.usuario_id == usuario_id)

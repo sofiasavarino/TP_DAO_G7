@@ -3,12 +3,14 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.controllers.ejemplar_controller import ejemplar_router
 from app.controllers.libro_controller import libro_router
+from app.controllers.notificacion_controller import router as notificacion_router
 from app.controllers.prestamo_controller import prestamo_router
 from app.controllers.remito_controller import remito_router
 from app.controllers.reserva_controller import reserva_router
 from app.controllers.sancion_controller import sancion_router
 from app.controllers.sede_controller import sede_router
 from app.controllers.socio_controller import socio_router
+from app.controllers.usuario_controller import usuario_router
 
 from app.controllers.auth_controller import auth_router
 API_PREFIX = "/api/v1"
@@ -32,6 +34,9 @@ app.include_router(sancion_router, prefix=API_PREFIX)
 app.include_router(sede_router, prefix=API_PREFIX)
 app.include_router(auth_router, prefix=API_PREFIX)
 app.include_router(socio_router, prefix=API_PREFIX)
+app.include_router(usuario_router, prefix=API_PREFIX)
+app.include_router(notificacion_router, prefix=API_PREFIX)
+app.include_router(sede_router, prefix=API_PREFIX)
 
 
 @app.get("/health")

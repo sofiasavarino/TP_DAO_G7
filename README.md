@@ -91,7 +91,11 @@ TP_DAO_G7/
 | GET | `/api/v1/sanciones?socio_id=` | Sanciones vigentes hoy (filtrables por socio) |
 | GET | `/api/v1/sanciones/{socio_id}` | Sanciones vigentes de un socio |
 | PUT | `/api/v1/sanciones/{id}/levantar?responsable_id=` | Levanta la sanción (marca inactiva + `fecha_fin=hoy`); el socio vuelve a poder reservar/prestar |
-| GET | `/api/v1/prestamos/mios?socio_id=` | Préstamos del socio (sin auth todavía, `?socio_id=` hasta implementar `get_current_user`) |
+| GET | `/api/v1/prestamos/mios?socio_id=` | Préstamos del socio con libro (`libro_nombre`, `libro_imagen_url`…) y fechas de inicio/vencimiento/devolución (sin auth todavía, `?socio_id=` hasta implementar `get_current_user`) |
+| GET | `/api/v1/notificaciones/mios?usuario_id=&solo_no_leidas=` | Notificaciones del usuario (no del socio), de la más nueva a la más vieja |
+| GET | `/api/v1/notificaciones/mios/no-leidas/cantidad?usuario_id=` | `{cantidad}` para el globito de la campanita |
+| PUT | `/api/v1/notificaciones/{id}/leida?usuario_id=` | Marca una como leída (idempotente) |
+| PUT | `/api/v1/notificaciones/mios/leidas?usuario_id=` | Marca todas como leídas; devuelve `{marcadas}` |
 | GET | `/api/v1/prestamos/vencidos` | Préstamos en estado VENCIDO |
 | PUT | `/api/v1/prestamos/{id}/devolucion?sede_id=&responsable_devolucion_id=` | Cierra préstamo; aplica sanción por retraso si la hay; si hay reserva más vieja de ese libro en otra sede, encola el ejemplar en un remito `CREADO` (o lo crea) rumbo a esa sede y la reserva queda `EN_TRANSITO`; si la reserva es en la misma sede, la asigna (`LISTA_PARA_RETIRO`) |
 | PUT | `/api/v1/prestamos/{id}/renovacion` | Extiende `fecha_vencimiento` 15 días; bloqueado si está vencido o hay reserva esperando ese libro |

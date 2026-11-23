@@ -2,6 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.config.database import get_session
+from app.dtos.ejemplar_dto import EjemplarCreate, EjemplarDTO, EjemplarEstadoUpdate
+from app.exceptions import EjemplarNoDisponible
 from app.controllers.dependencies import ADMINISTRADOR, BIBLIOTECARIO, require_roles
 from app.dtos.ejemplar_dto import (
     EjemplarCreate,
