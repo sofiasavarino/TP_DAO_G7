@@ -314,6 +314,13 @@ def historial_de_ejemplar(session: Session, ejemplar_id: int) -> list[Remito]:
     return remito_repo.historial_de_ejemplar(session, ejemplar_id)
 
 
+def listar_remitos(session: Session, estado: EstadoRemito | None = None) -> list[RemitoListadoDTO]:
+    """Todos los remitos de la red (o solo los de un estado), del más nuevo al más viejo.
+    Es el listado general de la pantalla de remitos (F8.1), incluidos los ya RECIBIDO."""
+    estados = [estado] if estado is not None else None
+    return [_to_listado_dto(r) for r in remito_repo.listar(session, estados)]
+
+
 def listar_pendientes_de_despacho(session: Session, sede_id: int | None = None) -> list[RemitoListadoDTO]:
     """Remitos CREADO que tiene que despachar la sede (de origen) indicada."""
     return [_to_listado_dto(r) for r in remito_repo.pendientes_de_despacho(session, sede_origen_id=sede_id)]

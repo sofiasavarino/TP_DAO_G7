@@ -89,6 +89,7 @@ def listar_activas(
         select(Sancion)
         .where(
             and_(
+                Sancion.activo.is_(True),  # las levantadas quedan con fecha_fin = hoy: sin esto seguían figurando
                 Sancion.fecha_inicio <= hoy,
                 or_(Sancion.fecha_fin.is_(None), Sancion.fecha_fin >= hoy),
             )

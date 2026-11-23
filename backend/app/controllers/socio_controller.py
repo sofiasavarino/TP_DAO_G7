@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.config.database import get_session
 from app.dtos.socio_dto import SocioDTO
-from app.services.socio_service import buscar_socios
+from app.services.socio_service import buscar_socios, listar_socios
 
 socio_router = APIRouter(prefix="/socios", tags=["socios"])
 
@@ -13,5 +13,8 @@ def buscar_socios_endpoint(
     q: str = Query("", description="Nombre, apellido o DNI (búsqueda parcial)"),
     session: Session = Depends(get_session),
 ) -> list[SocioDTO]:
-    """Buscador de socios del mostrador (F7.2): elegir a quién se le presta."""
+    """Sin `q`: padrón completo con su estado (F8.3).
+    Con `q`: buscador del mostrador por nombre, apellido o DNI (F7.2), sin los dados de baja."""
+    if not q.strip():
+        return listar_socios(session)
     return buscar_socios(session, q)

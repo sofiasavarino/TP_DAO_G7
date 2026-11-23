@@ -4,12 +4,14 @@ from sqlalchemy.orm import Session
 from app.config.database import get_session
 from app.dtos.remito_dto import IncidenciaItemDTO, RemitoCreate, RemitoDetalleDTO, RemitoListadoDTO
 from app.exceptions import BibliotecaError, RemitoNoEncontrado
+from app.models.enums import EstadoRemito
 from app.services.remito_service import (
     crear_remito,
     despachar,
     listar_con_incidencia,
     listar_pendientes_de_despacho,
     listar_pendientes_de_recepcion,
+    listar_remitos,
     obtener_remito,
     recibir,
     to_detalle,
@@ -41,6 +43,15 @@ def crear_remito_endpoint(
         raise _mapear_excepcion(e) from e
     session.commit()
     return to_detalle(session, remito.id)
+
+
+@remito_router.get("", response_model=list[RemitoListadoDTO])
+def listar_remitos_endpoint(
+    estado: EstadoRemito | None = Query(None, description="Filtrar por estado (si no se pasa, todos)"),
+    session: Session = Depends(get_session),
+) -> list[RemitoListadoDTO]:
+    """Listado general de remitos (F8.1), del más nuevo al más viejo."""
+    return listar_remitos(session, estado=estado)
 
 
 @remito_router.get("/de-despacho", response_model=list[RemitoListadoDTO])
