@@ -2,12 +2,22 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.config.database import get_session
+from app.controllers.dependencies import BIBLIOTECARIO, require_roles
 from app.dtos.googlebooks_dto import LibroLookupDTO
-from app.dtos.libro_dto import LibroCreate, LibroDTO, LibroListadoDTO
+from app.dtos.libro_dto import LibroCreate, LibroDTO, LibroListadoDTO, LibroUpdate
+from app.exceptions.catalogo import (
+    GoogleBooksNoDisponible,
+    IsbnDuplicado,
+    LibroConPrestamosActivos,
+    LibroNoEncontrado,
+)
 from app.repositories.libro_repository import LibroRepository
 from app.services.libro_service import (
+    actualizar_libro,
+    buscar_en_google,
     buscar_libro_por_isbn,
     crear_libro,
+    dar_de_baja_libro,
     listar_catalogo_filtrado,
     to_listado_dto,
 )
@@ -20,6 +30,22 @@ libro_repo = LibroRepository()
 def lookup_libro(isbn: str, session: Session = Depends(get_session)) -> LibroLookupDTO:
     """Autocompletado por ISBN: DB local → Google Books → MANUAL."""
     return buscar_libro_por_isbn(session, isbn)
+
+
+@libro_router.get(
+    "/google",
+    response_model=list[LibroLookupDTO],
+    dependencies=[Depends(require_roles(BIBLIOTECARIO))],
+)
+def buscar_google_books(
+    q: str = Query(..., min_length=2, description="Título, autor o ISBN"),
+    max_resultados: int = Query(10, ge=1, le=40),
+) -> list[LibroLookupDTO]:
+    """Proxy a Google Books para el alta de libros (la API key nunca sale del backend)."""
+    try:
+        return buscar_en_google(q, max_resultados)
+    except GoogleBooksNoDisponible as e:
+        raise HTTPException(503, str(e)) from e
 
 
 ORDENES_VALIDOS = {"default", "populares", "recientes"}
@@ -58,5 +84,43 @@ def crear_libro_endpoint(datos: LibroCreate, session: Session = Depends(get_sess
         libro, fue_nuevo = crear_libro(session, datos)
     except ValueError as e:
         raise HTTPException(400, str(e)) from e
+    session.commit()
+    return LibroDTO.model_validate(libro)
+
+
+@libro_router.put(
+    "/{libro_id}",
+    response_model=LibroDTO,
+    dependencies=[Depends(require_roles(BIBLIOTECARIO))],
+)
+def actualizar_libro_endpoint(
+    libro_id: int, datos: LibroUpdate, session: Session = Depends(get_session)
+) -> LibroDTO:
+    """Edición de un libro del catálogo (reemplaza datos y autores)."""
+    try:
+        libro = actualizar_libro(session, libro_id, datos)
+    except LibroNoEncontrado as e:
+        raise HTTPException(404, str(e)) from e
+    except IsbnDuplicado as e:
+        raise HTTPException(409, str(e)) from e
+    except ValueError as e:
+        raise HTTPException(400, str(e)) from e
+    session.commit()
+    return LibroDTO.model_validate(libro)
+
+
+@libro_router.patch(
+    "/{libro_id}/baja",
+    response_model=LibroDTO,
+    dependencies=[Depends(require_roles(BIBLIOTECARIO))],
+)
+def dar_de_baja_libro_endpoint(libro_id: int, session: Session = Depends(get_session)) -> LibroDTO:
+    """Baja lógica (activo = False). 409 si hay ejemplares en circulación."""
+    try:
+        libro = dar_de_baja_libro(session, libro_id)
+    except LibroNoEncontrado as e:
+        raise HTTPException(404, str(e)) from e
+    except LibroConPrestamosActivos as e:
+        raise HTTPException(409, str(e)) from e
     session.commit()
     return LibroDTO.model_validate(libro)

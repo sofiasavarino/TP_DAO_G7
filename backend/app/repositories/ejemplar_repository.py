@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session, selectinload
 
 from app.models.ejemplar import Ejemplar
 from app.models.enums import EstadoEjemplar
+from app.models.libro import Libro
 from app.models.sede import Sede
 from app.repositories.base_repository import BaseRepository
 
@@ -43,6 +44,33 @@ class EjemplarRepository(BaseRepository[Ejemplar]):
             .order_by(Ejemplar.codigo_inventario)
         )
         return list(session.scalars(stmt))
+
+    def listar_inventario(
+        self,
+        session: Session,
+        *,
+        libro_id: int | None = None,
+        sede_id: int | None = None,
+        estado: EstadoEjemplar | None = None,
+    ) -> list[Ejemplar]:
+        """Inventario físico (todos los estados) filtrable por libro, sede ACTUAL y estado.
+        Trae libro y sedes precargados; ordena por título y código."""
+        stmt = (
+            select(Ejemplar)
+            .join(Ejemplar.libro)
+            .options(
+                selectinload(Ejemplar.libro),
+                selectinload(Ejemplar.sede_actual),
+                selectinload(Ejemplar.sede_origen),
+            )
+        )
+        if libro_id is not None:
+            stmt = stmt.where(Ejemplar.libro_id == libro_id)
+        if sede_id is not None:
+            stmt = stmt.where(Ejemplar.sede_actual_id == sede_id)
+        if estado is not None:
+            stmt = stmt.where(Ejemplar.estado == estado)
+        return list(session.scalars(stmt.order_by(Libro.nombre, Ejemplar.codigo_inventario)))
 
     def listar_disponibles(
         self,

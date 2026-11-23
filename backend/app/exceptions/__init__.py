@@ -6,9 +6,17 @@ Juntas todas las importa y exportadas para conveniencia:
 
     raise exceptions.SocioSancionado(...)
 """
-
+from app.exceptions.auth import CredencialesInvalidas
 from app.exceptions.base import BibliotecaError
-from app.exceptions.catalogo import LibroConPrestamosActivos, LibroNoEncontrado
+from app.exceptions.catalogo import (
+    EjemplarNoEncontrado,
+    GoogleBooksNoDisponible,
+    IsbnDuplicado,
+    LibroConPrestamosActivos,
+    LibroNoEncontrado,
+    SedeNoPermitida,
+    TransicionEjemplarInvalida,
+)
 from app.exceptions.prestamo import (
     EjemplarNoDisponible,
     LimitePrestamosExcedido,
@@ -19,12 +27,19 @@ from app.exceptions.reserva import EjemplarNoDisponibleParaAsignar, ReservaNoEnc
 
 __all__ = [
     "BibliotecaError",
+    "CredencialesInvalidas"
     "EjemplarNoDisponible",
     "EjemplarNoDisponibleParaAsignar",
+    "EjemplarNoEncontrado",
+    "GoogleBooksNoDisponible",
+    "IsbnDuplicado",
     "LibroConPrestamosActivos",
     "LibroNoEncontrado",
     "LimitePrestamosExcedido",
     "RemitoNoEncontrado",
     "ReservaNoEncontrada",
+    "SedeNoPermitida",
     "SocioSancionado",
+    "TransicionEjemplarInvalida",
+
 ]
