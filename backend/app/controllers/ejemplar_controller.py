@@ -16,6 +16,7 @@ from app.exceptions.catalogo import (
     SedeNoPermitida,
     TransicionEjemplarInvalida,
 )
+from app.exceptions.prestamo import EjemplarNoDisponible
 from app.models.enums import EstadoEjemplar
 from app.models.usuario import Usuario
 from app.repositories.ejemplar_repository import EjemplarRepository
