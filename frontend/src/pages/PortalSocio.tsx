@@ -1,32 +1,32 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import BannerSanciones from "../components/socio/BannerSanciones";
 import Icon from "../components/socio/Icon";
+import Notificaciones from "../components/socio/Notificaciones";
 import Portada from "../components/socio/Portada";
 import ReservaModal from "../components/socio/ReservaModal";
 import { useAuth } from "../context/AuthContext";
 import { useCatalogoSocio } from "../hooks/useCatalogoSocio";
+import { usePanelSocio } from "../hooks/usePanelSocio";
 import { ApiError } from "../services/api";
 import { reservasService } from "../services/reservasService";
 import type { LibroListado } from "../types/libros";
+import { PrestamoEstado } from "../types/enums";
 import { ESTADOS_RESERVA_VIVA, type Reserva } from "../types/reservas";
-import { addDays, daysLeft, fmt } from "../utils/fechas";
+import type { PrestamoSocio } from "../types/socio";
+import { addDays, fmt } from "../utils/fechas";
 import { nombresAutores } from "../utils/libros";
 import CatalogoPage, { coincideBusqueda, type OrdenCatalogo } from "./socio/CatalogoPage";
 import LibroDetalle from "./socio/LibroDetalle";
 import MisReservasPage from "./socio/MisReservasPage";
-import { estimatedDates, seedReservations, type Reservation } from "./socio/datosDePrueba";
+import PrestamosPage from "./socio/PrestamosPage";
+import SancionesPage from "./socio/SancionesPage";
 
 // Reseñas: el backend todavía no tiene endpoints, así que viven solo en la sesión.
 type Review = { id: number; bookId: number; user: string; stars: number; text: string; date: string; verified: boolean; mine?: boolean };
-/** Lo mínimo que necesita el modal de reseña (sirve para un libro real o una reserva de prueba). */
+/** Lo mínimo que necesita el modal de reseña (un libro del catálogo o de un préstamo). */
 type ReviewTarget = { id: number; title: string; author: string; image: string | null };
 type Profile = { name: string; email: string; phone: string; branch: string; notifyReady: boolean; notifyDue: boolean; notifyNews: boolean };
-type View = "catalog" | "book" | "reservations" | "loans" | "fines" | "profile";
-
-const money = (n: number) =>
-  n.toLocaleString("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
-// Multa: base de $5.000 + 2% diario acumulado (interés compuesto) por cada día de atraso.
-const fineFor = (daysOver: number) => Math.round(5000 * Math.pow(1.02, daysOver));
-const LOST_AFTER_DAYS = 60;
+type View = "catalog" | "book" | "reservations" | "loans" | "sanctions" | "profile";
 
 const aTarget = (libro: LibroListado): ReviewTarget => ({
   id: libro.id,
@@ -53,60 +53,6 @@ function StarInput({ value, onChange }: { value: number; onChange: (n: number) =
           className={n <= value ? "on" : ""} onClick={() => onChange(n)}>★</button>
       ))}
     </div>
-  );
-}
-
-function ResRow({ r, estimate, review, onReview, onFines }: {
-  r: Reservation; estimate: string; review?: Review; onReview: (r: ReviewTarget) => void; onFines: () => void;
-}) {
-  const ready = r.pickupBranch === r.branch;
-  const plural = (n: number) => `${n} ${Math.abs(n) === 1 ? "día" : "días"}`;
-  let label = "";
-  let lines: string[] = [];
-  let overdueDays = 0;
-  if (r.status === "activa") {
-    label = ready ? "LISTO PARA RETIRAR" : `DISPONIBLE DESDE EL ${estimate.toUpperCase()}`;
-    lines = [ready ? `Retira hasta el ${fmt(r.pickupDate)}` : `Disponibilidad estimada: ${estimate}`];
-  } else if (r.status === "retirado") {
-    const d = daysLeft(r.dueDate!);
-    overdueDays = d < 0 ? -d : 0;
-    label = overdueDays ? "VENCIDO" : "LIBRO RETIRADO";
-    lines = [
-      `Retirado el ${fmt(r.pickupDate)}`,
-      `Debes devolverlo el ${fmt(r.dueDate!)}`,
-      d > 0 ? `Te quedan ${plural(d)}` : d === 0 ? "Vence hoy" : `Vencido hace ${plural(overdueDays)}`,
-    ];
-  } else if (r.status === "finalizada") {
-    label = "FINALIZADA";
-    lines = [`Retirado el ${fmt(r.pickupDate)}`, `Devuelto el ${fmt(r.returnedAt!)}`];
-  } else {
-    label = "CANCELADA";
-    lines = ["Reserva cancelada"];
-  }
-  const canReview = r.status === "retirado" || r.status === "finalizada";
-  return (
-    <article className={overdueDays ? "is-overdue" : ""}>
-      <img src={r.image} alt="" />
-      <div>
-        <span>{label}</span>
-        <h2>{r.title}</h2>
-        <p>{r.author}</p>
-        {lines.map((l, i) => (
-          <small key={i} className={overdueDays && i === 2 ? "overdue-line" : ""}>{l}</small>
-        ))}
-        <small>{r.pickupBranch}</small>
-        {overdueDays > 0 && (
-          <small className="overdue-line">
-            Multa acumulada: {money(fineFor(overdueDays))} ·{" "}
-            <a href="#multas" onClick={(e) => { e.preventDefault(); onFines(); }}>Ver multas</a>
-          </small>
-        )}
-        {review && <small><Stars value={review.stars} /> Tu reseña</small>}
-      </div>
-      <div className="row-actions">
-        {canReview && <button onClick={() => onReview(r)}>{review ? "Editar reseña" : "Calificar y reseñar"}</button>}
-      </div>
-    </article>
   );
 }
 
@@ -157,7 +103,6 @@ export default function PortalSocio() {
   const [orden, setOrden] = useState<OrdenCatalogo>("default");
   const [searchOpen, setSearchOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [noticeOpen, setNoticeOpen] = useState(false);
   const [activeView, setActiveView] = useState<View>("catalog");
   const [selectedBook, setSelectedBook] = useState<LibroListado | null>(null);
 
@@ -195,8 +140,18 @@ export default function PortalSocio() {
   // Libros con reserva viva: el botón "Reservar" pasa a "Ya reservado"
   const reservados = useMemo(() => new Set(reservasVivas.map((r) => r.libro_id)), [reservasVivas]);
 
-  // ----- Vistas todavía con datos de prueba (Mis reservas / Préstamos / Multas)
-  const [reservations] = useState<Reservation[]>(seedReservations);
+  // ----- F4.1 / F4.3: préstamos y sanciones vigentes del socio
+  const panel = usePanelSocio(usuario?.socio_id);
+  const prestamosAbiertos = panel.prestamos.filter(
+    (p) => p.estado === PrestamoEstado.ACTIVO || p.estado === PrestamoEstado.VENCIDO,
+  ).length;
+  // Una notificación nueva suele venir de un cambio en reservas, préstamos o sanciones
+  const recargarTodo = () => {
+    void cargarReservas();
+    void panel.recargar();
+  };
+
+  // ----- Reseñas: el backend todavía no tiene endpoints, viven solo en la sesión
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewTarget, setReviewTarget] = useState<ReviewTarget | null>(null);
   const [stars, setStars] = useState(0);
@@ -235,8 +190,8 @@ export default function PortalSocio() {
     void cargarReservas();
   };
 
-  const hasRead = (bookId: number) =>
-    reservations.some((r) => r.id === bookId && (r.status === "retirado" || r.status === "finalizada"));
+  // Lectura confirmada: el socio tuvo un préstamo de ese libro
+  const hasRead = (bookId: number) => panel.prestamos.some((p) => p.libro_id === bookId);
   const openReview = (r: ReviewTarget) => {
     const prev = reviews.find((v) => v.mine && v.bookId === r.id);
     setStars(prev?.stars ?? 0);
@@ -251,13 +206,14 @@ export default function PortalSocio() {
     ]);
     setReviewTarget(null);
   };
-  const overdueLoans = reservations.filter((r) => r.status === "retirado" && daysLeft(r.dueDate!) < 0);
-  const totalFine = overdueLoans.reduce((s, r) => s + fineFor(-daysLeft(r.dueDate!)), 0);
-  const renderRow = (r: Reservation) => (
-    <ResRow key={r.rid} r={r} estimate={estimatedDates[r.pickupBranch]}
-      review={reviews.find((v) => v.mine && v.bookId === r.id)} onReview={openReview}
-      onFines={() => go("fines")} />
-  );
+  const reviewDePrestamo = (p: PrestamoSocio) => {
+    const libro = libros.find((l) => l.id === p.libro_id);
+    openReview(
+      libro
+        ? aTarget(libro)
+        : { id: p.libro_id, title: p.libro_nombre, author: "", image: p.libro_imagen_url },
+    );
+  };
   const bookReviews = selectedBook ? reviews.filter((r) => r.bookId === selectedBook.id) : [];
   const myBookReview = selectedBook ? reviews.find((v) => v.mine && v.bookId === selectedBook.id) : undefined;
 
@@ -281,13 +237,10 @@ export default function PortalSocio() {
               Préstamos
             </button>
             <button
-              className={activeView === "fines" ? "active" : ""}
-              onClick={() => {
-                go("fines");
-                setNoticeOpen(false);
-              }}
+              className={activeView === "sanctions" ? "active" : ""}
+              onClick={() => go("sanctions")}
             >
-              Multas
+              Sanciones {panel.sanciones.length > 0 && <small>{panel.sanciones.length}</small>}
             </button>
           </nav>
           <div className="header-search" onClick={(e) => e.stopPropagation()}>
@@ -326,16 +279,7 @@ export default function PortalSocio() {
               </div>
             )}
           </div>
-          <button
-            className="notification-button has-notifications"
-            onClick={() => {
-              setNoticeOpen(!noticeOpen);
-            }}
-            aria-label="Ver notificaciones"
-          >
-            <Icon name="bell" size={21} />
-            <span />
-          </button>
+          <Notificaciones onAbrir={recargarTodo} />
           <button
             className="profile-button"
             onClick={() => setProfileOpen(!profileOpen)}
@@ -352,13 +296,6 @@ export default function PortalSocio() {
             <Icon name="menu" />
           </button>
         </div>
-        {noticeOpen && (
-          <div className="header-popover notice-popover">
-            <span className="popover-kicker">NOTIFICACIONES</span>
-            <strong>Tu reserva está lista</strong>
-            <p>“Orgullo y prejuicio” te espera en Sede Central hasta el {fmt(addDays(2))}.</p>
-          </div>
-        )}
         {profileOpen && (
           <div className="profile-popover">
             <div className="profile-main">
@@ -369,8 +306,8 @@ export default function PortalSocio() {
               </div>
             </div>
             <div className="profile-stat">
-              <span>Préstamos disponibles</span>
-              <strong>{Math.max(0, 2 - reservasVivas.length)} de 2</strong>
+              <span>Libros que podés pedir</span>
+              <strong>{Math.max(0, 2 - reservasVivas.length - prestamosAbiertos)} de 2</strong>
             </div>
             <button
               onClick={() => {
@@ -388,6 +325,9 @@ export default function PortalSocio() {
       </header>
 
       <main onClick={() => searchOpen && setSearchOpen(false)}>
+        {activeView !== "sanctions" && (
+          <BannerSanciones sanciones={panel.sanciones} onVerDetalle={() => go("sanctions")} />
+        )}
         {activeView === "catalog" ? (
           <CatalogoPage
             libros={libros}
@@ -442,84 +382,28 @@ export default function PortalSocio() {
             onOpenLibro={openBook}
           />
         ) : activeView === "loans" ? (
-          <section className="reservations-page">
-            <span className="eyebrow">TU CUENTA</span>
-            <h1>Préstamos</h1>
-            <p>Los libros que tienes en casa, cuándo devolverlos y tu historial de lecturas.</p>
-            <h3 className="list-title">Para devolver</h3>
-            <div className="reservation-list">
-              {reservations.filter((r) => r.status === "retirado").map(renderRow)}
-              {!reservations.some((r) => r.status === "retirado") && (
-                <p className="muted">No tienes libros pendientes de devolución.</p>
-              )}
-            </div>
-            <h3 className="list-title">Anteriores</h3>
-            <div className="reservation-list">
-              {reservations.filter((r) => r.status === "finalizada").map(renderRow)}
-              {!reservations.some((r) => r.status === "finalizada") && (
-                <p className="muted">Aún no tienes préstamos finalizados.</p>
-              )}
-            </div>
-          </section>
-        ) : activeView === "profile" ? (
-          <ProfileSettings profile={profile} branches={sedes.map((s) => s.nombre)} onSave={setProfile} />
+          <PrestamosPage
+            prestamos={panel.prestamos}
+            cargando={panel.cargando}
+            error={panel.errorPrestamos}
+            onReintentar={panel.recargar}
+            libros={libros}
+            onOpenLibro={openBook}
+            tieneResena={(libroId) => reviews.some((v) => v.mine && v.bookId === libroId)}
+            onResenar={reviewDePrestamo}
+            onExplore={() => go("catalog")}
+          />
+        ) : activeView === "sanctions" ? (
+          <SancionesPage
+            sanciones={panel.sanciones}
+            prestamos={panel.prestamos}
+            cargando={panel.cargando}
+            error={panel.errorSanciones}
+            onReintentar={panel.recargar}
+            onVerPrestamos={() => go("loans")}
+          />
         ) : (
-          <section className="reservations-page fines-page">
-            <span className="eyebrow">TU CUENTA</span>
-            <h1>Multas</h1>
-            <p>Cargos por devolución fuera de plazo, calculados según tus préstamos vencidos.</p>
-            <div className="fines-summary">
-              <div>
-                <span>SALDO PENDIENTE</span>
-                <strong>{money(totalFine)}</strong>
-              </div>
-              <div>
-                <span>ESTADO DE LA CUENTA</span>
-                <strong className={totalFine ? "account-bad" : "account-ok"}>
-                  {totalFine ? "Con multa" : "Al día"}
-                </strong>
-              </div>
-            </div>
-            {overdueLoans.map((r) => {
-              const over = -daysLeft(r.dueDate!);
-              const total = fineFor(over);
-              return (
-                <article className="fine-card" key={r.rid}>
-                  <span className="eyebrow">VENCIDO HACE {over} {over === 1 ? "DÍA" : "DÍAS"}</span>
-                  <h2>{r.title}</h2>
-                  <p>{r.author} · retirado el {fmt(r.pickupDate)}, vencía el {fmt(r.dueDate!)}</p>
-                  <dl>
-                    <div><dt>Cargo base</dt><dd>{money(5000)}</dd></div>
-                    <div><dt>Recargo 2% diario acumulado</dt><dd>{money(total - 5000)}</dd></div>
-                    <div className="total"><dt>Total a abonar</dt><dd>{money(total)}</dd></div>
-                  </dl>
-                  <p className="muted">
-                    Al abonar la multa quedas suspendido 15 días sin poder pedir libros.
-                  </p>
-                  {over > LOST_AFTER_DAYS && (
-                    <p className="fine-alert">
-                      Pasaron más de 2 meses: el libro se considera perdido y el socio puede ser dado
-                      de baja. Para volver a asociarte se cobra el valor del libro más un 50%.
-                    </p>
-                  )}
-                  <button className="ghost-btn" onClick={() => go("loans")}>Ver préstamo</button>
-                </article>
-              );
-            })}
-            {!overdueLoans.length && (
-              <div className="empty fines-empty">
-                <Icon name="bookmark" size={34} />
-                <h3>No tienes multas pendientes</h3>
-                <p>Tu historial de préstamos está al día.</p>
-              </div>
-            )}
-            <h3 className="list-title">Otras sanciones</h3>
-            <ul className="rules">
-              <li>Libro devuelto con daños menores (reparables): suspensión de 15 días.</li>
-              <li>Daños mayores (irreparables): multa del 100% del costo del libro y suspensión hasta abonarla. Pasados los 15 días se suma un recargo del 2% diario.</li>
-              <li>Más de 2 meses de atraso: el libro se da por perdido y el socio se da de baja.</li>
-            </ul>
-          </section>
+          <ProfileSettings profile={profile} branches={sedes.map((s) => s.nombre)} onSave={setProfile} />
         )}
       </main>
       {pendingBook && (

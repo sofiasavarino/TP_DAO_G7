@@ -61,6 +61,8 @@ export enum SocioEstado {
 export enum SancionTipo {
   MULTA = 'MULTA',
   SUSPENSION = 'SUSPENSION',
+  /** Baja del socio hasta que reponga el libro perdido */
+  REPOSICION = 'REPOSICION',
 }
 
 // Tipos de notificación al usuario

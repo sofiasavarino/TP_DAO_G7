@@ -46,11 +46,17 @@ def _to_listado(p: Prestamo) -> PrestamoListadoDTO:
         numero=p.numero,
         estado=p.estado,
         tipo=p.tipo,
+        fecha_inicio=p.fecha_inicio,
         fecha_vencimiento=p.fecha_vencimiento,
+        fecha_devolucion=p.fecha_devolucion,
         socio_id=p.socio_id,
         socio_nombre=f"{p.socio.nombre} {p.socio.apellido}",
         ejemplar_id=p.ejemplar_id,
         ejemplar_codigo=p.ejemplar.codigo_inventario,
+        libro_id=p.ejemplar.libro_id,
+        libro_nombre=p.ejemplar.libro.nombre,
+        libro_isbn=p.ejemplar.libro.isbn,
+        libro_imagen_url=p.ejemplar.libro.imagen_url,
     )
 
 
