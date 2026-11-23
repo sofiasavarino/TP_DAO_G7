@@ -1,0 +1,89 @@
+/* ===== F8.1 / F8.2 · Remitos entre sedes =====
+   Archivo propio para no tocar index.css: reutiliza sus variables y las clases del panel
+   (admin-*, inv-*, estado-pill, pickup-options, reservation-modal, ejemplar-form). */
+
+/* --- Colores de estado del remito (mismo sistema --est que los ejemplares) --- */
+.est-creado { --est: #6f746f; --est-bg: rgba(29, 36, 32, .08); }
+.est-recibido { --est: #1f6b47; --est-bg: rgba(31, 107, 71, .12); }
+.est-con_incidencia { --est: #b4532f; --est-bg: rgba(188, 90, 56, .14); }
+/* .est-en_transito ya existe en index.css (azul) */
+
+/* --- Tabla --- */
+.rem-tabla td.num { font-variant-numeric: tabular-nums; font-weight: 600; }
+.rem-tabla .inv-accion:disabled { cursor: not-allowed; }
+.rem-numero { white-space: nowrap; border: 0; background: none; padding: 0; font: inherit; font-weight: 700; font-size: 13px; letter-spacing: .02em; color: var(--ink); cursor: pointer; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.rem-numero:hover { color: var(--rust); text-decoration: underline; text-underline-offset: 3px; }
+.rem-recorrido { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; font-weight: 600; }
+.rem-recorrido > span:nth-child(2) { color: #8b908b; font-weight: 400; }
+.rem-recorrido .mia { color: var(--green); text-decoration: underline; text-decoration-color: rgba(31, 74, 56, .35); text-underline-offset: 3px; }
+.rem-nota { margin: -6px 0 16px; font-size: 13px; color: #697169; }
+.rem-nota code { padding: 2px 7px; border-radius: 6px; background: var(--cream); color: var(--green); font-size: 12px; }
+
+/* --- Modales --- */
+.reservation-modal.rem-modal-ancho { width: min(680px, 100%); }
+.rem-sub { margin: -6px 0 18px; font-size: 14px; }
+.rem-resumen { margin-top: 14px; }
+.rem-resumen.mal { background: rgba(188, 90, 56, .1); color: #8a3a1e; }
+.rem-motivos { gap: 6px; }
+.rem-motivos label { min-height: 58px; }
+.rem-contador { margin-left: 8px; padding: 2px 9px; border-radius: 999px; background: var(--green); color: var(--paper); font-size: 11px; font-variant-numeric: tabular-nums; }
+
+/* Selector múltiple de ejemplares */
+.rem-picker { border: 1px solid rgba(29, 36, 32, .25); border-radius: 10px; background: #fff; overflow: hidden; }
+.rem-picker.invalido { border-color: var(--rust); }
+.rem-picker-barra { display: flex; gap: 10px; align-items: center; padding: 10px; border-bottom: 1px solid rgba(29, 36, 32, .1); background: rgba(233, 225, 211, .35); }
+.rem-picker-barra .admin-search { flex: 1; max-width: none; height: 40px; }
+.rem-picker ul { list-style: none; margin: 0; padding: 4px; max-height: 240px; overflow-y: auto; }
+.rem-picker li label { display: grid; grid-template-columns: 18px 128px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; cursor: pointer; font-weight: 400; }
+.rem-picker li label:hover { background: rgba(31, 74, 56, .06); }
+.rem-picker li label.marcado { background: rgba(31, 74, 56, .1); }
+.rem-picker input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--green); }
+.rem-picker .mono { font-size: 12px; font-weight: 600; }
+.rem-picker-libro { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rem-picker-vacio { margin: 0; padding: 18px; text-align: center; color: #697169; font-weight: 400; }
+.rem-tag { font-size: 11px; font-weight: 700; color: #9a6a12; background: rgba(196, 140, 40, .16); padding: 2px 8px; border-radius: 999px; }
+
+/* Recepción: estado de cada ejemplar */
+.rem-recepcion { list-style: none; margin: 0 0 14px; padding: 0; display: grid; gap: 8px; }
+.rem-recepcion li { display: flex; justify-content: space-between; align-items: center; gap: 14px; padding: 10px 12px 10px 14px; border: 1px solid rgba(29, 36, 32, .12); border-radius: 10px; background: #fff; }
+.rem-recepcion li.danado { border-color: var(--rust); background: rgba(188, 90, 56, .04); }
+.rem-recepcion li > div:first-child { display: grid; gap: 2px; min-width: 0; }
+.rem-recepcion small { color: #697169; font-size: 12px; }
+.rem-recepcion-estado { display: inline-flex; border: 1px solid rgba(29, 36, 32, .16); border-radius: 999px; padding: 3px; flex: none; }
+.rem-recepcion-estado button { border: 0; background: none; border-radius: 999px; padding: 6px 11px; font-size: 12px; font-weight: 600; color: #4d554f; cursor: pointer; }
+.rem-recepcion-estado button.activo.bien { background: var(--green); color: var(--paper); }
+.rem-recepcion-estado button.activo.mal { background: var(--rust); color: #fff; }
+.rem-obs { display: grid; gap: 6px; font-weight: 600; font-size: 13px; }
+.rem-obs textarea { border: 1px solid rgba(29, 36, 32, .25); border-radius: 8px; padding: 11px 13px; font: inherit; font-weight: 400; resize: vertical; background: #fff; }
+.rem-obs textarea[aria-invalid="true"] { border-color: var(--rust); }
+
+/* Detalle */
+.rem-detalle-titulo { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.rem-pasos { list-style: none; margin: 0 0 22px; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); }
+.rem-pasos li { position: relative; display: grid; gap: 2px; padding-top: 22px; color: #8b908b; }
+.rem-pasos li span { position: absolute; top: 0; left: 0; width: 14px; height: 14px; border-radius: 50%; border: 2px solid #c9c2b5; background: var(--paper); z-index: 1; }
+.rem-pasos li:not(:last-child)::after { content: ""; position: absolute; top: 6px; left: 14px; right: 0; height: 2px; background: #ddd5c8; }
+.rem-pasos li.hecho { color: var(--ink); }
+.rem-pasos li.hecho span { background: var(--green); border-color: var(--green); }
+.rem-pasos li.hecho:not(:last-child)::after { background: var(--green); }
+.rem-pasos strong { font-size: 13px; }
+.rem-pasos small { font-size: 12px; }
+.rem-detalle-sub { margin: 0 0 8px; font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: #697169; font-family: inherit; }
+.rem-detalle-ejemplares { list-style: none; margin: 0 0 18px; padding: 0; border: 1px solid rgba(29, 36, 32, .12); border-radius: 10px; background: #fff; max-height: 220px; overflow-y: auto; }
+.rem-detalle-ejemplares li { display: grid; grid-template-columns: 140px 1fr; gap: 10px; padding: 9px 14px; font-size: 14px; }
+.rem-detalle-ejemplares li + li { border-top: 1px solid rgba(29, 36, 32, .08); }
+.rem-detalle-ejemplares .mono { font-size: 12px; font-weight: 600; }
+.rem-observaciones { margin: 0 0 6px; white-space: pre-line; padding: 12px 14px; background: var(--cream); border-radius: 8px; font-size: 14px; }
+
+/* El panel oculta la 3ª y 4ª columna en pantallas angostas; acá la 4ª es el estado,
+   así que se ocultan "Ejemplares" y "Último movimiento" en su lugar. */
+@media (max-width: 760px) {
+  .admin-table.rem-tabla th:nth-child(4), .admin-table.rem-tabla td:nth-child(4) { display: table-cell; }
+  .admin-table.rem-tabla th:nth-child(5), .admin-table.rem-tabla td:nth-child(5) { display: none; }
+}
+@media (max-width: 640px) {
+  .admin-table.rem-tabla th:nth-child(3), .admin-table.rem-tabla td:nth-child(3) { display: none; }
+  .rem-recepcion li { flex-direction: column; align-items: stretch; }
+  .rem-picker li label { grid-template-columns: 18px minmax(0, 1fr); }
+  .rem-picker li label .rem-picker-libro, .rem-picker li label .rem-tag { grid-column: 2; }
+}
