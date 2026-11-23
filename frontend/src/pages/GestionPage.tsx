@@ -4,9 +4,10 @@ import SeccionPendiente from '../components/admin/SeccionPendiente';
 import { RUTA_GESTION, RUTAS_GESTION } from '../utils/rutas';
 import EjemplaresPage from './gestion/EjemplaresPage';
 import LibrosPage from './gestion/LibrosPage';
+import MostradorPage from './gestion/MostradorPage';
 
 /** Secciones que ya tienen pantalla propia; el resto muestra un placeholder. */
-const IMPLEMENTADAS: string[] = [RUTAS_GESTION.catalogo, RUTAS_GESTION.ejemplares];
+const IMPLEMENTADAS: string[] = [RUTAS_GESTION.catalogo, RUTAS_GESTION.ejemplares, RUTAS_GESTION.mostrador];
 
 /** Rutas hijas de /gestion/* (App.tsx ya restringe a Bibliotecario y Administrador). */
 export default function GestionPage() {
@@ -18,6 +19,7 @@ export default function GestionPage() {
         <Route index element={<Navigate to={RUTAS_GESTION.catalogo} replace />} />
         <Route path={relativa(RUTAS_GESTION.catalogo)} element={<LibrosPage />} />
         <Route path={relativa(RUTAS_GESTION.ejemplares)} element={<EjemplaresPage />} />
+        <Route path={relativa(RUTAS_GESTION.mostrador)} element={<MostradorPage />} />
         {SECCIONES_GESTION.filter((s) => !IMPLEMENTADAS.includes(s.to)).map((s) => (
           <Route
             key={s.to}

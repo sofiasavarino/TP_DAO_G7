@@ -10,6 +10,7 @@ from app.services.reserva_service import (
     cancelar_reserva,
     crear_reserva,
     eta_para_reserva,
+    listar_listas_para_retiro,
     listar_mios,
     listar_pendientes,
     procesar_retiro,
@@ -64,6 +65,15 @@ def listar_pendientes_endpoint(
 ) -> list[ReservaDTO]:
     """Cola de espera SIN ejemplar (PENDIENTE) de toda la red, FIFO. Filtrable por libro o sede."""
     return listar_pendientes(session, libro_id=libro_id, sede_id=sede_id)
+
+
+@reserva_router.get("/listas-para-retiro", response_model=list[ReservaDTO])
+def listar_listas_para_retiro_endpoint(
+    sede_id: int = Query(..., description="Sede del mostrador (sede de retiro)"),
+    session: Session = Depends(get_session),
+) -> list[ReservaDTO]:
+    """Reservas LISTA_PARA_RETIRO de la sede, para entregarlas en el mostrador (F7.1)."""
+    return listar_listas_para_retiro(session, sede_id)
 
 
 @reserva_router.get("/eta", response_model=ReservaEtaDTO)
