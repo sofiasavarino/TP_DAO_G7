@@ -310,10 +310,21 @@ export default function LibrosPage() {
               lo volvés a dar de alta con el mismo ISBN, se reactiva.
             </p>
             <div className="modal-actions">
-              <button className="ghost-btn" onClick={() => setADarDeBaja(null)}>
+              <button className="ghost-btn" style={{ width: '100%',marginTop: 0, borderRadius: 0, background:'#bc5a38'}} onClick={() => setADarDeBaja(null)}>
                 Cancelar
               </button>
-              <button className="confirm-reservation" disabled={dandoDeBaja} onClick={() => void confirmarBaja()}>
+              <button className="confirm-reservation" style={{
+                    width: '100%',
+                    padding: '14px 18px',
+                    fontFamily: 'inherit',
+                    fontSize: 13,
+                    fontWeight: 700,
+                    borderRadius: 0,
+                    background: '#e5e2dc',
+                    color: '#3d433f',
+                    border: '1px solid #c9c4ba',
+                    cursor: 'pointer',
+                  }} disabled={dandoDeBaja} onClick={() => void confirmarBaja()}>
                 {dandoDeBaja ? 'DANDO DE BAJA…' : 'DAR DE BAJA'}
               </button>
             </div>
