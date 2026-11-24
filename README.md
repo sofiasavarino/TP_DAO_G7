@@ -114,7 +114,7 @@ TP_DAO_G7/
 | PATCH | `/api/v1/ejemplares/{id}/reparacion` | `DISPONIBLE` → `EN_REPARACION`. 409 si el estado no lo admite; 403 si un Bibliotecario lo intenta sobre un ejemplar de otra sede |
 | PATCH | `/api/v1/ejemplares/{id}/reincorporacion` | `EN_REPARACION` → `DISPONIBLE`. 409 si el estado no lo admite; 403 si un Bibliotecario lo intenta sobre un ejemplar de otra sede |
 | PATCH | `/api/v1/ejemplares/{id}/inutilizable` | `DISPONIBLE`/`EN_REPARACION` → `INUTILIZABLE` (terminal). 409 si el estado no lo admite; 403 si un Bibliotecario lo intenta sobre un ejemplar de otra sede |
-| GET | `/api/v1/sedes` | Sedes activas (para selectores). Requiere sesión |
+| GET | `/api/v1/sedes` | Sedes activas (para selectores). Público: lo usa el formulario de registro de socios |
 | PATCH | `/api/v1/ejemplares/{id}/estado` | Cambio de estado de un ejemplar |
 
 ### Reportes (solo Administrador)
@@ -178,8 +178,8 @@ Mientras haya cualquier sanción vigente (`MULTA`, `SUSPENSION` o `REPOSICION`) 
 
 | Acceso | Endpoints (`/api/v1/...`) |
 |---|---|
-| Público (sin token) | `POST /auth/login`, `POST /auth/registro`, `GET /health`, `/docs` |
-| Cualquier usuario logueado | `/libros/catalogo*`, `/libros/lookup`, `/ejemplares/disponibles`, `/ejemplares/por-libro/{id}`, `/sedes`, `/prestamos/mios`, `/reservas` (crear), `/reservas/mios`, `/reservas/eta`, `DELETE /reservas/{id}`, `GET /sanciones`, `/notificaciones/*` |
+| Público (sin token) | `POST /auth/login`, `POST /auth/registro`, `GET /sedes` (necesario para elegir la sede al registrarse), `GET /health`, `/docs` |
+| Cualquier usuario logueado | `/libros/catalogo*`, `/libros/lookup`, `/ejemplares/disponibles`, `/ejemplares/por-libro/{id}`, `/prestamos/mios`, `/reservas` (crear), `/reservas/mios`, `/reservas/eta`, `DELETE /reservas/{id}`, `GET /sanciones`, `/notificaciones/*` |
 | Bibliotecario y Administrador | `/prestamos` (alta, listado general, vencidos, devolución, renovación, pérdida, reposición), todos los `/remitos*`, `/reservas/pendientes`, `/reservas/listas-para-retiro`, `/reservas/procesar-vencimientos`, `POST /reservas/{id}/retira`, `POST /sanciones`, `PUT /sanciones/{id}/levantar\|abonar`, `GET /sanciones/{socio_id}`, `/socios`, `POST /libros`, `/libros/google`, `PUT/PATCH /libros/{id}`, `/ejemplares` (alta, inventario, acciones manuales) |
 | Solo Administrador | `/usuarios/bibliotecarios` |
 
