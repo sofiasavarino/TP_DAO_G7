@@ -3,6 +3,7 @@ import AdminIcon from '../../components/admin/AdminIcon';
 import { ApiError } from '../../services/api';
 import { usuariosService } from '../../services/usuariosService';
 import type { EmpleadoListado, Sede } from '../../types/usuarios';
+import ResetPasswordModal from '../../components/admin/ResetPasswordModal';
 
 type Aviso = { tipo: 'ok' | 'error'; texto: string };
 
@@ -97,6 +98,7 @@ export default function PersonalPage() {
   const [errores, setErrores] = useState<Errores>({});
   const [errorForm, setErrorForm] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
+  const [aResetear, setAResetear] = useState<EmpleadoListado | null>(null);
 
   const cargar = useCallback(async () => {
     setCargando(true);
@@ -262,6 +264,7 @@ export default function PersonalPage() {
                 <th scope="col">Legajo</th>
                 <th scope="col">Sede</th>
                 <th scope="col">Estado</th>
+                <th scope="col" className="acciones">Acción</th>
               </tr>
             </thead>
             <tbody>
@@ -280,12 +283,33 @@ export default function PersonalPage() {
                   <td>
                     <em className={`badge${p.activo ? ' ok' : ''}`}>{p.activo ? 'Activo' : 'De baja'}</em>
                   </td>
+                  <td className="acciones">
+                    <button
+                      type="button"
+                      className="inv-accion"
+                      onClick={() => setAResetear(p)}
+                    >
+                      Restablecer clave
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       )}
+      {aResetear && (
+              <ResetPasswordModal
+                usuarioId={aResetear.usuario_id}
+                nombrePersona={`${aResetear.nombre} ${aResetear.apellido}`}
+                nombreUsuario={aResetear.nombre_usuario}
+                onCerrar={() => setAResetear(null)}
+                onGuardada={(texto) => {
+                  setAResetear(null);
+                  setAviso({ tipo: 'ok', texto });
+                }}
+              />
+            )}
 
       {formAbierto && (
         <div className="reservation-modal-backdrop" role="presentation">

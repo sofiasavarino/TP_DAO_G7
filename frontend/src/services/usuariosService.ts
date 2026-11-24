@@ -11,6 +11,13 @@ export const usuariosService = {
   /** Sedes activas (público): para elegir sede al registrarse o al dar de alta personal. */
   listarSedes: () => api.get<Sede[]>('/api/v1/sedes'),
 
+  /** Solo Administrador: blanquea la contraseña de cualquier usuario (socio o bibliotecario). */
+  restablecerPassword: (usuarioId: number, passwordNueva: string) =>
+    api.request<void>(`/api/v1/usuarios/${usuarioId}/password`, {
+      method: 'PUT',
+      body: JSON.stringify({ password_nueva: passwordNueva }),
+    }),
+
   /** Autorregistro de socio (público). No inicia sesión: después hay que llamar a login. */
   registrarSocio: (payload: RegistroSocioPayload) =>
     api.post<UsuarioSesion>('/api/v1/auth/registro', payload),

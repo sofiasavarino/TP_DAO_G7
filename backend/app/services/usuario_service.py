@@ -157,3 +157,12 @@ def cambiar_password_usuario(
         raise CredencialesInvalidas("La contraseña actual es incorrecta.")
     usuario.hash = hash_password(datos.password_nueva)
     session.flush()
+
+def restablecer_password_admin(session: Session, usuario_id: int, password_nueva: str) -> bool:
+    """Blanquea la contraseña de cualquier usuario (solo Administrador). Devuelve False si no existe."""
+    usuario = usuario_repo.get_by_id(session, usuario_id, incluir_inactivos=True)
+    if usuario is None:
+        return False
+    usuario.hash = hash_password(password_nueva)
+    session.flush()
+    return True
