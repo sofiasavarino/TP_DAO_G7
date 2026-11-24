@@ -35,7 +35,6 @@ export interface Prestamo {
 export interface PrestamoPayload {
   socio_id: number;
   ejemplar_id: number;
-  tipo: PrestamoTipo;
   observaciones: string | null;
 }
 

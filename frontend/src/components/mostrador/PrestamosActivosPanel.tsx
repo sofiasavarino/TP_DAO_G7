@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { mostradorService } from '../../services/mostradorService';
 import type { EjemplarInventario } from '../../types/ejemplares';
-import { PrestamoEstado } from '../../types/enums';
+import { PrestamoEstado, PrestamoTipo } from '../../types/enums';
 import {
   ETIQUETA_ESTADO_PRESTAMO,
   ETIQUETA_TIPO_PRESTAMO,
@@ -109,7 +109,8 @@ export default function PrestamosActivosPanel({
           String(p.socio_id) === q ||
           normalizar(p.ejemplar_codigo).includes(q) ||
           normalizar(p.numero).includes(q) ||
-          normalizar(p.ejemplar?.libro.nombre).includes(q)),
+          normalizar(p.ejemplar?.libro.nombre).includes(q) ||
+          (p.tipo === PrestamoTipo.INTERBIBLIOTECARIO && normalizar(p.ejemplar?.sede_origen.nombre).includes(q))),
     );
   }, [vistas, busqueda, filtro]);
 
@@ -211,7 +212,13 @@ export default function PrestamosActivosPanel({
                   <tr key={p.id} className={p.atrasado ? 'mos-atrasado' : ''}>
                     <td>
                       <strong className="mono">{p.numero}</strong>
-                      <small className="inv-sub">{ETIQUETA_TIPO_PRESTAMO[p.tipo]}</small>
+                      <small className="inv-sub">
+                        {ETIQUETA_TIPO_PRESTAMO[p.tipo]}
+                        {/* Interbibliotecario: de qué sede es el ejemplar (sede de origen) */}
+                        {p.tipo === PrestamoTipo.INTERBIBLIOTECARIO && p.ejemplar && (
+                          <span className="mos-origen">de {p.ejemplar.sede_origen.nombre}</span>
+                        )}
+                      </small>
                     </td>
                     <td>
                       <strong>{p.socio_nombre}</strong>
@@ -298,6 +305,9 @@ function DevolucionModal({
   onDevuelto: (prestamoId: number, aviso: string) => void;
 }) {
   const [conDanios, setConDanios] = useState(false);
+  // Estado del ejemplar: arranca con su descripción actual para editarla
+  const descripcionActual = prestamo.ejemplar?.descripcion_fisica ?? '';
+  const [detalle, setDetalle] = useState(descripcionActual);
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -312,7 +322,10 @@ function DevolucionModal({
     setGuardando(true);
     setError(null);
     try {
-      await mostradorService.registrarDevolucion(prestamo.id, sedeId, usuarioId, conDanios);
+      // Solo se manda si cambió: si no, no hay nada nuevo que registrar
+      const texto = detalle.trim();
+      const cambio = texto && texto !== descripcionActual.trim() ? texto : null;
+      await mostradorService.registrarDevolucion(prestamo.id, sedeId, usuarioId, conDanios, cambio);
       onDevuelto(
         prestamo.id,
         `Devolución registrada: préstamo ${prestamo.numero} finalizado${
@@ -339,6 +352,9 @@ function DevolucionModal({
             <strong>{libro?.nombre ?? `Ejemplar ${prestamo.ejemplar_codigo}`}</strong>
             <span>
               {prestamo.numero} · {prestamo.socio_nombre} · {prestamo.ejemplar_codigo}
+              {prestamo.tipo === PrestamoTipo.INTERBIBLIOTECARIO && prestamo.ejemplar
+                ? ` · interbibliotecario, de ${prestamo.ejemplar.sede_origen.nombre}`
+                : ''}
             </span>
           </div>
         </div>
@@ -350,6 +366,23 @@ function DevolucionModal({
             devolución el sistema le aplica la sanción por retraso.
           </p>
         )}
+
+        <label className="campo mos-detalle">
+          <span>
+            Estado del ejemplar <small>(opcional)</small>
+          </span>
+          <textarea
+            rows={2}
+            maxLength={200}
+            value={detalle}
+            onChange={(e) => setDetalle(e.target.value)}
+            placeholder="Ej. Tapa con raspones leves"
+          />
+          <small className="mos-detalle-ayuda">
+            <span>Queda en el historial del préstamo y actualiza la descripción física del ejemplar.</span>
+            <span className={detalle.length >= 200 ? 'tope' : ''}>{detalle.length}/200</span>
+          </small>
+        </label>
 
         <label className={`mos-check${conDanios ? ' marcado' : ''}`}>
           <input type="checkbox" checked={conDanios} onChange={(e) => setConDanios(e.target.checked)} />

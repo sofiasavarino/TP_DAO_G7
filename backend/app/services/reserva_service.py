@@ -13,12 +13,7 @@ from datetime import date
 
 from sqlalchemy.orm import Session
 
-from app.models.enums import (
-    EstadoEjemplar,
-    EstadoReserva,
-    EstadoSocio,
-    TipoPrestamo,
-)
+from app.models.enums import EstadoEjemplar, EstadoReserva, EstadoSocio
 
 from app.dtos.reserva_dto import ReservaCreate, ReservaDTO, ReservaEtaDTO
 from app.exceptions import (
@@ -200,11 +195,7 @@ def crear_reserva(session: Session, datos: ReservaCreate, usuario_id: int) -> Re
 
 
 def procesar_retiro(
-    session: Session,
-    reserva_id: int,
-    sede_id: int,
-    usuario_id: int,
-    tipo: TipoPrestamo = TipoPrestamo.LOCAL,
+    session: Session, reserva_id: int, sede_id: int, usuario_id: int
 ) -> Prestamo:
     """Retiro de un ejemplar reservado: la reserva cierra CUMPLIDA y nace el préstamo.
 
@@ -239,9 +230,7 @@ def procesar_retiro(
 
     prestamo = crear_prestamo_para_reserva(
         session,
-        socio_id=reserva.socio_id,
-        ejemplar_id=reserva.ejemplar_id,
-        tipo=tipo,
+        reserva,
         observaciones=f"Retiro de reserva {reserva_id} (confirmado por usuario {usuario_id})",
     )
     estado_de_reserva(reserva).retirar(reserva)  # LISTA_PARA_RETIRO -> CUMPLIDA

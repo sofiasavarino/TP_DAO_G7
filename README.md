@@ -79,13 +79,13 @@ TP_DAO_G7/
 | PUT | `/api/v1/libros/{id}` | Edición de un libro (reemplaza datos y autores). 409 si el ISBN ya lo tiene otro libro. Bibliotecario/Admin |
 | PATCH | `/api/v1/libros/{id}/baja` | Baja lógica (`activo = false`): deja de aparecer en `/catalogo`. 409 si tiene ejemplares prestados, reservados o en tránsito. Bibliotecario/Admin |
 | GET | `/api/v1/prestamos` | Listado general de préstamos |
-| POST | `/api/v1/prestamos` | Alta de préstamo (`DIAS_PRESTAMO=15` calculado por backend; `LimitePrestamosExcedido`, `SocioSancionado`, `EjemplarNoDisponible`)
+| POST | `/api/v1/prestamos` | Alta de préstamo (`DIAS_PRESTAMO=15` calculado por backend; `LimitePrestamosExcedido`, `SocioSancionado`, `EjemplarNoDisponible`). El `tipo` NO va en el body: el préstamo directo siempre es `LOCAL` |
 | POST | `/api/v1/reservas?responsable_creacion_id=` | Alta de reserva: asigna ejemplar DISPONIBLE local (`LISTA_PARA_RETIRO`); si sólo hay en otra sede encola remito IDA (`EN_TRANSITO`); si no hay nada, `PENDIENTE`. Body: `socio_id, libro_id, sede_retiro_id` |
 | POST | `/api/v1/reservas/procesar-vencimientos?responsable_proceso_id=` | Cierra `LISTA_PARA_RETIRO` vencidas (FIFO): reserva → `VENCIDA`; ejemplar RESERVADO se libera y se sirve la siguiente reserva más vieja FIFO del libro (o queda DISPONIBLE). Devuelve la lista de vencidas |
 | GET | `/api/v1/reservas/mios?socio_id=` | Reservas del socio, de la más reciente a la más vieja (cualquier estado) |
 | GET | `/api/v1/reservas/pendientes?libro_id=&sede_id=` | Cola de espera SIN ejemplar (`PENDIENTE`) de toda la red, FIFO. Filtros combinan con AND (`?libro_id=1&sede_id=2` = pendientes del libro 1 para retirar en sede 2) |
 | DELETE | `/api/v1/reservas/{id}?responsable_cancelacion_id=` | Cancelación de reserva viva (`PENDIENTE`/`EN_TRANSITO`/`LISTA_PARA_RETIRO`) → `CANCELADA`. Si el ejemplar pre-asignado no viaja en un remito, se libera y se sirve la siguiente reserva FIFO; si viaja, se reasigna al llegar al destino. `CUMPLIDA`/`VENCIDA`/`CANCELADA` → 400 |
-| POST | `/api/v1/reservas/{id}/retira?sede_id=&responsable_retiro_id=&tipo=LOCAL` | El socio retira la reserva `LISTA_PARA_RETIRO` (dentro de las 48hs hábiles): reserva → `CUMPLIDA` y nace el préstamo real (`P-NNNNNN`, `DIAS_PRESTAMO=15`); falla si no está en LISTA_PARA_RETIRO, la ventana venció, la sede no es la de retiro, o el socio está sancionado/sin cupo |
+| POST | `/api/v1/reservas/{id}/retira?sede_id=&responsable_retiro_id=` | El socio retira la reserva `LISTA_PARA_RETIRO` (dentro de las 48hs hábiles): reserva → `CUMPLIDA` y nace el préstamo real (`P-NNNNNN`, `DIAS_PRESTAMO=15`); falla si no está en LISTA_PARA_RETIRO, la ventana venció, la sede no es la de retiro, o el socio está sancionado/sin cupo. El backend deriva el `tipo`: `INTERBIBLIOTECARIO` sólo si un remito IDA recibido desde la fecha de la reserva trajo el ejemplar a la sede de retiro, si no `LOCAL` |
 | GET | `/api/v1/reservas/eta?libro_id=&sede_retiro_id=` | Vista previa SIN crear la reserva: `disponible_ahora` y `eta` (fecha mínima estimada o null). Para que el front muestre "Podés esperarlo para…" antes de reservar | |
 | POST | `/api/v1/sanciones?responsable_id=` | Alta de sanción manual sobre un préstamo (`MULTA` con `monto` o `SUSPENSION` con `dias_suspension`); valida socio activo y que el préstamo no tenga ya sanción |
 | GET | `/api/v1/sanciones?socio_id=` | Sanciones vigentes hoy (filtrables por socio) |
@@ -257,6 +257,12 @@ python -m app.seed_demo --reset   # DEMO: borra la base y la carga con escenario
 # python -m app.seeds            # datos iniciales: 3 sedes, 3 roles, usuarios seed, catálogo de muestra
 python -m app.seed_catalogo_google  # OPCIONAL: importa ~108 libros desde Google Books (3 ejemplares por libro, 1 por sede); requiere GOOGLE_BOOKS_API_KEY en backend/.env
 uvicorn app.main:app --reload  # http://localhost:8000 | documentación en /docs
+```
+
+Para correr tests:
+```bash
+pip install -e ".[dev]"
+python -m pytest --cov --cov-report=term-missing
 ```
 
 Frontend:

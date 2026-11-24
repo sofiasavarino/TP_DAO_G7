@@ -59,6 +59,14 @@
 .mos-form .admin-search { max-width: none; }
 .mos-tipos { gap: 6px; }
 .mos-tipos label { min-height: 58px; }
+/* Tipo de préstamo calculado (local / interbibliotecario): solo informativo */
+.mos-tipo-info { display: grid; gap: 3px; padding: 12px 14px 12px 16px; border-radius: 8px; border-left: 4px solid var(--green); background: rgba(31, 74, 56, .07); }
+.mos-tipo-info strong { font-size: 14px; color: var(--green); }
+.mos-tipo-info small { font-size: 12px; color: #4d554f; }
+.mos-tipo-info.inter { border-color: #2f5e8a; background: rgba(47, 94, 138, .08); }
+.mos-tipo-info.inter strong { color: #2f5e8a; }
+/* Préstamos interbibliotecarios en el listado: de qué sede es el ejemplar */
+.mos-origen { display: inline-block; margin-left: 4px; padding: 1px 7px; border-radius: 999px; font-size: 11px; font-weight: 700; color: #2f5e8a; background: rgba(47, 94, 138, .1); }
 .mos-socio-elegido { display: flex; align-items: center; gap: 12px; padding: 10px 16px 10px 10px; border: 1px solid var(--green); border-radius: 999px; background: rgba(31, 74, 56, .05); }
 .mos-socio-elegido > div { display: grid; line-height: 1.3; min-width: 0; }
 .mos-socio-elegido strong { font-size: 14px; }
@@ -99,3 +107,11 @@
   .mos-situacion-datos { grid-template-columns: 1fr; }
   .mos-situacion-datos > div + div { border-left: 0; border-top: 1px solid rgba(29, 36, 32, .12); }
 }
+
+/* --- Estado del ejemplar al devolverlo --- */
+.mos-detalle { display: grid; gap: 6px; margin-top: 16px; font-weight: 600; font-size: 13px; }
+.mos-detalle > span small { font-weight: 400; color: #8b908b; }
+.mos-detalle textarea { border: 1px solid rgba(29, 36, 32, .25); border-radius: 8px; padding: 11px 13px; font: inherit; font-weight: 400; font-size: 14px; resize: vertical; background: #fff; }
+.mos-detalle textarea:focus { outline: 2px solid rgba(31, 74, 56, .35); outline-offset: 1px; }
+.mos-detalle-ayuda { display: flex; justify-content: space-between; gap: 12px; font-weight: 400; font-size: 12px; color: #697169; }
+.mos-detalle-ayuda .tope { color: var(--rust); font-weight: 700; }

@@ -98,6 +98,7 @@ def devolver_prestamo_endpoint(
     sede_id: int = Query(..., description="Sede donde el socio devuelve el ejemplar"),
     responsable_devolucion_id: int = Query(..., description="Usuario bibliotecario/empleado que recibe la devolución"),
     con_danios: bool = Query(False, description="Devuelto con daños menores: va a reparación y suspende al socio"),
+    observaciones: str | None = Query(None, max_length=200, description="Estado físico del ejemplar al devolverlo"),
     session: Session = Depends(get_session),
 ) -> PrestamoDTO:
     try:
@@ -107,6 +108,7 @@ def devolver_prestamo_endpoint(
             sede_id=sede_id,
             usuario_id=responsable_devolucion_id,
             con_danios=con_danios,
+            observaciones=observaciones,
         )
     except Exception as e:  # noqa: BLE001
         raise _mapear_excepcion(e) from e

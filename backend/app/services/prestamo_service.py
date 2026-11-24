@@ -14,6 +14,7 @@ from app.exceptions import (
 from app.models.enums import EstadoEjemplar, EstadoPrestamo, EstadoSocio, TipoPrestamo, TipoSancion
 from app.models.libro import Libro
 from app.models.prestamo import Prestamo
+from app.models.reserva import Reserva
 from app.models.sancion import Sancion
 from app.repositories.ejemplar_repository import EjemplarRepository
 from app.repositories.libro_repository import LibroRepository
@@ -129,28 +130,37 @@ def crear_prestamo(session: Session, datos: PrestamoCreate) -> Prestamo:
             f"ejemplar {ejemplar.codigo_inventario} está comprometido en un remito"
         )
     estado_de(ejemplar).prestar(ejemplar)  # DISPONIBLE -> PRESTADO (si no, TransicionInvalida)
-    return _nuevo_prestamo(session, datos.socio_id, datos.ejemplar_id, datos.tipo, datos.observaciones)
+    # El préstamo directo es siempre LOCAL: el ejemplar ya está disponible en la sede,
+    # no se movió para este préstamo (el tipo no lo elige el cliente).
+    return _nuevo_prestamo(
+        session, datos.socio_id, datos.ejemplar_id, TipoPrestamo.LOCAL, datos.observaciones
+    )
 
 
 def crear_prestamo_para_reserva(
-    session: Session,
-    socio_id: int,
-    ejemplar_id: int,
-    tipo: TipoPrestamo = TipoPrestamo.LOCAL,
-    observaciones: str | None = None,
+    session: Session, reserva: Reserva, observaciones: str | None = None
 ) -> Prestamo:
     """Préstamo que nace cuando el socio retira una reserva LISTA_PARA_RETIRO.
 
     A diferencia de `crear_prestamo`, el ejemplar viene RESERVADO para ese socio
-    (no DISPONIBLE), por eso el estado aceptado cambia.
+    (no DISPONIBLE), por eso el estado aceptado cambia. El tipo se deriva: es
+    INTERBIBLIOTECARIO sólo si un remito IDA recibido desde la fecha de la reserva
+    trajo el ejemplar a la sede de retiro; si no, LOCAL.
     """
-    _validar_socio_y_limite(session, socio_id)
+    if reserva.ejemplar_id is None:
+        raise ValueError(f"La reserva {reserva.id} no tiene ejemplar asignado")
+    _validar_socio_y_limite(session, reserva.socio_id)
 
-    ejemplar = ejemplar_repo.get_by_id(session, ejemplar_id, incluir_inactivos=True)
+    ejemplar = ejemplar_repo.get_by_id(session, reserva.ejemplar_id, incluir_inactivos=True)
     if ejemplar is None:
-        raise ValueError(f"ejemplar {ejemplar_id} no existe")
+        raise ValueError(f"ejemplar {reserva.ejemplar_id} no existe")
     estado_de(ejemplar).retirar_reservado(ejemplar)  # RESERVADO -> PRESTADO
-    return _nuevo_prestamo(session, socio_id, ejemplar_id, tipo, observaciones)
+
+    viajo = remito_repo.fue_servida_por_remito(
+        session, reserva.ejemplar_id, reserva.sede_retiro_id, reserva.fecha_reserva
+    )
+    tipo = TipoPrestamo.INTERBIBLIOTECARIO if viajo else TipoPrestamo.LOCAL
+    return _nuevo_prestamo(session, reserva.socio_id, reserva.ejemplar_id, tipo, observaciones)
 
 
 def crear_sancion_por_retraso(
@@ -190,7 +200,8 @@ def crear_sancion_por_retraso(
 
 
 def devolver_prestamo(
-    session: Session, prestamo_id: int, sede_id: int, usuario_id: int, con_danios: bool = False
+    session: Session, prestamo_id: int, sede_id: int, usuario_id: int, con_danios: bool = False,
+    observaciones: str | None = None,
 ) -> Prestamo:
     """Cierra el préstamo: registra devolución, aplica sanción si hay retraso.
 
@@ -210,6 +221,10 @@ def devolver_prestamo(
         raise ValueError(f"préstamo {prestamo_id} no existe")
     if prestamo.estado == EstadoPrestamo.FINALIZADO:
         raise ValueError(f"préstamo {prestamo_id} ya devuelto")
+    # Estado físico del ejemplar al devolverlo (opcional, máx. 200 como descripcion_fisica)
+    observaciones = (observaciones or "").strip() or None
+    if observaciones and len(observaciones) > 200:
+        raise ValueError("el detalle del ejemplar no puede superar los 200 caracteres")
 
     hoy = date.today()
     prestamo.fecha_devolucion = hoy
@@ -220,6 +235,11 @@ def devolver_prestamo(
 
     ejemplar = prestamo.ejemplar
     ejemplar.sede_actual_id = sede_id
+    if observaciones:
+        # Queda en el historial del préstamo y como descripción física actual del ejemplar
+        nota = f"Devolución {hoy.strftime('%d/%m/%Y')}: {observaciones}"
+        prestamo.observaciones = f"{prestamo.observaciones}\n{nota}" if prestamo.observaciones else nota
+        ejemplar.descripcion_fisica = observaciones
 
     def al_aparecer() -> None:
         _levantar_baja_por_perdida(session, prestamo, hoy)

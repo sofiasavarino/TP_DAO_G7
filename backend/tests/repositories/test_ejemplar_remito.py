@@ -10,7 +10,6 @@ from app.models.enums import (
     EstadoRemito,
     EstadoSocio,
     MotivoTraslado,
-    TipoPrestamo,
 )
 from app.models.libro import Libro
 from app.models.remito import Remito
@@ -93,5 +92,5 @@ def test_crear_prestamo_rechaza_ejemplar_comprometido_en_remito(session):
     with pytest.raises(EjemplarNoDisponible, match="comprometido en un remito"):
         crear_prestamo(
             session,
-            PrestamoCreate(socio_id=socio.id, ejemplar_id=ej.id, tipo=TipoPrestamo.LOCAL),
+            PrestamoCreate(socio_id=socio.id, ejemplar_id=ej.id),
         )

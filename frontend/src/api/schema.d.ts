@@ -1499,7 +1499,6 @@ export interface components {
             socio_id: number;
             /** Ejemplar Id */
             ejemplar_id: number;
-            tipo: components["schemas"]["TipoPrestamo"];
             /** Observaciones */
             observaciones?: string | null;
         };
@@ -3191,8 +3190,6 @@ export interface operations {
                 sede_id: number;
                 /** @description Usuario que confirma el retiro (bibliotecario) */
                 responsable_retiro_id: number;
-                /** @description Tipo de préstamo que nace del retiro */
-                tipo?: components["schemas"]["TipoPrestamo"];
             };
             header?: never;
             path: {

@@ -60,8 +60,6 @@ const MAX_SUGERENCIAS = 8;
 export default function PrestamoDirectoForm({ sedeId, sedeNombre, libros, ejemplares, onAviso, onCambio }: Props) {
   const [socio, setSocio] = useState<SocioElegido | null>(null);
   const [ejemplarId, setEjemplarId] = useState<number | null>(null);
-  const [tipo, setTipo] = useState<PrestamoTipo>(PrestamoTipo.LOCAL);
-  const [tipoTocado, setTipoTocado] = useState(false);
   const [observaciones, setObservaciones] = useState('');
   const [errores, setErrores] = useState<{ socio?: string; ejemplar?: string }>({});
   const [alerta, setAlerta] = useState<Alerta | null>(null);
@@ -79,12 +77,10 @@ export default function PrestamoDirectoForm({ sedeId, sedeNombre, libros, ejempl
     if (ejemplarId !== null && !ejemplar) setEjemplarId(null);
   }, [ejemplarId, ejemplar]);
 
-  // Tipo sugerido: si el ejemplar es de otra sede (llegó por remito) es interbibliotecario
-  useEffect(() => {
-    if (ejemplar && !tipoTocado) {
-      setTipo(ejemplar.sede_origen_id !== sedeId ? PrestamoTipo.INTERBIBLIOTECARIO : PrestamoTipo.LOCAL);
-    }
-  }, [ejemplar, sedeId, tipoTocado]);
+  // El préstamo directo es siempre LOCAL: el ejemplar ya está disponible en esta sede,
+  // no se movió para este préstamo. INTERBIBLIOTECARIO sólo nace de una reserva servida
+  // por remito, y lo calcula el backend al confirmar el retiro.
+  const tipo = PrestamoTipo.LOCAL;
 
   // Situación del socio: préstamos abiertos y sanciones vigentes
   const socioId = socio?.id ?? null;
@@ -129,7 +125,6 @@ export default function PrestamoDirectoForm({ sedeId, sedeNombre, libros, ejempl
   const limpiar = () => {
     setEjemplarId(null);
     setObservaciones('');
-    setTipoTocado(false);
     setAlerta(null);
     setErrores({});
   };
@@ -148,7 +143,6 @@ export default function PrestamoDirectoForm({ sedeId, sedeNombre, libros, ejempl
       const prestamo = await mostradorService.crearPrestamo({
         socio_id: socio.id,
         ejemplar_id: ejemplar.id,
-        tipo,
         observaciones: observaciones.trim() || null,
       });
       onAviso({
@@ -245,7 +239,7 @@ export default function PrestamoDirectoForm({ sedeId, sedeNombre, libros, ejempl
           )}
         </div>
 
-        {/* --- Columna derecha: ejemplar y tipo --- */}
+        {/* --- Columna derecha: ejemplar (el tipo de préstamo sale de él) --- */}
         <div className="mos-form-col">
           <div className="campo">
             <span>Ejemplar disponible en {sedeNombre} *</span>
@@ -266,31 +260,12 @@ export default function PrestamoDirectoForm({ sedeId, sedeNombre, libros, ejempl
             )}
           </div>
 
-          <div className="campo">
-            <span>Tipo de préstamo</span>
-            <div className="pickup-options mos-tipos">
-              {[PrestamoTipo.LOCAL, PrestamoTipo.INTERBIBLIOTECARIO].map((t) => (
-                <label key={t} className={tipo === t ? 'selected' : ''}>
-                  <input
-                    type="radio"
-                    name="tipo-prestamo"
-                    checked={tipo === t}
-                    onChange={() => {
-                      setTipo(t);
-                      setTipoTocado(true);
-                    }}
-                  />
-                  <span className="radio-mark" />
-                  <div>
-                    <strong>{ETIQUETA_TIPO_PRESTAMO[t]}</strong>
-                    <small className="available-now">
-                      {t === PrestamoTipo.LOCAL ? 'El ejemplar es de esta sede' : 'El ejemplar vino de otra sede'}
-                    </small>
-                  </div>
-                </label>
-              ))}
+          {ejemplar && (
+            <div className="mos-tipo-info">
+              <strong>Préstamo {ETIQUETA_TIPO_PRESTAMO[tipo].toLowerCase()}</strong>
+              <small>El ejemplar está disponible en {sedeNombre} y se registra como préstamo local.</small>
             </div>
-          </div>
+          )}
 
           <label className="campo">
             <span>Observaciones</span>
