@@ -315,7 +315,7 @@ def procesar_vencimientos(
         puede_servir_siguiente = ejemplar is not None and estado_de(ejemplar).admite("soltar")
         estado_de_reserva(reserva).vencer(reserva, ejemplar)  # LISTA_PARA_RETIRO -> VENCIDA (+ suelta)
         mensajes.avisar_reserva_vencida(session, reserva)
-        if not puede_servir_siguiente:
+        if ejemplar is None or not puede_servir_siguiente:
             continue
         # Se sirve la siguiente reserva más vieja FIFO del libro.
         asignar_ejemplar_a_reserva_mas_vieja(session, ejemplar, hoy, usuario_id=usuario_id)
@@ -351,7 +351,7 @@ def cancelar_reserva(session: Session, reserva_id: int, usuario_id: int | None =
     )
     estado_de_reserva(reserva).cancelar(reserva, ejemplar, viaja_en_remito)
 
-    if debe_asignar:
+    if ejemplar is not None and debe_asignar:
         # Se sirve la siguiente reserva más vieja FIFO del libro.
         asignar_ejemplar_a_reserva_mas_vieja(session, ejemplar, hoy, usuario_id=usuario_id)
     # si está en un remito abierto, al llegar al destino la recepción lo reasigna FIFO

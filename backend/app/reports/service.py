@@ -178,10 +178,13 @@ def carga_operativa_por_sede(session: Session) -> list[CargaSedeDTO]:
     for sede_id in sorted(set(prestamos) | set(transito)):
         prestamo = prestamos.get(sede_id)
         remito = transito.get(sede_id)
+        fuente = prestamo if prestamo is not None else remito
+        if fuente is None:  # no debería pasar: la sede sale de la unión de ambos mapas
+            continue
         resultado.append(
             CargaSedeDTO(
                 sede_id=sede_id,
-                sede=(prestamo or remito)["sede"],
+                sede=fuente["sede"],
                 prestamos_activos=prestamo["prestamos"] if prestamo else 0,
                 remitos_en_transito=remito["remitos"] if remito else 0,
                 ejemplares_en_transito=remito["ejemplares"] if remito else 0,

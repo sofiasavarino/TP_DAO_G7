@@ -393,6 +393,8 @@ def reponer_libro(
         )
 
     original = libro_repo.get_by_id(session, perdido.libro_id, incluir_inactivos=True)
+    if original is None:
+        raise ValueError(f"libro original {perdido.libro_id} no existe")
     repuesto = libro_repo.get_by_id(session, datos.libro_id, incluir_inactivos=True)
     if repuesto is None:
         raise ValueError(f"libro {datos.libro_id} no existe")
