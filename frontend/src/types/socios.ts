@@ -12,10 +12,10 @@ export interface Socio {
   estado: SocioEstado;
 }
 
-/** GET /api/v1/sanciones (SancionDTO). El backend además tiene REPOSICION (baja por pérdida). */
+/** GET /api/v1/sanciones (SancionDTO): MULTA, SUSPENSION y REPOSICION (baja por pérdida). */
 export interface Sancion {
   id: number;
-  tipo: SancionTipo | 'REPOSICION';
+  tipo: SancionTipo;
   motivo: string;
   monto: number | null;
   dias_suspension: number | null;
@@ -43,5 +43,5 @@ export const ETIQUETA_ESTADO_SOCIO: Record<SocioEstado, string> = {
 export const ETIQUETA_SANCION: Record<Sancion['tipo'], string> = {
   [SancionTipo.MULTA]: 'Multa',
   [SancionTipo.SUSPENSION]: 'Suspensión',
-  REPOSICION: 'Reposición',
+  [SancionTipo.REPOSICION]: 'Reposición',
 };

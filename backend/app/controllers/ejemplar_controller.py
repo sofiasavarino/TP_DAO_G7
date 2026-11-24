@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.config.database import get_session
 from app.dtos.ejemplar_dto import EjemplarCreate, EjemplarDTO, EjemplarEstadoUpdate
 from app.exceptions import EjemplarNoDisponible
-from app.controllers.dependencies import ADMINISTRADOR, BIBLIOTECARIO, require_roles
+from app.controllers.dependencies import ADMINISTRADOR, BIBLIOTECARIO, get_current_user, require_roles
 from app.dtos.ejemplar_dto import (
     EjemplarCreate,
     EjemplarDTO,
@@ -40,7 +40,9 @@ def _sede_permitida(usuario: Usuario) -> int | None:
     """El administrador gestiona toda la red; el bibliotecario, solo su sede."""
     return None if usuario.rol.nombre == ADMINISTRADOR else usuario.sede_id
 
-ejemplar_router = APIRouter(prefix="/ejemplares", tags=["ejemplares"])
+ejemplar_router = APIRouter(
+    prefix="/ejemplares", tags=["ejemplares"], dependencies=[Depends(get_current_user)]
+)
 ejemplar_repo = EjemplarRepository()
 
 
@@ -93,7 +95,10 @@ def listar_por_libro_endpoint(
     return [EjemplarDTO.model_validate(e) for e in listar_por_libro(session, libro_id)]
 
 
-@ejemplar_router.post("", response_model=EjemplarDTO, status_code=201)
+@ejemplar_router.post(
+    "", response_model=EjemplarDTO, status_code=201,
+    dependencies=[Depends(require_roles(BIBLIOTECARIO))],
+)
 def crear_ejemplar_endpoint(datos: EjemplarCreate, session: Session = Depends(get_session)) -> EjemplarDTO:
     try:
         ejemplar = crear_ejemplar(session, datos)
@@ -103,7 +108,10 @@ def crear_ejemplar_endpoint(datos: EjemplarCreate, session: Session = Depends(ge
     return EjemplarDTO.model_validate(ejemplar)
 
 
-@ejemplar_router.patch("/{ejemplar_id}/estado", response_model=EjemplarDTO)
+@ejemplar_router.patch(
+    "/{ejemplar_id}/estado", response_model=EjemplarDTO,
+    dependencies=[Depends(require_roles(BIBLIOTECARIO))],
+)
 def cambiar_estado_endpoint(
     ejemplar_id: int, body: EjemplarEstadoUpdate, session: Session = Depends(get_session)
 ) -> EjemplarDTO:
