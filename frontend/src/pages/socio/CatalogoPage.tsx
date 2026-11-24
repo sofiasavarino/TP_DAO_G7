@@ -5,6 +5,7 @@ import LibroCard from '../../components/socio/LibroCard';
 import Portada from '../../components/socio/Portada';
 import type { Sede } from '../../types/ejemplares';
 import type { LibroListado } from '../../types/libros';
+import { autorLegible, esMismoAutor } from '../../utils/autores';
 import { copiasEnSede, sedesConCopias, totalCopias, type Disponibilidad } from '../../utils/disponibilidad';
 import { generosDe, traducirGenero } from '../../utils/generos';
 import { nombresAutores } from '../../utils/libros';
@@ -92,8 +93,8 @@ export default function CatalogoPage({
   const autores = useMemo(
     () => [
       TODOS_AUTORES,
-      ...Array.from(new Set(libros.flatMap((l) => l.autores.map((a) => a.nombre)))).sort((a, b) =>
-        a.localeCompare(b, 'es'),
+      ...Array.from(new Set(libros.flatMap((l) => l.autores.map((a) => autorLegible(a.nombre))))).sort(
+        (a, b) => a.localeCompare(b, 'es'),
       ),
     ],
     [libros],
@@ -119,7 +120,7 @@ export default function CatalogoPage({
       (l) =>
         coincideBusqueda(l, query) &&
         (genero === TODOS_GENEROS || generosDe(l.genero).includes(genero)) &&
-        (autor === TODOS_AUTORES || l.autores.some((a) => a.nombre === autor)) &&
+        (autor === TODOS_AUTORES || l.autores.some((a) => esMismoAutor(a.nombre, autor))) &&
         (!sedesElegidas.length || sedesElegidas.some((id) => copiasEnSede(disponibilidad, l.id, id) > 0)),
     );
     if (orden !== 'autor') return filtrados; // el backend ya los mandó ordenados

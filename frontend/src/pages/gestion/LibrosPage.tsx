@@ -4,6 +4,7 @@ import LibroFormModal from '../../components/libros/LibroFormModal';
 import { ApiError } from '../../services/api';
 import { librosService } from '../../services/librosService';
 import type { Libro, LibroListado } from '../../types/libros';
+import { autorLegible } from '../../utils/autores';
 import { traducirGenero } from '../../utils/generos';
 import { normalizar } from '../../utils/texto';
 
@@ -62,7 +63,7 @@ export default function LibrosPage() {
     return libros.filter(
       (l) =>
         normalizar(l.nombre).includes(q) ||
-        l.autores.some((a) => normalizar(a.nombre).includes(q)) ||
+        l.autores.some((a) => normalizar(a.nombre).includes(q) || normalizar(autorLegible(a.nombre)).includes(q)) ||
         normalizar(l.editorial).includes(q) ||
         normalizar(traducirGenero(l.genero)).includes(q) || normalizar(l.genero).includes(q) ||
         (qIsbn.length > 0 && (l.isbn ?? '').includes(qIsbn)),
@@ -230,7 +231,7 @@ export default function LibrosPage() {
                         </div>
                       </div>
                     </td>
-                    <td>{l.autores.length ? l.autores.map((a) => a.nombre).join(', ') : <span className="muted">—</span>}</td>
+                    <td>{l.autores.length ? l.autores.map((a) => autorLegible(a.nombre)).join(', ') : <span className="muted">—</span>}</td>
                     <td className="mono">{l.isbn ?? <span className="muted">—</span>}</td>
                     <td>{l.genero ? <em className="badge">{traducirGenero(l.genero)}</em> : <span className="muted">—</span>}</td>
                     <td className="acciones">
