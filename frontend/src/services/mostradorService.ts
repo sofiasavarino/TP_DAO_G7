@@ -77,12 +77,19 @@ export const mostradorService = {
   listarPrestamos: () => api.get<PrestamoListado[]>(PRESTAMOS),
 
   /** Devolución en la sede del mostrador. Con `conDanios` el ejemplar va a reparación. */
-  registrarDevolucion: (prestamoId: number, sedeId: number, usuarioId: number, conDanios: boolean) =>
+  registrarDevolucion: (
+    prestamoId: number,
+    sedeId: number,
+    usuarioId: number,
+    conDanios: boolean,
+    observaciones: string | null = null, // estado físico del ejemplar (opcional, máx. 200)
+  ) =>
     api.put<Prestamo>(
       `${PRESTAMOS}/${prestamoId}/devolucion${query({
         sede_id: sedeId,
         responsable_devolucion_id: usuarioId,
         con_danios: conDanios,
+        ...(observaciones ? { observaciones } : {}),
       })}`,
     ),
 };

@@ -305,6 +305,9 @@ function DevolucionModal({
   onDevuelto: (prestamoId: number, aviso: string) => void;
 }) {
   const [conDanios, setConDanios] = useState(false);
+  // Estado del ejemplar: arranca con su descripción actual para editarla
+  const descripcionActual = prestamo.ejemplar?.descripcion_fisica ?? '';
+  const [detalle, setDetalle] = useState(descripcionActual);
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -319,7 +322,10 @@ function DevolucionModal({
     setGuardando(true);
     setError(null);
     try {
-      await mostradorService.registrarDevolucion(prestamo.id, sedeId, usuarioId, conDanios);
+      // Solo se manda si cambió: si no, no hay nada nuevo que registrar
+      const texto = detalle.trim();
+      const cambio = texto && texto !== descripcionActual.trim() ? texto : null;
+      await mostradorService.registrarDevolucion(prestamo.id, sedeId, usuarioId, conDanios, cambio);
       onDevuelto(
         prestamo.id,
         `Devolución registrada: préstamo ${prestamo.numero} finalizado${
@@ -360,6 +366,23 @@ function DevolucionModal({
             devolución el sistema le aplica la sanción por retraso.
           </p>
         )}
+
+        <label className="campo mos-detalle">
+          <span>
+            Estado del ejemplar <small>(opcional)</small>
+          </span>
+          <textarea
+            rows={2}
+            maxLength={200}
+            value={detalle}
+            onChange={(e) => setDetalle(e.target.value)}
+            placeholder="Ej. Tapa con raspones leves"
+          />
+          <small className="mos-detalle-ayuda">
+            <span>Queda en el historial del préstamo y actualiza la descripción física del ejemplar.</span>
+            <span className={detalle.length >= 200 ? 'tope' : ''}>{detalle.length}/200</span>
+          </small>
+        </label>
 
         <label className={`mos-check${conDanios ? ' marcado' : ''}`}>
           <input type="checkbox" checked={conDanios} onChange={(e) => setConDanios(e.target.checked)} />

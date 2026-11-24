@@ -200,7 +200,8 @@ def crear_sancion_por_retraso(
 
 
 def devolver_prestamo(
-    session: Session, prestamo_id: int, sede_id: int, usuario_id: int, con_danios: bool = False
+    session: Session, prestamo_id: int, sede_id: int, usuario_id: int, con_danios: bool = False,
+    observaciones: str | None = None,
 ) -> Prestamo:
     """Cierra el préstamo: registra devolución, aplica sanción si hay retraso.
 
@@ -220,6 +221,10 @@ def devolver_prestamo(
         raise ValueError(f"préstamo {prestamo_id} no existe")
     if prestamo.estado == EstadoPrestamo.FINALIZADO:
         raise ValueError(f"préstamo {prestamo_id} ya devuelto")
+    # Estado físico del ejemplar al devolverlo (opcional, máx. 200 como descripcion_fisica)
+    observaciones = (observaciones or "").strip() or None
+    if observaciones and len(observaciones) > 200:
+        raise ValueError("el detalle del ejemplar no puede superar los 200 caracteres")
 
     hoy = date.today()
     prestamo.fecha_devolucion = hoy
@@ -230,6 +235,11 @@ def devolver_prestamo(
 
     ejemplar = prestamo.ejemplar
     ejemplar.sede_actual_id = sede_id
+    if observaciones:
+        # Queda en el historial del préstamo y como descripción física actual del ejemplar
+        nota = f"Devolución {hoy.strftime('%d/%m/%Y')}: {observaciones}"
+        prestamo.observaciones = f"{prestamo.observaciones}\n{nota}" if prestamo.observaciones else nota
+        ejemplar.descripcion_fisica = observaciones
 
     def al_aparecer() -> None:
         _levantar_baja_por_perdida(session, prestamo, hoy)
