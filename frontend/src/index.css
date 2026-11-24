@@ -2073,6 +2073,20 @@ footer > span {
   color: var(--ink);
 }
 
+.reserva-aviso {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-left: 3px solid #c48c28;
+  background: rgba(196, 140, 40, 0.14);
+  line-height: 1.5;
+  font-size: 13px;
+}
+
+.reserva-aviso strong {
+  display: block;
+  margin-bottom: 2px;
+  color: #7a5410;
+}
 /* ===== Footer del portal: sedes de la red (solo las activas, las filtra el backend) ===== */
 /* Con sedes, el footer pasa a dos filas: arriba las sedes, abajo logo · lema · © */
 footer:has(.footer-sedes) {

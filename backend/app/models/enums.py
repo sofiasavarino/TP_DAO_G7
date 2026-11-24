@@ -42,6 +42,7 @@ class EstadoSocio(enum.Enum):
     ACTIVO = "ACTIVO"
     SUSPENDIDO = "SUSPENDIDO"
     BAJA = "BAJA"
+    PENDIENTE_CUOTA = "PENDIENTE_CUOTA"
 
 
 class TipoSancion(enum.Enum):

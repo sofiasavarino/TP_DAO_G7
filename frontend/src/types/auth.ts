@@ -1,4 +1,5 @@
 import type { RolNombre } from './enums';
+import { SocioEstado } from './enums';
 
 /** Respuesta de GET /api/v1/auth/me */
 export interface UsuarioSesion {
@@ -13,4 +14,5 @@ export interface UsuarioSesion {
   empleado_id: number | null;
   email: string | null;
   telefono?: string | null;
+  estado_socio?: SocioEstado | null;
 }

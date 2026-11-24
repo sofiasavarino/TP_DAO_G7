@@ -88,6 +88,7 @@ export const ETIQUETA_ESTADO_SOCIO: Record<SocioEstado, string> = {
   [SocioEstado.ACTIVO]: 'Activo',
   [SocioEstado.SUSPENDIDO]: 'Suspendido',
   [SocioEstado.BAJA]: 'Baja',
+  [SocioEstado.PENDIENTE_CUOTA]: 'Pendiente de cuota',
 };
 
 export const ETIQUETA_SANCION: Record<Sancion['tipo'], string> = {

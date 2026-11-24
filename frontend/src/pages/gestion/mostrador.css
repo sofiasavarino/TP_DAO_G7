@@ -126,3 +126,12 @@
 .mos-detalle textarea:focus { outline: 2px solid rgba(31, 74, 56, .35); outline-offset: 1px; }
 .mos-detalle-ayuda { display: flex; justify-content: space-between; gap: 12px; font-weight: 400; font-size: 12px; color: #697169; }
 .mos-detalle-ayuda .tope { color: var(--rust); font-weight: 700; }
+
+/* --- Pestañas de los tres bloques --- */
+.mos-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  border-bottom: 1px solid rgba(29, 36, 32, .14);
+  margin-bottom: 22px;
+}

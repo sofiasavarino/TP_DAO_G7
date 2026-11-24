@@ -24,6 +24,7 @@ class ReservaEtaDTO(BaseModel):
     sede_retiro_id: int
     disponible_ahora: bool
     eta: date | None = None
+    
 
 
 class ReservaDTO(BaseModel):
@@ -40,3 +41,4 @@ class ReservaDTO(BaseModel):
     libro_id: int
     sede_retiro_id: int
     ejemplar_id: int | None = None
+    aviso: str | None = None

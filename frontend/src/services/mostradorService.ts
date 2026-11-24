@@ -76,6 +76,9 @@ export const mostradorService = {
   /** Todos los préstamos (la pantalla se queda con ACTIVO y VENCIDO). */
   listarPrestamos: () => api.get<PrestamoListado[]>(PRESTAMOS),
 
+  activarSocio: (socioId: number) =>
+    api.put<SocioBusqueda>(`${ENDPOINTS_PENDIENTES.socios}/${socioId}/activar`),
+
   /** Devolución en la sede del mostrador. Con `conDanios` el ejemplar va a reparación. */
   registrarDevolucion: (
     prestamoId: number,
