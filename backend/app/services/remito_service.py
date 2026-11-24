@@ -7,7 +7,7 @@ Ciclo de vida del remito (enum EstadoRemito):
 
 Qué le pasa a cada ejemplar del remito:
 
-    crear      -> no cambia de estado (sigue DISPONIBLE o RESERVADO en la sede de origen)
+    crear      -> no cambia de estado (sigue DISPONIBLE en la sede de origen; no se aceptan RESERVADOS)
     despachar  -> EN_TRANSITO
     recibir    -> sede_actual = sede destino (inventario flotante) y queda
                   RESERVADO si alguien lo tiene reservado, si no DISPONIBLE;
@@ -118,8 +118,8 @@ def crear_remito(session: Session, datos: RemitoCreate, usuario_id: int) -> Remi
 
     `usuario_id` es quien lo crea (sale del usuario logueado, no del body).
     Valida: número único (o lo autogenera `R-YYYYMMDD-NNN` si no viene), origen distinto de destino,
-    ambas sedes activas y que cada ejemplar exista, esté DISPONIBLE/RESERVADO, esté en la sede de origen
-    y no viaje ya en otro remito abierto.
+    ambas sedes activas y que cada ejemplar exista, esté DISPONIBLE (no RESERVADO),
+    esté en la sede de origen y no viaje ya en otro remito abierto.
     """
     numero = (datos.numero_remito or "").strip() or generar_numero_remito(session)
     if remito_repo.existe_numero(session, numero):
@@ -154,7 +154,7 @@ def agregar_ejemplares(session: Session, remito_id: int, ejemplar_ids: list[int]
     - Incluye ejemplares que viajan a otra sede (reserva en otra sede, etc.).
     - Valida que el remito exista y esté CREADO.
     - Descarta los ejemplares que ya están en este remito.
-    - Son validos: existen, están en la sede de origen, están en estado DISPONIBLE/RESERVADO
+    - Son válidos: existen, están en la sede de origen, están DISPONIBLE (no RESERVADOS)
       y no viajan ya en otro remito abierto.
     """
     remito = _get_remito(session, remito_id)
@@ -223,7 +223,8 @@ def despachar(session: Session, remito_id: int, usuario_id: int) -> Remito:
     _validar_estado(remito, EstadoRemito.CREADO, "despachar")
     _validar_sedes_activas(session, remito.sede_origen_id, remito.sede_destino_id)
     _validar_ejemplares_transferibles(
-        session, remito.ejemplares, remito.sede_origen_id, excluir_remito_id=remito.id
+        session, remito.ejemplares, remito.sede_origen_id,
+        excluir_remito_id=remito.id, para_despacho=True,
     )
 
     remito.estado = EstadoRemito.EN_TRANSITO
@@ -376,12 +377,23 @@ def _validar_ejemplares_transferibles(
     ejemplares: list[Ejemplar],
     sede_origen_id: int,
     excluir_remito_id: int | None = None,
+    para_despacho: bool = False,
 ) -> None:
     """Junta TODOS los problemas y los informa juntos, así el bibliotecario
-    corrige el remito de una sola vez en vez de ir error por error."""
+    corrige el remito de una sola vez en vez de ir error por error.
+
+    Al dar de alta/agregar, un ejemplar RESERVADO no es transferible: ya está
+    comprometido con una reserva (otra cosa es el despacho, donde los remitos
+    automáticos pueden llevar ejemplares que se marcaron RESERVADO al encolarse).
+    """
     problemas: list[str] = []
     for e in ejemplares:
-        if not estado_de(e).admite("despachar"):
+        valido = (
+            estado_de(e).admite("despachar")
+            if para_despacho
+            else e.estado == EstadoEjemplar.DISPONIBLE
+        )
+        if not valido:
             problemas.append(f"{e.codigo_inventario} está {e.estado.value}")
         elif e.sede_actual_id != sede_origen_id:
             problemas.append(f"{e.codigo_inventario} no está en la sede de origen")
