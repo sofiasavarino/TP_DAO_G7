@@ -1,11 +1,14 @@
 from collections.abc import Sequence
 from datetime import date
 
-from sqlalchemy import func, select
+from sqlalchemy import Row, func, select
 from sqlalchemy.orm import Session, selectinload
 
-from app.models.enums import EstadoReserva
+from app.models.ejemplar import Ejemplar
+from app.models.enums import EstadoEjemplar, EstadoReserva
+from app.models.libro import Libro
 from app.models.reserva import Reserva
+from app.models.sede import Sede
 from app.repositories.base_repository import BaseRepository
 
 # Reservas que siguen "vivas" (todavia pueden terminar en prestamo).
@@ -191,3 +194,74 @@ class ReservaRepository(BaseRepository[Reserva]):
             Reserva.estado == EstadoReserva.PENDIENTE,
         )
         return session.scalars(stmt).first()
+
+    # ---------------------------------------------------------------- reportes
+
+    def conteo_por_estado(
+        self, session: Session, desde: date | None = None, hasta: date | None = None
+    ) -> dict[EstadoReserva, int]:
+        """Base del reporte de cumplimiento de retiro y presupuesto de reservas."""
+        stmt = select(Reserva.estado, func.count(Reserva.id)).group_by(Reserva.estado)
+        if desde is not None:
+            stmt = stmt.where(Reserva.fecha_reserva >= desde)
+        if hasta is not None:
+            stmt = stmt.where(Reserva.fecha_reserva <= hasta)
+        return {estado: cantidad for estado, cantidad in session.execute(stmt)}
+
+    def presion_por_libro(self, session: Session, limite: int = 10) -> list[Row]:
+        """Libros con más reservas en cola vs. ejemplares en circulación.
+
+        Filas (libro_id, libro, reservas_esperando, ejemplares). Sirve para decidir
+        altas de copias o rebalanceos: ratio = reservas / ejemplares.
+        """
+        ejemplares = (
+            select(func.count(Ejemplar.id))
+            .where(
+                Ejemplar.libro_id == Libro.id,
+                Ejemplar.estado != EstadoEjemplar.INUTILIZABLE,
+            )
+            .correlate(Libro)
+            .scalar_subquery()
+        )
+        stmt = (
+            select(
+                Libro.id.label("libro_id"),
+                Libro.nombre.label("libro"),
+                func.count(Reserva.id).label("reservas_esperando"),
+                ejemplares.label("ejemplares"),
+            )
+            .join(Libro, Reserva.libro_id == Libro.id)
+            .where(Reserva.estado.in_((EstadoReserva.PENDIENTE, EstadoReserva.EN_TRANSITO)))
+            .group_by(Libro.id, Libro.nombre)
+            .order_by(func.count(Reserva.id).desc())
+            .limit(limite)
+        )
+        return list(session.execute(stmt).all())
+
+    def dias_promedio_espera_por_sede(
+        self, session: Session, desde: date | None = None, hasta: date | None = None
+    ) -> list[Row]:
+        """Días promedio desde `fecha_reserva` hasta `fecha_asignacion`, por sede de retiro.
+
+        Sólo cuenta reservas que efectivamente fueron asignadas. Usa `julianday()`
+        (SQLite), igual que el reporte de tránsito de remitos.
+        """
+        stmt = (
+            select(
+                Sede.id.label("sede_id"),
+                Sede.nombre.label("sede_nombre"),
+                func.count(Reserva.id).label("reservas"),
+                func.avg(
+                    func.julianday(Reserva.fecha_asignacion) - func.julianday(Reserva.fecha_reserva)
+                ).label("dias_promedio"),
+            )
+            .join(Sede, Reserva.sede_retiro_id == Sede.id)
+            .where(Reserva.fecha_asignacion.is_not(None))
+            .group_by(Sede.id, Sede.nombre)
+            .order_by(Sede.nombre)
+        )
+        if desde is not None:
+            stmt = stmt.where(Reserva.fecha_reserva >= desde)
+        if hasta is not None:
+            stmt = stmt.where(Reserva.fecha_reserva <= hasta)
+        return list(session.execute(stmt).all())

@@ -102,6 +102,31 @@ class RemitoRepository(BaseRepository[Remito]):
             stmt = stmt.where(Remito.fecha_creacion <= hasta)
         return {estado: cantidad for estado, cantidad in session.execute(stmt)}
 
+    def en_transito_por_sede(self, session: Session) -> list[Row]:
+        """Material viajando hacia cada sede: remitos EN_TRANSITO y sus ejemplares."""
+        cantidad = (
+            select(
+                remito_ejemplar.c.remito_id,
+                func.count(remito_ejemplar.c.ejemplar_id).label("cant"),
+            )
+            .group_by(remito_ejemplar.c.remito_id)
+            .subquery()
+        )
+        stmt = (
+            select(
+                Sede.id.label("sede_id"),
+                Sede.nombre.label("sede"),
+                func.count(Remito.id).label("remitos"),
+                func.coalesce(func.sum(cantidad.c.cant), 0).label("ejemplares"),
+            )
+            .join(Sede, Remito.sede_destino_id == Sede.id)
+            .outerjoin(cantidad, cantidad.c.remito_id == Remito.id)
+            .where(Remito.estado == EstadoRemito.EN_TRANSITO)
+            .group_by(Sede.id, Sede.nombre)
+            .order_by(Sede.nombre)
+        )
+        return list(session.execute(stmt).all())
+
     def movimientos_entre_sedes(
         self, session: Session, desde: date | None = None, hasta: date | None = None
     ) -> list[Row[tuple[str, str, int, int, float | None]]]:

@@ -4,6 +4,20 @@ from app.dtos.ejemplar_dto import EjemplarCreate, EjemplarDTO, EjemplarEstadoUpd
 from app.dtos.libro_dto import LibroCreate, LibroDTO, LibroListadoDTO
 from app.dtos.notificacion_dto import NotificacionCreate, NotificacionDTO
 from app.dtos.prestamo_dto import PrestamoCreate, PrestamoDTO, PrestamoListadoDTO
+from app.dtos.reporte_dto import (
+    CargaSedeDTO,
+    CumplimientoRetiroDTO,
+    DisponibilidadSedeDTO,
+    EficaciaLogisticaDTO,
+    EstadoColeccionDTO,
+    EsperaReservaDTO,
+    LibroSolicitadoDTO,
+    MovimientoSedeDTO,
+    MultasAcumuladasDTO,
+    PresionLibroDTO,
+    UsoGeneroSedeDTO,
+    VencidosSinSancionDTO,
+)
 from app.dtos.reserva_dto import ReservaCreate, ReservaDTO, ReservaEtaDTO
 from app.dtos.remito_dto import EjemplarEnRemitoDTO, IncidenciaItemDTO, RemitoCreate, RemitoDetalleDTO, RemitoListadoDTO
 from app.dtos.resena_dto import ResenaCreate, ResenaDTO
@@ -20,6 +34,9 @@ __all__ = [
     "LibroCreate", "LibroDTO", "LibroListadoDTO",
     "NotificacionCreate", "NotificacionDTO",
     "PrestamoCreate", "PrestamoDTO", "PrestamoListadoDTO",
+    "CumplimientoRetiroDTO", "DisponibilidadSedeDTO", "EficaciaLogisticaDTO",
+    "EstadoColeccionDTO", "EsperaReservaDTO", "LibroSolicitadoDTO", "MovimientoSedeDTO",
+    "CargaSedeDTO", "MultasAcumuladasDTO", "PresionLibroDTO", "UsoGeneroSedeDTO", "VencidosSinSancionDTO",
     "ReservaCreate", "ReservaDTO", "ReservaEtaDTO",
     "RemitoCreate", "RemitoDetalleDTO", "RemitoListadoDTO", "EjemplarEnRemitoDTO", "IncidenciaItemDTO",
     "ResenaCreate", "ResenaDTO",

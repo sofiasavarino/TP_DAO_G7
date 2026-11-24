@@ -6,8 +6,10 @@ from sqlalchemy.orm import Session, selectinload
 
 from app.models.ejemplar import Ejemplar
 from app.models.enums import EstadoPrestamo, TipoPrestamo
+from app.models.libro import Libro
 from app.models.prestamo import Prestamo
 from app.models.sancion import Sancion
+from app.models.sede import Sede
 from app.repositories.base_repository import BaseRepository
 
 # "Abierto" = el socio todavia tiene el ejemplar (vencido o no).
@@ -124,4 +126,43 @@ class PrestamoRepository(BaseRepository[Prestamo]):
             .group_by(Prestamo.estado, Prestamo.tipo)
             .order_by(Prestamo.estado, Prestamo.tipo)
         )
+        return list(session.execute(stmt).all())
+
+    def activos_por_sede(self, session: Session) -> list[Row]:
+        """Préstamos ACTIVOS por sede actual del ejemplar (carga operativa)."""
+        stmt = (
+            select(
+                Sede.id.label("sede_id"),
+                Sede.nombre.label("sede"),
+                func.count(Prestamo.id).label("prestamos"),
+            )
+            .join(Ejemplar, Prestamo.ejemplar_id == Ejemplar.id)
+            .join(Sede, Ejemplar.sede_actual_id == Sede.id)
+            .where(Prestamo.estado == EstadoPrestamo.ACTIVO)
+            .group_by(Sede.id, Sede.nombre)
+            .order_by(Sede.nombre)
+        )
+        return list(session.execute(stmt).all())
+
+    def por_genero_y_sede(
+        self, session: Session, desde: date | None = None, hasta: date | None = None
+    ) -> list[Row]:
+        """Préstamos agrupados por género del libro y sede actual (rotación de catálogo)."""
+        stmt = (
+            select(
+                Libro.genero.label("genero"),
+                Sede.nombre.label("sede"),
+                func.count(Prestamo.id).label("prestamos"),
+            )
+            .join(Ejemplar, Prestamo.ejemplar_id == Ejemplar.id)
+            .join(Libro, Ejemplar.libro_id == Libro.id)
+            .join(Sede, Ejemplar.sede_actual_id == Sede.id)
+            .where(Libro.genero.is_not(None))
+            .group_by(Libro.genero, Sede.nombre)
+            .order_by(func.count(Prestamo.id).desc())
+        )
+        if desde is not None:
+            stmt = stmt.where(Prestamo.fecha_inicio >= desde)
+        if hasta is not None:
+            stmt = stmt.where(Prestamo.fecha_inicio <= hasta)
         return list(session.execute(stmt).all())

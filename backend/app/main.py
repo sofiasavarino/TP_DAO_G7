@@ -5,6 +5,7 @@ from app.controllers.ejemplar_controller import ejemplar_router
 from app.controllers.libro_controller import libro_router
 from app.controllers.notificacion_controller import router as notificacion_router
 from app.controllers.prestamo_controller import prestamo_router
+from app.controllers.reporte_controller import reporte_router
 from app.controllers.remito_controller import remito_router
 from app.controllers.reserva_controller import reserva_router
 from app.controllers.sancion_controller import sancion_router
@@ -36,6 +37,7 @@ app.include_router(auth_router, prefix=API_PREFIX)
 app.include_router(socio_router, prefix=API_PREFIX)
 app.include_router(usuario_router, prefix=API_PREFIX)
 app.include_router(notificacion_router, prefix=API_PREFIX)
+app.include_router(reporte_router, prefix=API_PREFIX)
 app.include_router(sede_router, prefix=API_PREFIX)
 
 

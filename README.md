@@ -117,6 +117,25 @@ TP_DAO_G7/
 | GET | `/api/v1/sedes` | Sedes activas (para selectores). Requiere sesión |
 | PATCH | `/api/v1/ejemplares/{id}/estado` | Cambio de estado de un ejemplar |
 
+### Reportes (solo Administrador)
+
+Todos los reportes son de solo lectura y devuelven agregados listos para graficar. Filtros de fecha opcionales con `?desde=&hasta=` donde aplica.
+
+| GET | Responder | Qué mide |
+|---|---|---|
+| `/api/v1/reportes/disponibilidad?libro_id=` | `DisponibilidadSedeDTO[]` | % de ejemplares disponibles por sede |
+| `/api/v1/reportes/eficacia-logistica?desde=&hasta=` | `EficaciaLogisticaDTO` | % de remitos recibidos sobre los cerrados (recibidos + incidencia) |
+| `/api/v1/reportes/movimientos?desde=&hasta=` | `MovimientoSedeDTO[]` | Envíos por origen/destino y días promedio de tránsito |
+| `/api/v1/reportes/libros-solicitados?tipo=&limite=` | `LibroSolicitadoDTO[]` | Ranking de préstamos por libro (por defecto inter-bibliotecarios) |
+| `/api/v1/reportes/salud-coleccion` | `EstadoColeccionDTO[]` | % de ejemplares por estado (material fuera de circulación) |
+| `/api/v1/reportes/cumplimiento-retiro?desde=&hasta=` | `CumplimientoRetiroDTO` | % de reservas cumplidas sobre las cerradas |
+| `/api/v1/reportes/espera-reservas?desde=&hasta=` | `EsperaReservaDTO[]` | Días promedio desde la reserva hasta la asignación, por sede |
+| `/api/v1/reportes/carga-operativa` | `CargaSedeDTO[]` | Préstamos activos + remitos/ejemplares en tránsito por sede |
+| `/api/v1/reportes/multas?desde=&hasta=` | `MultasAcumuladasDTO` | Total de multas y ranking de socios por monto |
+| `/api/v1/reportes/presion-libros?limite=` | `PresionLibroDTO[]` | Libros con más reservas en cola por ejemplar en circulación |
+| `/api/v1/reportes/uso-genero?desde=&hasta=` | `UsoGeneroSedeDTO[]` | Préstamos por género y sede (rotación del catálogo) |
+| `/api/v1/reportes/vencidos-sin-sancion` | `VencidosSinSancionDTO` | Préstamos vencidos a los que aún no se sancionó |
+
 - `/docs` — Swagger UI generado por FastAPI. `/openapi.json` — spec OpenAPI.
 - Versionado: todas las rutas de negocio cuelgan de `/api/v1/<recurso>` (`/api/v1/libros`, `/api/v1/prestamos`, ...). Cambios incompatibles a `v2` en el futuro.
 - **Seed de catálogo masivo (una sola corrida, opcional)**: con `GOOGLE_BOOKS_API_KEY` en `backend/.env`, después de `python -m app.seeds`, ejecutar `python -m app.seed_catalogo_google`. Consulta Google Books por título/autor (108 títulos), crea libros (dedup por ISBN o nombre) + autores, y 3 ejemplares por libro (1 por sede). Idempotente.
