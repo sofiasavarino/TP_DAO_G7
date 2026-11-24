@@ -6,6 +6,7 @@ import Portada from '../../components/socio/Portada';
 import type { Sede } from '../../types/ejemplares';
 import type { LibroListado } from '../../types/libros';
 import { copiasEnSede, sedesConCopias, totalCopias, type Disponibilidad } from '../../utils/disponibilidad';
+import { generosDe, traducirGenero } from '../../utils/generos';
 import { nombresAutores } from '../../utils/libros';
 import { limpiarIsbn, normalizar } from '../../utils/texto';
 
@@ -82,7 +83,7 @@ export default function CatalogoPage({
   const generos = useMemo(
     () => [
       TODOS_GENEROS,
-      ...Array.from(new Set(libros.map((l) => l.genero).filter((g): g is string => !!g))).sort((a, b) =>
+      ...Array.from(new Set(libros.flatMap((l) => generosDe(l.genero)))).sort((a, b) =>
         a.localeCompare(b, 'es'),
       ),
     ],
@@ -117,7 +118,7 @@ export default function CatalogoPage({
     const filtrados = libros.filter(
       (l) =>
         coincideBusqueda(l, query) &&
-        (genero === TODOS_GENEROS || l.genero === genero) &&
+        (genero === TODOS_GENEROS || generosDe(l.genero).includes(genero)) &&
         (autor === TODOS_AUTORES || l.autores.some((a) => a.nombre === autor)) &&
         (!sedesElegidas.length || sedesElegidas.some((id) => copiasEnSede(disponibilidad, l.id, id) > 0)),
     );
@@ -144,7 +145,11 @@ export default function CatalogoPage({
   const enMiSede = sedePropia ? libros.filter((l) => copiasEnSede(disponibilidad, l.id, sedePropia.id) > 0) : [];
   const estantesPorGenero = useMemo(() => {
     const porGenero = new Map<string, LibroListado[]>();
-    libros.forEach((l) => l.genero && porGenero.set(l.genero, [...(porGenero.get(l.genero) ?? []), l]));
+    // Un libro con varios géneros entra en el estante de su primer género (no se duplica).
+    libros.forEach((l) => {
+      const principal = generosDe(l.genero)[0];
+      if (principal) porGenero.set(principal, [...(porGenero.get(principal) ?? []), l]);
+    });
     return [...porGenero.entries()].sort((a, b) => b[1].length - a[1].length).slice(0, 3);
   }, [libros]);
 
@@ -337,7 +342,7 @@ export default function CatalogoPage({
                 <h2>{destacado.nombre}</h2>
                 <p className="author">
                   {nombresAutores(destacado)}
-                  {destacado.genero && ` · ${destacado.genero}`}
+                  {!!destacado.genero && ` · ${traducirGenero(destacado.genero)}`}
                 </p>
                 <p className="synopsis">
                   {destacado.sinopsis ||

@@ -117,6 +117,8 @@ TP_DAO_G7/
 | GET | `/api/v1/sedes` | Sedes activas (para selectores). Público: lo usa el formulario de registro de socios |
 | PATCH | `/api/v1/ejemplares/{id}/estado` | Cambio de estado de un ejemplar |
 
+> **Géneros:** la DB guarda el string que devuelve Google Books (p. ej. `Fantasy fiction, Argentine`). El front lo separa y traduce con `utils/generos.ts` antes de mostrarlo en el filtro del catálogo, el detalle, la gestión de libros y el reporte `uso-genero`. El filtro del catálogo es client-side y compara géneros ya en español; el query param `?genero=` del backend sigue siendo match exacto sobre el valor crudo.
+
 ### Reportes (solo Administrador)
 
 Todos los reportes son de solo lectura y devuelven agregados listos para graficar. Filtros de fecha opcionales con `?desde=&hasta=` donde aplica.

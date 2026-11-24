@@ -5,6 +5,7 @@ import { librosService } from '../../services/librosService';
 import type { Sede } from '../../types/ejemplares';
 import type { Libro, LibroListado } from '../../types/libros';
 import { totalCopias, type Disponibilidad } from '../../utils/disponibilidad';
+import { traducirGenero } from '../../utils/generos';
 import { nombresAutores } from '../../utils/libros';
 import { anio, limpiarSinopsis } from '../../utils/texto';
 interface Props {
@@ -62,7 +63,7 @@ export default function LibroDetalle({
       <div className="detail-grid">
         <Portada src={libro.imagen_url} titulo={libro.nombre} />
         <div>
-          {libro.genero && <span className="eyebrow">{libro.genero.toUpperCase()}</span>}
+          {libro.genero && <span className="eyebrow">{traducirGenero(libro.genero).toLocaleUpperCase('es')}</span>}
           <h1>{libro.nombre}</h1>
           <p className="detail-author">{nombresAutores(libro)}</p>
           {ficha.length > 0 && <p className="detail-synopsis">{ficha.join(' · ')}</p>}

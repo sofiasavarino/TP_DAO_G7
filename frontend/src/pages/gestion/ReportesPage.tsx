@@ -17,6 +17,7 @@ import type {
   UsoGeneroSede,
   VencidosSinSancion,
 } from '../../types/reportes';
+import { traducirGenero } from '../../utils/generos';
 import './reportes.css';
 
 interface Datos {
@@ -355,7 +356,7 @@ export default function ReportesPage() {
               <h2>Uso por género y sede</h2>
               <Tabla
                 columnas={['Género', 'Sede', 'Préstamos']}
-                filas={datos.uso.map((u) => [u.genero, u.sede, u.prestamos])}
+                filas={datos.uso.map((u) => [traducirGenero(u.genero), u.sede, u.prestamos])}
               />
             </section>
 
