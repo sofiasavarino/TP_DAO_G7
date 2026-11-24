@@ -2072,3 +2072,39 @@ footer > span {
   background: #dad6ce;
   color: var(--ink);
 }
+
+/* ===== Footer del portal: sedes de la red (solo las activas, las filtra el backend) ===== */
+/* Con sedes, el footer pasa a dos filas: arriba las sedes, abajo logo · lema · © */
+footer:has(.footer-sedes) {
+  flex-wrap: wrap;
+  row-gap: 0;
+  padding-top: 40px;
+  padding-bottom: 30px;
+}
+.footer-sedes {
+  width: 100%;
+  padding-bottom: 28px;
+  margin-bottom: 26px;
+  border-bottom: 1px solid #e2dccf;
+}
+.footer-sedes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 26px;
+  margin-top: 14px;
+}
+.footer-sedes address {
+  font-style: normal;
+  display: grid;
+  gap: 4px;
+  font-size: 13px;
+  color: #5f665f;
+  line-height: 1.45;
+}
+.footer-sedes address strong {
+  font: 600 17px "Playfair Display", serif;
+  color: var(--ink);
+  margin-bottom: 2px;
+}
+.footer-sedes address a { color: var(--green); text-decoration: none; width: fit-content; }
+.footer-sedes address a:hover { text-decoration: underline; }
