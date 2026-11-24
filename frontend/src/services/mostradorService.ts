@@ -79,6 +79,12 @@ export const mostradorService = {
   activarSocio: (socioId: number) =>
     api.put<SocioBusqueda>(`${ENDPOINTS_PENDIENTES.socios}/${socioId}/activar`),
 
+  /**
+   * Renueva el préstamo por DIAS_PRESTAMO (15) días más. Una sola vez por préstamo.
+   * El backend lo rechaza (409) si ya se renovó, si está vencido o si hay socios esperando el libro.
+   */
+  renovarPrestamo: (prestamoId: number) => api.put<Prestamo>(`${PRESTAMOS}/${prestamoId}/renovacion`),
+
   /** Devolución en la sede del mostrador. Con `conDanios` el ejemplar va a reparación. */
   registrarDevolucion: (
     prestamoId: number,

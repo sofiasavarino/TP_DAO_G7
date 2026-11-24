@@ -10,6 +10,8 @@ export interface PrestamoListado {
   estado: PrestamoEstado;
   tipo: PrestamoTipo;
   /** ISO yyyy-mm-dd */
+  fecha_inicio: string;
+  /** ISO yyyy-mm-dd */
   fecha_vencimiento: string;
   socio_id: number;
   socio_nombre: string;
@@ -88,6 +90,18 @@ export interface SancionVigente {
  * la validación real la hace el backend.
  */
 export const MAX_PRESTAMOS_ABIERTOS = 2;
+
+/**
+ * Días de un préstamo y de su renovación. Copia de DIAS_PRESTAMO en prestamo_service.py.
+ * Un préstamo se puede renovar una sola vez: si ya vence más de DIAS_PRESTAMO días después
+ * de su inicio, es porque se renovó (la validación real la hace el backend).
+ */
+export const DIAS_PRESTAMO = 15;
+
+export function yaRenovado(p: { fecha_inicio: string; fecha_vencimiento: string }): boolean {
+  const dias = (Date.parse(p.fecha_vencimiento) - Date.parse(p.fecha_inicio)) / 86_400_000;
+  return Math.round(dias) > DIAS_PRESTAMO;
+}
 
 export const ETIQUETA_TIPO_PRESTAMO: Record<PrestamoTipo, string> = {
   [PrestamoTipo.LOCAL]: 'Local',

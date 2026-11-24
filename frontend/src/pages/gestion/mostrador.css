@@ -135,3 +135,14 @@
   border-bottom: 1px solid rgba(29, 36, 32, .14);
   margin-bottom: 22px;
 }
+
+/* --- Renovación de préstamos --- */
+.mos-renovado { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px; font-size: 11px; font-weight: 700; color: #4d554f; background: rgba(29, 36, 32, .08); }
+.mos-btn-renovar:disabled { cursor: not-allowed; opacity: .45; }
+.mos-renov-fechas { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 16px; padding: 14px 18px; border: 1px solid rgba(29, 36, 32, .12); border-radius: 10px; background: #fff; }
+.mos-renov-fechas > div { display: grid; gap: 4px; }
+.mos-renov-fechas > div:last-child { text-align: right; }
+.mos-renov-fechas span { font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #697169; }
+.mos-renov-fechas > span { font-size: 20px; letter-spacing: 0; color: #8b908b; }
+.mos-renov-fechas strong { font-family: "Playfair Display", serif; font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.mos-renov-fechas strong.nuevo { color: var(--green); }

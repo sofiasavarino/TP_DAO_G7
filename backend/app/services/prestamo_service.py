@@ -263,6 +263,7 @@ def renovar_prestamo(session: Session, prestamo_id: int) -> Prestamo:
 
     Bloqueado si:
     - el préstamo no existe o no está ACTIVO
+    - ya se renovó una vez (solo se permite una renovación)
     - ya estamos pasados de la fecha de vencimiento (atraso => no renueva)
     - hay reserva esperando por ese libro (recir mantiene la etiqueta)
     """
@@ -273,6 +274,10 @@ def renovar_prestamo(session: Session, prestamo_id: int) -> Prestamo:
         raise BibliotecaError(
             f"Solo se renuevan préstamos ACTIVO (estado actual: {prestamo.estado.value})"
         )
+    # Una sola renovación: un préstamo nuevo vence DIAS_PRESTAMO días después de su inicio;
+    # si la diferencia ya es mayor, es porque se renovó (no hace falta otra columna en la base).
+    if (prestamo.fecha_vencimiento - prestamo.fecha_inicio).days > DIAS_PRESTAMO:
+        raise BibliotecaError("El préstamo ya se renovó una vez; solo se permite una renovación")
 
     hoy = date.today()
     if hoy > prestamo.fecha_vencimiento:

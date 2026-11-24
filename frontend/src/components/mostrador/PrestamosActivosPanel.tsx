@@ -3,8 +3,10 @@ import { mostradorService } from '../../services/mostradorService';
 import type { EjemplarInventario } from '../../types/ejemplares';
 import { PrestamoEstado, PrestamoTipo } from '../../types/enums';
 import {
+  DIAS_PRESTAMO,
   ETIQUETA_ESTADO_PRESTAMO,
   ETIQUETA_TIPO_PRESTAMO,
+  yaRenovado,
   type PrestamoListado,
 } from '../../types/mostrador';
 import { diasHasta, formatearFecha, textoVencimiento } from '../../utils/fechas';
@@ -31,6 +33,8 @@ interface PrestamoVista extends PrestamoListado {
   ejemplar?: EjemplarInventario;
   dias: number;
   atrasado: boolean;
+  /** Ya usó su única renovación. */
+  renovado: boolean;
 }
 
 /**
@@ -55,6 +59,7 @@ export default function PrestamosActivosPanel({
   const [filtro, setFiltro] = useState<FiltroEstado>('todos');
   const [pagina, setPagina] = useState(1);
   const [aDevolver, setADevolver] = useState<PrestamoVista | null>(null);
+  const [aRenovar, setARenovar] = useState<PrestamoVista | null>(null);
 
   const cargar = useCallback(async () => {
     setCargando(true);
@@ -86,7 +91,13 @@ export default function PrestamosActivosPanel({
     return prestamos.map((p) => {
       const dias = diasHasta(p.fecha_vencimiento);
       // VENCIDO lo marca el backend; un ACTIVO con la fecha pasada también está atrasado
-      return { ...p, ejemplar: porId.get(p.ejemplar_id), dias, atrasado: p.estado === PrestamoEstado.VENCIDO || dias < 0 };
+      return {
+        ...p,
+        ejemplar: porId.get(p.ejemplar_id),
+        dias,
+        atrasado: p.estado === PrestamoEstado.VENCIDO || dias < 0,
+        renovado: yaRenovado(p),
+      };
     });
   }, [prestamos, ejemplares]);
 
@@ -117,6 +128,12 @@ export default function PrestamosActivosPanel({
   const totalPaginas = Math.max(1, Math.ceil(filtrados.length / POR_PAGINA));
   const paginaActual = Math.min(pagina, totalPaginas);
   const visibles = filtrados.slice((paginaActual - 1) * POR_PAGINA, paginaActual * POR_PAGINA);
+
+  const alRenovar = (texto: string) => {
+    setARenovar(null);
+    onAviso({ tipo: 'ok', texto });
+    onCambio(); // recarga la lista con el nuevo vencimiento
+  };
 
   const alDevolver = (prestamoId: number, texto: string) => {
     setADevolver(null);
@@ -235,6 +252,7 @@ export default function PrestamosActivosPanel({
                       {formatearFecha(p.fecha_vencimiento)}
                       <small className={`inv-sub${p.atrasado ? ' mos-texto-mal' : ''}`}>
                         {textoVencimiento(p.fecha_vencimiento)}
+                        {p.renovado && <span className="mos-renovado">renovado</span>}
                       </small>
                     </td>
                     <td>
@@ -244,9 +262,25 @@ export default function PrestamosActivosPanel({
                       </span>
                     </td>
                     <td className="acciones">
-                      <button className="inv-accion ok" onClick={() => setADevolver(p)}>
-                        Registrar devolución
-                      </button>
+                      <div className="inv-acciones">
+                        <button
+                          className="inv-accion mos-btn-renovar"
+                          onClick={() => setARenovar(p)}
+                          disabled={p.renovado || p.atrasado}
+                          title={
+                            p.renovado
+                              ? 'Ya se renovó una vez: solo se permite una renovación'
+                              : p.atrasado
+                                ? 'Un préstamo vencido no se puede renovar'
+                                : `Extender ${DIAS_PRESTAMO} días`
+                          }
+                        >
+                          Renovar
+                        </button>
+                        <button className="inv-accion ok" onClick={() => setADevolver(p)}>
+                          Registrar devolución
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -272,6 +306,10 @@ export default function PrestamosActivosPanel({
             </div>
           )}
         </>
+      )}
+
+      {aRenovar && (
+        <RenovacionModal prestamo={aRenovar} onCerrar={() => setARenovar(null)} onRenovado={alRenovar} />
       )}
 
       {aDevolver && (
@@ -409,6 +447,103 @@ function DevolucionModal({
           </button>
           <button className="confirm-reservation" onClick={() => void confirmar()} disabled={guardando}>
             {guardando ? 'REGISTRANDO…' : 'CONFIRMAR DEVOLUCIÓN'}
+          </button>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+/** Suma días a una fecha ISO (yyyy-mm-dd) sin corrimientos de zona horaria. */
+function sumarDias(iso: string, dias: number): string {
+  const [a, m, d] = iso.slice(0, 10).split('-').map(Number);
+  const f = new Date(Date.UTC(a!, (m ?? 1) - 1, (d ?? 1) + dias));
+  return f.toISOString().slice(0, 10);
+}
+
+/** Confirmación de la renovación: +DIAS_PRESTAMO días, una sola vez por préstamo. */
+function RenovacionModal({
+  prestamo,
+  onCerrar,
+  onRenovado,
+}: {
+  prestamo: PrestamoVista;
+  onCerrar: () => void;
+  onRenovado: (aviso: string) => void;
+}) {
+  const [guardando, setGuardando] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const nuevoVencimiento = sumarDias(prestamo.fecha_vencimiento, DIAS_PRESTAMO);
+
+  useEffect(() => {
+    const onKey = (e: globalThis.KeyboardEvent) => e.key === 'Escape' && !guardando && onCerrar();
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onCerrar, guardando]);
+
+  const confirmar = async () => {
+    setGuardando(true);
+    setError(null);
+    try {
+      const renovado = await mostradorService.renovarPrestamo(prestamo.id);
+      onRenovado(
+        `Préstamo ${prestamo.numero} renovado: ahora vence el ${formatearFecha(renovado.fecha_vencimiento)}.`,
+      );
+    } catch (e) {
+      // 409 del backend: ya renovado, vencido, o hay socios esperando el libro
+      setError(mensajeDeError(e, 'No se pudo renovar el préstamo.'));
+      setGuardando(false);
+    }
+  };
+
+  const libro = prestamo.ejemplar?.libro;
+  return (
+    <div className="reservation-modal-backdrop" role="presentation">
+      <section className="reservation-modal" role="dialog" aria-modal="true" aria-labelledby="renov-title">
+        <button className="modal-close" onClick={onCerrar} aria-label="Cerrar" disabled={guardando}>
+          <AdminIcon name="close" size={18} />
+        </button>
+        <span className="eyebrow">RENOVACIÓN</span>
+        <h2 id="renov-title">¿Renovar el préstamo?</h2>
+        <div className="modal-book">
+          {libro?.imagen_url && <img src={libro.imagen_url} alt="" />}
+          <div>
+            <strong>{libro?.nombre ?? `Ejemplar ${prestamo.ejemplar_codigo}`}</strong>
+            <span>
+              {prestamo.numero} · {prestamo.socio_nombre} · {prestamo.ejemplar_codigo}
+            </span>
+          </div>
+        </div>
+
+        <div className="mos-renov-fechas">
+          <div>
+            <span>Vence hoy el</span>
+            <strong>{formatearFecha(prestamo.fecha_vencimiento)}</strong>
+          </div>
+          <span aria-hidden="true">→</span>
+          <div>
+            <span>Pasa a vencer el</span>
+            <strong className="nuevo">{formatearFecha(nuevoVencimiento)}</strong>
+          </div>
+        </div>
+
+        <p className="ejemplar-resumen mos-resumen">
+          Se extiende <b>{DIAS_PRESTAMO} días</b>. Cada préstamo se puede renovar <b>una sola vez</b>, y no se puede
+          si hay otros socios esperando este libro.
+        </p>
+
+        {error && (
+          <div className="login-error" role="alert">
+            {error}
+          </div>
+        )}
+
+        <div className="modal-actions">
+          <button className="ghost-btn" onClick={onCerrar} disabled={guardando}>
+            Cancelar
+          </button>
+          <button className="confirm-reservation" onClick={() => void confirmar()} disabled={guardando}>
+            {guardando ? 'RENOVANDO…' : 'CONFIRMAR RENOVACIÓN'}
           </button>
         </div>
       </section>
