@@ -253,8 +253,8 @@ python -m venv ../.venv     # o el venv que prefieran, p. ej. backend/.venv
 source ../.venv/bin/activate   # En Windows: ..\.venv\Scripts\activate
 pip install -e ".[dev]"        # instala las dependencias de backend/pyproject.toml
 cp .env.example .env           # Completar la API key de Google Books (se necesita para el paso siguiente)
-python -m app.seed_demo --reset   # DEMO: borra la base y la carga con escenarios de vencimientos, multas, remitos e historial (fechas relativas a hoy)
-# python -m app.seeds            # datos iniciales: 3 sedes, 3 roles, usuarios seed, catálogo de muestra
+python -m app.seeds            # datos iniciales: 3 sedes, 3 roles, usuarios seed, catálogo de muestra
+python -m app.seed_demo  
 python -m app.seed_catalogo_google  # OPCIONAL: importa ~108 libros desde Google Books (3 ejemplares por libro, 1 por sede); requiere GOOGLE_BOOKS_API_KEY en backend/.env
 uvicorn app.main:app --reload  # http://localhost:8000 | documentación en /docs
 ```
