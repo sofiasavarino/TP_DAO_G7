@@ -430,11 +430,12 @@ export default function EjemplaresPage() {
               disponible. Se conserva en el historial.
             </p>
             <div className="modal-actions">
-              <button className="ghost-btn" onClick={() => setAInutilizar(null)}>
+              <button className="confirm-reservation" style={{ width: '100%', marginTop: 0, borderRadius: 0 }} onClick={() => setAInutilizar(null)}>
                 Cancelar
               </button>
               <button
-                className="confirm-reservation"
+                className="ghost-btn"
+                style={{ width: '100%', marginTop: 0, borderRadius: 0 }}
                 disabled={procesando === aInutilizar.id}
                 onClick={() => void ejecutar(aInutilizar, 'inutilizable')}
               >

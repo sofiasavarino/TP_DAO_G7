@@ -348,12 +348,24 @@ export default function LibroFormModal({ libro, librosExistentes, onCerrar, onGu
           )}
 
           <div className="modal-actions">
-            <button type="button" className="ghost-btn" onClick={onCerrar} disabled={guardando}>
-              Cancelar
-            </button>
-            <button type="submit" className="confirm-reservation" disabled={guardando}>
+             <button type="submit" className="confirm-reservation" disabled={guardando} style={{ width: '100%', marginTop: 0, borderRadius: 0 }}>
               {guardando ? 'GUARDANDO…' : esEdicion ? 'GUARDAR CAMBIOS' : 'AGREGAR AL CATÁLOGO'}
             </button>
+            <button type="button" className="ghost-btn" onClick={onCerrar} disabled={guardando} style={{
+                    width: '100%',
+                    padding: '14px 18px',
+                    fontFamily: 'inherit',
+                    fontSize: 13,
+                    fontWeight: 700,
+                    borderRadius: 0,
+                    background: '#e5e2dc',
+                    color: '#3d433f',
+                    border: '1px solid #c9c4ba',
+                    cursor: 'pointer',
+                  }}>
+              Cancelar
+            </button>
+           
           </div>
         </form>
       </section>
