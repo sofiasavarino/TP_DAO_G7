@@ -477,6 +477,7 @@ import LibroDetalle from "./socio/LibroDetalle";
 import MisReservasPage from "./socio/MisReservasPage";
 import PrestamosPage from "./socio/PrestamosPage";
 import SancionesPage from "./socio/SancionesPage";
+import SedesFooter from "../components/socio/SedesFooter";
 
 // Reseñas: el backend todavía no tiene endpoints, así que viven solo en la sesión.
 type Review = { id: number; bookId: number; user: string; stars: number; text: string; date: string; verified: boolean; mine?: boolean };
@@ -1150,6 +1151,7 @@ export default function PortalSocio() {
         </div>
       )}
       <footer>
+        <SedesFooter sedes={sedes} />
         <button className="brand" onClick={() => go("catalog")}>
           <span>Herm</span>
           <i>es</i>
