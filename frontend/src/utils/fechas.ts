@@ -45,3 +45,17 @@ export const daysLeft = (s: string) =>
   Math.round(
     (new Date(`${s}T00:00:00`).getTime() - new Date(`${addDays(0)}T00:00:00`).getTime()) / 86400000,
   );
+
+  /** Suma días hábiles (sin sábados ni domingos) a una fecha YYYY-MM-DD. No considera feriados. */
+export function sumarDiasHabiles(fecha: string, dias: number): string {
+  const [y, m, d] = String(fecha).slice(0, 10).split('-').map(Number);
+  const dt = new Date(y, m - 1, d);
+  let restantes = dias;
+  while (restantes > 0) {
+    dt.setDate(dt.getDate() + 1);
+    const dow = dt.getDay();
+    if (dow !== 0 && dow !== 6) restantes--;
+  }
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}`;
+}

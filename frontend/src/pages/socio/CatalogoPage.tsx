@@ -340,7 +340,8 @@ export default function CatalogoPage({
                   {destacado.genero && ` · ${destacado.genero}`}
                 </p>
                 <p className="synopsis">
-                  {[destacado.editorial, destacado.isbn && `ISBN ${destacado.isbn}`].filter(Boolean).join(' · ')}
+                  {destacado.sinopsis ||
+                    (destacado.editorial ? `Editorial ${destacado.editorial}.` : 'Disponible para retiro en biblioteca.')}
                 </p>
                 <div className="weekly-meta">
                   <span>

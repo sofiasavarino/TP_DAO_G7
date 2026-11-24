@@ -800,6 +800,8 @@ export default function PortalSocio() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [activeView, setActiveView] = useState<View>("catalog");
   const [selectedBook, setSelectedBook] = useState<LibroListado | null>(null);
+  const [bookReadOnly, setBookReadOnly] = useState(false);
+  const [bookReturnView, setBookReturnView] = useState<View>("catalog");
 
   // ----- F3: catálogo real (libros, sedes y copias disponibles por sede)
   const catalogo = useCatalogoSocio(orden === "autor" ? "default" : orden);
@@ -877,8 +879,15 @@ export default function PortalSocio() {
     setActiveView(view);
     window.scrollTo({ top: 0 });
   };
-  const openBook = (libro: LibroListado) => {
+  // const openBook = (libro: LibroListado) => {
+  //   setSelectedBook(libro);
+  //   setSearchOpen(false);
+  //   go("book");
+  // };
+  const openBook = (libro: LibroListado, opciones?: { soloLectura?: boolean; volverA?: View }) => {
     setSelectedBook(libro);
+    setBookReadOnly(Boolean(opciones?.soloLectura));
+    setBookReturnView(opciones?.volverA ?? "catalog");
     setSearchOpen(false);
     go("book");
   };
@@ -952,7 +961,7 @@ export default function PortalSocio() {
               }}
               onFocus={() => setSearchOpen(true)}
               onKeyDown={(e) => e.key === "Enter" && setSearchOpen(false)}
-              placeholder="Buscá por título o autor"
+              placeholder="Buscá tu libro favorito"
               aria-label="Buscar libros"
             />
             {query && (
@@ -1049,8 +1058,9 @@ export default function PortalSocio() {
             disponibilidad={disponibilidad}
             sedePropiaId={usuario?.sede.id ?? null}
             reservado={reservados.has(selectedBook.id)}
+            soloLectura={bookReadOnly}
             onReserve={reserve}
-            onBack={() => go("catalog")}
+            onBack={() => go(bookReturnView)}
           >
             <h2 className="list-title">Reseñas de los socios</h2>
             <button className="ghost-btn" onClick={() => openReview(aTarget(selectedBook))}>
@@ -1077,7 +1087,7 @@ export default function PortalSocio() {
             sedes={sedes}
             onCancelada={onReservada}
             onExplore={() => go("catalog")}
-            onOpenLibro={openBook}
+            onOpenLibro={(libro) => openBook(libro, { soloLectura: true, volverA: "reservations" })}
           />
         ) : activeView === "loans" ? (
           <PrestamosPage
@@ -1086,7 +1096,7 @@ export default function PortalSocio() {
             error={panel.errorPrestamos}
             onReintentar={panel.recargar}
             libros={libros}
-            onOpenLibro={openBook}
+            onOpenLibro={(libro) => openBook(libro, { soloLectura: true, volverA: "loans" })}
             tieneResena={(libroId) => reviews.some((v) => v.mine && v.bookId === libroId)}
             onResenar={reviewDePrestamo}
             onExplore={() => go("catalog")}

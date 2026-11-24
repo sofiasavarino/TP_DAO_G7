@@ -41,14 +41,87 @@ def buscar_libro_por_isbn(session: Session, isbn: str) -> LibroLookupDTO:
     return LibroLookupDTO(origen="MANUAL", isbn=isbn)
 
 
-def crear_libro(session: Session, datos: LibroCreate) -> tuple[Libro, bool]:
-    """Crea un libro en el catálogo. Devuelve (libro, es_nuevo).
+# def crear_libro(session: Session, datos: LibroCreate) -> tuple[Libro, bool]:
+#     """Crea un libro en el catálogo. Devuelve (libro, es_nuevo).
 
-    Si el ISBN ya existe, no duplica: devuelve el libro existente (ideal para el
-    alta desde Google Books) con `es_nuevo=False`; si estaba dado de baja, se
-    reactiva. Los `autor_ids` que no existan abortan la creación con ValueError
-    para que la vista avise. Los `autores` (nombres) se reutilizan o se crean.
-    """
+#     Si el ISBN ya existe, no duplica: devuelve el libro existente (ideal para el
+#     alta desde Google Books) con `es_nuevo=False`; si estaba dado de baja, se
+#     reactiva. Los `autor_ids` que no existan abortan la creación con ValueError
+#     para que la vista avise. Los `autores` (nombres) se reutilizan o se crean.
+#     """
+#     isbn = _normalizar_isbn(datos.isbn)
+#     if isbn:
+#         existente = libro_repo.get_by_isbn(session, isbn)
+#         if existente is not None:
+#             if not existente.activo:
+#                 existente.activo = True
+#                 session.flush()
+#             return existente, False
+
+#     nombre = datos.nombre.strip()
+#     if not nombre:
+#         raise ValueError("El libro tiene que tener un título.")
+
+#     sinopsis=datos.sinopsis
+
+#     libro = Libro(
+#         nombre=nombre,
+#         isbn=isbn,
+#         cant_paginas=datos.cant_paginas,
+#         editorial=datos.editorial,
+#         fecha_publicacion=datos.fecha_publicacion,
+#         imagen_url=datos.imagen_url,
+#         genero=datos.genero,
+#         autores=_resolver_autores(session, datos.autor_ids, datos.autores),
+#     )
+#     return libro_repo.add(session, libro), True
+
+
+# def crear_libro_desde_lookup(session: Session, datos: LibroLookupDTO) -> tuple[Libro, bool]:
+#     """Alta desde un resultado de Google Books (o MANUAL).
+
+#     - Dedup por ISBN: si ya existe, devuelve el libro actual con `es_nuevo=False`.
+#     - Resuelve autores por nombre (case-insensitive); crea los que falten.
+#     """
+#     if not existente.sinopsis and dto.sinopsis:
+#         existente.sinopsis = dto.sinopsis
+#     nombre = (datos.nombre or "").strip()
+#     if not nombre:
+#         raise ValueError("El libro no tiene nombre.")
+
+#     if datos.isbn:
+#         existente = libro_repo.get_by_isbn(session, datos.isbn)
+#         if existente is not None:
+#             return existente, False
+#     else:
+#         # Sin ISBN no podemos deduplicar por eso; comparamos por nombre para que
+#         # la importación masiva sea idempotente.
+#         stmt = select(Libro).where(func.lower(Libro.nombre) == nombre.lower())
+#         existente = session.scalars(stmt).first()
+#         if existente is not None:
+#             return existente, False
+
+#     nombres = list(dict.fromkeys(a.strip() for a in datos.autores if a and a.strip()))
+#     encontrados = autor_repo.get_by_nombres(session, nombres)
+#     existe_lower = {a.nombre.strip().lower() for a in encontrados}
+#     autores = list(encontrados)
+#     for n in nombres:
+#         if n.lower() not in existe_lower:
+#             autores.append(Autor(nombre=n))
+
+#     libro = Libro(
+#         nombre=nombre,
+#         isbn=datos.isbn,
+#         cant_paginas=datos.cant_paginas,
+#         editorial=datos.editorial,
+#         fecha_publicacion=datos.fecha_publicacion,
+#         imagen_url=datos.imagen_url,
+#         genero=datos.genero,
+#         autores=autores,
+#     )
+#     return libro_repo.add(session, libro), True
+def crear_libro(session: Session, datos: LibroCreate) -> tuple[Libro, bool]:
+    """Crea un libro en el catálogo. Devuelve (libro, es_nuevo)."""
     isbn = _normalizar_isbn(datos.isbn)
     if isbn:
         existente = libro_repo.get_by_isbn(session, isbn)
@@ -70,17 +143,14 @@ def crear_libro(session: Session, datos: LibroCreate) -> tuple[Libro, bool]:
         fecha_publicacion=datos.fecha_publicacion,
         imagen_url=datos.imagen_url,
         genero=datos.genero,
+        sinopsis=datos.sinopsis,
         autores=_resolver_autores(session, datos.autor_ids, datos.autores),
     )
     return libro_repo.add(session, libro), True
 
 
 def crear_libro_desde_lookup(session: Session, datos: LibroLookupDTO) -> tuple[Libro, bool]:
-    """Alta desde un resultado de Google Books (o MANUAL).
-
-    - Dedup por ISBN: si ya existe, devuelve el libro actual con `es_nuevo=False`.
-    - Resuelve autores por nombre (case-insensitive); crea los que falten.
-    """
+    """Alta desde un resultado de Google Books (o MANUAL)."""
     nombre = (datos.nombre or "").strip()
     if not nombre:
         raise ValueError("El libro no tiene nombre.")
@@ -88,13 +158,17 @@ def crear_libro_desde_lookup(session: Session, datos: LibroLookupDTO) -> tuple[L
     if datos.isbn:
         existente = libro_repo.get_by_isbn(session, datos.isbn)
         if existente is not None:
+            if not existente.sinopsis and datos.sinopsis:
+                existente.sinopsis = datos.sinopsis
+                session.flush()
             return existente, False
     else:
-        # Sin ISBN no podemos deduplicar por eso; comparamos por nombre para que
-        # la importación masiva sea idempotente.
         stmt = select(Libro).where(func.lower(Libro.nombre) == nombre.lower())
         existente = session.scalars(stmt).first()
         if existente is not None:
+            if not existente.sinopsis and datos.sinopsis:
+                existente.sinopsis = datos.sinopsis
+                session.flush()
             return existente, False
 
     nombres = list(dict.fromkeys(a.strip() for a in datos.autores if a and a.strip()))
@@ -113,6 +187,7 @@ def crear_libro_desde_lookup(session: Session, datos: LibroLookupDTO) -> tuple[L
         fecha_publicacion=datos.fecha_publicacion,
         imagen_url=datos.imagen_url,
         genero=datos.genero,
+        sinopsis=datos.sinopsis,
         autores=autores,
     )
     return libro_repo.add(session, libro), True
@@ -132,6 +207,8 @@ def actualizar_libro(session: Session, libro_id: int, datos: LibroUpdate) -> Lib
     nombre = datos.nombre.strip()
     if not nombre:
         raise ValueError("El libro tiene que tener un título.")
+
+    libro.sinopsis = datos.sinopsis
 
     isbn = _normalizar_isbn(datos.isbn)
     if isbn and libro_repo.existe_isbn(session, isbn, excluir_id=libro.id):
@@ -234,6 +311,7 @@ def _local_a_dto(libro: Libro) -> LibroLookupDTO:
         imagen_url=libro.imagen_url,
         genero=libro.genero,
         autores=[a.nombre for a in libro.autores],  # lazy load dentro de la sesión
+        sinopsis=libro.sinopsis,
     )
 
 
