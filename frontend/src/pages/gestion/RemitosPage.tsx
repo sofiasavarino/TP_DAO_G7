@@ -472,11 +472,23 @@ function DespachoModal({
           </div>
         )}
         <div className="modal-actions">
-          <button className="ghost-btn" onClick={onCerrar} disabled={guardando}>
-            Cancelar
-          </button>
-          <button className="confirm-reservation" onClick={() => void confirmar()} disabled={guardando}>
+        
+          <button className="confirm-reservation" onClick={() => void confirmar()} disabled={guardando} style={{ width: '100%', marginTop: 0, borderRadius: 0}}>
             {guardando ? 'DESPACHANDO…' : 'CONFIRMAR DESPACHO'}
+          </button>
+          <button className="ghost-btn" onClick={onCerrar} disabled={guardando} style={{
+                    width: '100%',
+                    padding: '14px 18px',
+                    fontFamily: 'inherit',
+                    fontSize: 13,
+                    fontWeight: 700,
+                    borderRadius: 0,
+                    background: '#e5e2dc',
+                    color: '#3d433f',
+                    border: '1px solid #c9c4ba',
+                    cursor: 'pointer',
+                  }}>
+            Cancelar
           </button>
         </div>
       </section>

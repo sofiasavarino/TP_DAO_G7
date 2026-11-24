@@ -99,7 +99,7 @@ TP_DAO_G7/
 | GET | `/api/v1/prestamos/vencidos` | Préstamos en estado VENCIDO |
 | PUT | `/api/v1/prestamos/{id}/devolucion?sede_id=&responsable_devolucion_id=` | Cierra préstamo; aplica sanción por retraso si la hay; si hay reserva más vieja de ese libro en otra sede, encola el ejemplar en un remito `CREADO` (o lo crea) rumbo a esa sede y la reserva queda `EN_TRANSITO`; si la reserva es en la misma sede, la asigna (`LISTA_PARA_RETIRO`) |
 | PUT | `/api/v1/prestamos/{id}/renovacion` | Extiende `fecha_vencimiento` 15 días; bloqueado si está vencido o hay reserva esperando ese libro |
-| POST | `/api/v1/remitos` | Crea un remito con ejemplares (`responsable_creacion_id` en query); queda `CREADO`. `numero_remito` opcional: si no viene, el backend lo autogenera `R-YYYYMMDD-NNN` |
+| POST | `/api/v1/remitos` | Crea un remito con ejemplares (`responsable_creacion_id` en query); queda `CREADO`. Sólo acepta ejemplares `DISPONIBLE` (un `RESERVADO` ya está comprometido → 400). `numero_remito` opcional: si no viene, el backend lo autogenera `R-YYYYMMDD-NNN` |
 | GET | `/api/v1/remitos/de-despacho?sede_id=` | Tablero: remitos `CREADO` (filtrable por sede de origen) con `ejemplares_count` |
 | GET | `/api/v1/remitos/de-recepcion?sede_id=` | Tablero: remitos `EN_TRANSITO` (filtrable por sede de destino) con `ejemplares_count` |
 | GET | `/api/v1/remitos/con-incidencia?sede_id=` | Tablero: remitos `CON_INCIDENCIA` (filtrable por sede de destino) con `ejemplares_count` |
@@ -159,6 +159,29 @@ Todos los reportes son de solo lectura y devuelven agregados listos para grafica
 - Versionado: todas las rutas de negocio cuelgan de `/api/v1/<recurso>` (`/api/v1/libros`, `/api/v1/prestamos`, ...). Cambios incompatibles a `v2` en el futuro.
 - **Seed de catálogo masivo (una sola corrida, opcional)**: con `GOOGLE_BOOKS_API_KEY` en `backend/.env`, después de `python -m app.seeds`, ejecutar `python -m app.seed_catalogo_google`. Consulta Google Books por título/autor (108 títulos), crea libros (dedup por ISBN o nombre) + autores, y 3 ejemplares por libro (1 por sede). Idempotente.
 - CORS: abierto a `localhost:5173`/`5174` para el frontend; ajustar `allow_origins` en `app/main.py` al deployear.
+
+### Reglas de sanciones
+
+| Situación | Consecuencia |
+|---|---|
+| Préstamo vencido sin devolución (política: 2 meses) | Se marca el ejemplar `PERDIDO`, el socio pasa a `BAJA` y se crea una sanción **`REPOSICION`** (`PUT /prestamos/{id}/perdida`). |
+| Devolución fuera de plazo | Multa económica: `$5000 × 1.02^n` (n = días hábiles de retraso, interés compuesto). Al **abonarla** (`PUT /sanciones/{id}/abonar`) se levanta la multa y arranca una suspensión de **15 días**. |
+| Libro perdido | El socio sigue de baja hasta regularizar: si **devuelve el libro original**, se le cobra la multa correspondiente y vuelve a `ACTIVO`; si el libro se perdió definitivamente, debe **reponerlo con una edición igual o posterior** (`PUT /prestamos/{id}/reposicion`), y el original pasa a `INUTILIZABLE`. |
+| Devolución con daños menores (reparable) | Ejemplar → `EN_REPARACION` y socio suspendido **15 días** (`PUT /prestamos/{id}/devolucion?con_danios=true`). |
+| Devolución con daños mayores (irreparable) | Ejemplar `INUTILIZABLE` y socio en **BAJA** hasta reponer el libro (igual o edición posterior). |
+
+Mientras haya cualquier sanción vigente (`MULTA`, `SUSPENSION` o `REPOSICION`) el socio no puede reservar ni retirar libros. `REPOSICION` **no se levanta** con `PUT /sanciones/{id}/levantar`: se resuelve con la reposición/devolución del libro.
+
+### Roles por endpoint
+
+`require_roles` siempre deja pasar al **Administrador** además de los roles listados; para "cualquier logueado" se usa `get_current_user` (para no excluir al Bibliotecario).
+
+| Acceso | Endpoints (`/api/v1/...`) |
+|---|---|
+| Público (sin token) | `POST /auth/login`, `POST /auth/registro`, `GET /health`, `/docs` |
+| Cualquier usuario logueado | `/libros/catalogo*`, `/libros/lookup`, `/ejemplares/disponibles`, `/ejemplares/por-libro/{id}`, `/sedes`, `/prestamos/mios`, `/reservas` (crear), `/reservas/mios`, `/reservas/eta`, `DELETE /reservas/{id}`, `GET /sanciones`, `/notificaciones/*` |
+| Bibliotecario y Administrador | `/prestamos` (alta, listado general, vencidos, devolución, renovación, pérdida, reposición), todos los `/remitos*`, `/reservas/pendientes`, `/reservas/listas-para-retiro`, `/reservas/procesar-vencimientos`, `POST /reservas/{id}/retira`, `POST /sanciones`, `PUT /sanciones/{id}/levantar\|abonar`, `GET /sanciones/{socio_id}`, `/socios`, `POST /libros`, `/libros/google`, `PUT/PATCH /libros/{id}`, `/ejemplares` (alta, inventario, acciones manuales) |
+| Solo Administrador | `/usuarios/bibliotecarios` |
 
 ## Arquitectura
 

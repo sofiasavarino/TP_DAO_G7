@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.config.database import get_session
-from app.controllers.dependencies import BIBLIOTECARIO, require_roles
+from app.controllers.dependencies import BIBLIOTECARIO, get_current_user, require_roles
 from app.dtos.googlebooks_dto import LibroLookupDTO
 from app.dtos.libro_dto import LibroCreate, LibroDTO, LibroListadoDTO, LibroUpdate
 from app.exceptions.catalogo import (
@@ -22,7 +22,9 @@ from app.services.libro_service import (
     to_listado_dto,
 )
 
-libro_router = APIRouter(prefix="/libros", tags=["libros"])
+libro_router = APIRouter(
+    prefix="/libros", tags=["libros"], dependencies=[Depends(get_current_user)]
+)
 libro_repo = LibroRepository()
 
 
@@ -77,7 +79,10 @@ def obtener_libro(libro_id: int, session: Session = Depends(get_session)) -> Lib
     return LibroDTO.model_validate(libro)
 
 
-@libro_router.post("", response_model=LibroDTO, status_code=201)
+@libro_router.post(
+    "", response_model=LibroDTO, status_code=201,
+    dependencies=[Depends(require_roles(BIBLIOTECARIO))],
+)
 def crear_libro_endpoint(datos: LibroCreate, session: Session = Depends(get_session)) -> LibroDTO:
     """Alta de libro. Si el ISBN ya existe, devuelve el existente (no duplica)."""
     try:

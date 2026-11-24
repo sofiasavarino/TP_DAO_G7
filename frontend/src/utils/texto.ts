@@ -21,3 +21,11 @@ export function isbnValido(isbn: string): boolean {
 export function anio(fechaIso: string | null | undefined): string {
   return fechaIso ? fechaIso.slice(0, 4) : '';
 }
+
+/** Si la sinopsis viene bilingüe desde Google Books ("... ENGLISH DESCRIPTION ..."), deja solo la parte en español. */
+export function limpiarSinopsis(sinopsis: string | null | undefined): string {
+  if (!sinopsis) return '';
+  return sinopsis
+    .split(/\s*(?:ENGLISH DESCRIPTION|DESCRIPTION IN ENGLISH|ENGLISH VERSION)\s*:?\s*/i)[0]
+    .trim();
+}

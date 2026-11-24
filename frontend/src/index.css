@@ -1485,6 +1485,8 @@ footer > span {
 .libro-form-campos input:not(#autor-input) { border: 1px solid rgba(29, 36, 32, .25); border-radius: 8px; padding: 11px 13px; background: #fff; font-weight: 400; color: var(--ink); min-width: 0; }
 .libro-form-campos input:focus { outline: 2px solid var(--green); outline-offset: 1px; }
 .libro-form-campos input[aria-invalid="true"] { border-color: var(--rust); }
+.libro-form-campos textarea { border: 1px solid rgba(29, 36, 32, .25); border-radius: 8px; padding: 11px 13px; background: #fff; font-weight: 400; color: var(--ink); min-width: 0; resize: vertical; }
+.libro-form-campos textarea:focus { outline: 2px solid var(--green); outline-offset: 1px; }
 .campo-error { color: #8a3a1e; font-weight: 600; font-size: 12px; }
 .chips-input { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-height: 46px; padding: 6px 8px; border: 1px solid rgba(29, 36, 32, .25); border-radius: 8px; background: #fff; cursor: text; }
 .chips-input:focus-within { outline: 2px solid var(--green); outline-offset: 1px; }
@@ -1769,3 +1771,298 @@ footer > span {
 .notif-tipo.ok { color: var(--green); }
 .notif-tipo.alerta { color: var(--rust); }
 .notif-tipo.info { color: #5d6b8a; }
+
+.link-inline {
+  background: none;
+  border: 0;
+  padding: 0;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--rust);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.info-box {
+  background: var(--cream);
+  border-left: 3px solid var(--green);
+  padding: 12px 14px;
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink);
+  margin: 0;
+}
+/* Bloque de disponibilidad y acciones a ancho completo en LibroDetalle */
+.detail-availability-box {
+  width: 100%;
+  margin-top: 36px;
+  padding-top: 28px;
+  border-top: 1px solid rgba(29, 36, 32, 0.12);
+}
+
+.detail-availability-box .detail-avail {
+  font-size: 13px;
+  margin: 0 0 14px;
+  color: var(--ink);
+}
+
+/* Misma estética exacta de las tarjetas de sedes (.branch-list) */
+.detail-availability-box .branch-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.detail-availability-box .branch-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 13px 16px;
+  border: 1px solid #496654;
+  background: rgba(45, 74, 58, 0.04);
+}
+
+.detail-availability-box .branch-list li.none {
+  border-color: var(--line);
+  background: transparent;
+  opacity: 0.65;
+}
+
+.detail-availability-box .branch-list li div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.detail-availability-box .branch-list strong {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.detail-availability-box .branch-list .own-tag {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--green);
+}
+
+.detail-availability-box .branch-list span {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.detail-availability-box .branch-list b {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--green);
+  white-space: nowrap;
+}
+
+.detail-availability-box .branch-list li.none b {
+  color: var(--muted);
+}
+
+/* Botones rectangulares con misma fuente y marco visible en el secundario */
+.detail-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.detail-actions .confirm-reservation,
+.detail-actions .detail-back-btn {
+  width: 100%;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 0;
+  padding: 15px 22px;
+  text-align: center;
+  justify-content: center;
+  margin: 0;
+  cursor: pointer;
+}
+
+.detail-actions .detail-back-btn {
+  background: rgba(29, 36, 32, 0.03);
+  color: var(--ink);
+  border: 1.5px solid #496654;
+}
+
+.detail-actions .detail-back-btn:hover {
+  background: rgba(45, 74, 58, 0.08);
+  border-color: var(--green);
+}
+
+/* Espaciado de la sección de reseñas en LibroDetalle */
+.book-detail .list-title {
+  margin-top: 48px;
+  margin-bottom: 16px;
+}
+
+.book-detail > .ghost-btn {
+  margin-bottom: 16px;
+}
+
+.book-detail .review-list {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Jerarquía tipográfica UX y botones en MisReservasPage */
+.reservations-page .reservations-intro {
+  font-size: 15px;
+  line-height: 1.6;
+  max-width: 64ch;
+}
+
+.reservation-list article .reservation-info .res-status {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--green);
+  margin-bottom: 6px;
+}
+
+.reservation-list article .reservation-info h2 {
+  font-size: 22px;
+  line-height: 1.25;
+  margin: 0 0 4px;
+}
+
+.reservation-list article .reservation-info .res-author {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink);
+  margin: 0 0 12px;
+}
+
+.reservation-list article .reservation-info .res-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.reservation-list article .reservation-info .res-meta small {
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+/* Acciones en tarjeta de reserva: CTA rectangular arriba, cancelar discreto abajo */
+.reservation-list article .row-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  min-width: 155px;
+}
+
+.reservation-list article .row-actions .btn-cta-libro {
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 12px 20px;
+  border-radius: 0;
+  border: 0;
+  background: var(--rust);
+  color: #fff;
+  cursor: pointer;
+  text-align: center;
+}
+
+.reservation-list article .row-actions .btn-cta-libro:hover {
+  filter: brightness(0.94);
+}
+
+.reservation-list article .row-actions .btn-cancel-link {
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 8px 12px;
+  border-radius: 0;
+  border: 1px solid rgba(29, 36, 32, 0.22);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  text-align: center;
+}
+
+.reservation-list article .row-actions .btn-cancel-link:hover {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+/* Modal de cancelación: datos completos y botones rectangulares invertidos */
+.modal-book-detail {
+  align-items: flex-start;
+}
+
+.modal-book-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.modal-book-author {
+  font-size: 13.5px;
+  color: var(--muted);
+}
+
+.modal-reserva-datos {
+  list-style: none;
+  padding: 8px 0 0;
+  margin: 4px 0 0;
+  border-top: 1px solid rgba(29, 36, 32, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.modal-reserva-datos b {
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.modal-actions-rect {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.modal-actions-rect .confirm-reservation,
+.modal-actions-rect .btn-cancel-secondary {
+  width: 100%;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 700;
+  padding: 14px 18px;
+  border-radius: 0;
+  margin: 0;
+  cursor: pointer;
+  text-align: center;
+}
+
+.modal-actions-rect .btn-cancel-secondary {
+  background: #e5e2dc;
+  color: #3d433f;
+  border: 1px solid #c9c4ba;
+}
+
+.modal-actions-rect .btn-cancel-secondary:hover:not(:disabled) {
+  background: #dad6ce;
+  color: var(--ink);
+}

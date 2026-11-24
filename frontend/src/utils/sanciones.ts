@@ -31,7 +31,9 @@ export function resumenSancion(s: Sancion): string {
       const dias = diasRestantes(s);
       return dias ? `Estás suspendido: te ${dias === 1 ? 'queda' : 'quedan'} ${plural(dias, 'día', 'días')}` : 'Estás suspendido';
     }
+    case SancionTipo.REPOSICION:
+      return 'Tu cuenta está dada de baja: reponé el libro (igual o edición posterior) o devolvélo y aboná la multa';
     default:
-      return 'Tu cuenta está dada de baja hasta que repongas el libro';
+      return 'Tenés una sanción vigente';
   }
 }

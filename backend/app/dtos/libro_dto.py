@@ -19,6 +19,7 @@ class LibroCreate(BaseModel):
     # Nombres de autores (ej. los que trae Google Books): se reutilizan los que ya
     # existen (sin distinguir mayúsculas) y se crean los que falten.
     autores: list[str] = []
+    sinopsis: str | None = None
 
 
 class LibroUpdate(BaseModel):
@@ -32,6 +33,7 @@ class LibroUpdate(BaseModel):
     imagen_url: str | None = None
     genero: str | None = None
     autores: list[str] = []
+    sinopsis: str | None = None
 
 
 class LibroDTO(BaseModel):
@@ -49,6 +51,7 @@ class LibroDTO(BaseModel):
     genero: str | None = None
     activo: bool = True
     autores: list[AutorDTO] = []
+    sinopsis: str | None = None
 
 
 class LibroListadoDTO(BaseModel):
@@ -64,3 +67,4 @@ class LibroListadoDTO(BaseModel):
     genero: str | None = None
     activo: bool = True
     autores: list[AutorDTO] = []
+    sinopsis: str | None = None

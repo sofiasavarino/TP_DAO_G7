@@ -16,3 +16,4 @@ class LibroLookupDTO(BaseModel):
     imagen_url: str | None = None
     genero: str | None = None
     autores: list[str] = []
+    sinopsis: str | None = None

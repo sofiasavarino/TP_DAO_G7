@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, EmailStr
 from app.dtos.usuario_dto import UsuarioSesionDTO
 
 
@@ -23,5 +23,17 @@ class MeDTO(UsuarioSesionDTO):
 
     nombre: str | None = None
     apellido: str | None = None
+    telefono: str | None = None
     socio_id: int | None = None
     empleado_id: int | None = None
+
+class ActualizarPerfilRequest(BaseModel):
+    nombre_usuario: str = Field(..., min_length=3, max_length=50, pattern=r"^[A-Za-z0-9._-]+$")
+    email: EmailStr
+    telefono: str | None = Field(default=None, pattern=r"^\d{7,15}$")
+    sede_id: int
+
+
+class CambiarPasswordRequest(BaseModel):
+    password_actual: str = Field(..., min_length=1)
+    password_nueva: str = Field(..., min_length=8, max_length=128)

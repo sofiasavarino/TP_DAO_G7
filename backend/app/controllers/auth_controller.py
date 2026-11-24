@@ -5,13 +5,13 @@ from app.config.database import get_session
 from app.exceptions import CredencialesInvalidas
 from app.controllers.dependencies import get_current_user
 from app.controllers.errores import error_de_alta
-from app.dtos.auth_dto import LoginRequest, MeDTO, TokenDTO
+from app.dtos.auth_dto import LoginRequest, MeDTO, TokenDTO, ActualizarPerfilRequest, CambiarPasswordRequest
 from app.dtos.registro_dto import RegistroSocioRequest
 from app.exceptions.base import BibliotecaError
 from app.models.usuario import Usuario
 from app.repositories.usuario_repository import UsuarioRepository
 from app.services.auth_service import autenticar, to_me_dto
-from app.services.usuario_service import registrar_socio
+from app.services.usuario_service import registrar_socio, actualizar_perfil_socio, cambiar_password_usuario
 
 auth_router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -48,3 +48,32 @@ def registro_socio(
         raise error_de_alta(e) from e
     session.commit()
     return to_me_dto(UsuarioRepository().get_con_detalle(session, usuario.id))
+
+@auth_router.patch("/me", response_model=MeDTO)
+def actualizar_mi_perfil(
+    datos: ActualizarPerfilRequest,
+    usuario: Usuario = Depends(get_current_user),
+    session: Session = Depends(get_session),
+) -> MeDTO:
+    try:
+        actualizado = actualizar_perfil_socio(session, usuario, datos)
+    except BibliotecaError as e:
+        raise error_de_alta(e) from e
+    session.commit()
+    return to_me_dto(UsuarioRepository().get_con_detalle(session, actualizado.id))
+
+
+@auth_router.put("/me/password", status_code=status.HTTP_204_NO_CONTENT)
+def cambiar_mi_password(
+    datos: CambiarPasswordRequest,
+    usuario: Usuario = Depends(get_current_user),
+    session: Session = Depends(get_session),
+) -> None:
+    try:
+        cambiar_password_usuario(session, usuario, datos)
+    except CredencialesInvalidas as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        ) from None
+    session.commit()

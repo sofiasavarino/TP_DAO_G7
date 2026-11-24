@@ -2,10 +2,13 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.config.database import get_session
+from app.controllers.dependencies import BIBLIOTECARIO, require_roles
 from app.dtos.socio_dto import SocioDTO
 from app.services.socio_service import buscar_socios, listar_socios
 
-socio_router = APIRouter(prefix="/socios", tags=["socios"])
+socio_router = APIRouter(
+    prefix="/socios", tags=["socios"], dependencies=[Depends(require_roles(BIBLIOTECARIO))]
+)
 
 
 @socio_router.get("", response_model=list[SocioDTO])

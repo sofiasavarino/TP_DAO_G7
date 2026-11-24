@@ -20,14 +20,36 @@ const VACIO = {
 type Campos = typeof VACIO;
 type Errores = Partial<Record<keyof Campos, string>>;
 
+const SOLO_LETRAS = /^[A-Za-zÁÉÍÓÚáéíóúÑñÜü\s]+$/;
+const EMAIL_VALIDO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 function validar(c: Campos): Errores {
   const e: Errores = {};
+  const nombre = c.nombre.trim();
+  const apellido = c.apellido.trim();
+  const email = c.email.trim();
+  if (!nombre) e.nombre = 'Ingresá tu nombre.';
+  else if (!SOLO_LETRAS.test(nombre)) e.nombre = 'El nombre solo puede contener letras.';
+
+  if (!apellido) e.apellido = 'Ingresá tu apellido.';
+  else if (!SOLO_LETRAS.test(apellido)) e.apellido = 'El apellido solo puede contener letras.';
+
   if (!/^\d{7,10}$/.test(c.dni)) e.dni = 'Solo números, sin puntos (7 a 10 dígitos).';
+
   if (!c.sede_id) e.sede_id = 'Elegí la sede donde vas a retirar los libros.';
+
   if (!/^[A-Za-z0-9._-]{3,50}$/.test(c.nombre_usuario))
     e.nombre_usuario = 'Entre 3 y 50 caracteres: letras, números, punto, guion o guion bajo.';
+
   if (c.password.length < 8) e.password = 'Al menos 8 caracteres.';
+
   if (c.confirmar !== c.password) e.confirmar = 'Las contraseñas no coinciden.';
+
+  if (c.telefono && !/^\d{7,15}$/.test(c.telefono)) e.telefono = 'Ingresá solo números (entre 7 y 15 dígitos, sin +54).';
+
+  if (!email) e.email = 'Ingresá tu correo electrónico.';
+  else if (!EMAIL_VALIDO.test(email))
+    e.email = 'Ingresá un correo electrónico válido (ej. lucia@ejemplo.com).';
   return e;
 }
 
@@ -53,6 +75,7 @@ export default function RegistroPage() {
   }
 
   const cambiar = (campo: keyof Campos) => (e: { target: { value: string } }) => {
+    const val = campo === 'telefono' || campo === 'dni' ? e.target.value.replace(/\D/g, '') : e.target.value;
     setCampos((c) => ({ ...c, [campo]: e.target.value }));
     setErrores((er) => ({ ...er, [campo]: undefined }));
   };
@@ -130,11 +153,11 @@ export default function RegistroPage() {
             </div>
           )}
 
-          {campo('nombre', 'Nombre', { required: true, autoFocus: true, autoComplete: 'given-name', maxLength: 100 })}
-          {campo('apellido', 'Apellido', { required: true, autoComplete: 'family-name', maxLength: 100 })}
-          {campo('dni', 'DNI', { required: true, inputMode: 'numeric', placeholder: 'Sin puntos' })}
-          {campo('telefono', 'Teléfono (opcional)', { type: 'tel', autoComplete: 'tel', maxLength: 30 })}
-          {campo('email', 'Email', { required: true, type: 'email', autoComplete: 'email', className: 'full' })}
+          {campo('nombre', 'Nombre', { required: true, autoFocus: true, autoComplete: 'given-name', maxLength: 100, placeholder: 'Ej: Lucía'})}
+          {campo('apellido', 'Apellido', { required: true, autoComplete: 'family-name',placeholder: 'Ej: Méndez', maxLength: 100 })}
+          {campo('dni', 'DNI (sin puntos)', { required: true, inputMode: 'numeric', placeholder: 'Ej: 40123456'})}
+          {campo('telefono', 'Teléfono (opcional, solo números sin +54)', { inputMode: 'numeric', type: 'tel', autoComplete: 'tel', maxLength: 30, placeholder: 'Ej: 3515551234'})}
+          {campo('email', 'Email', { required: true, type: 'email', autoComplete: 'email', className: 'full', placeholder: "Ej: lucia@example.com" })}
 
           <label className="full">
             Sede

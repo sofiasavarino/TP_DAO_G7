@@ -13,12 +13,1027 @@ export interface paths {
         };
         /**
          * Lookup Libro
-         * @description Autocompletado de datos de libro a partir del ISBN.
-         *
-         *     Precedencia: DB local → Google Books → vacío (carga manual).
+         * @description Autocompletado por ISBN: DB local → Google Books → MANUAL.
          */
         get: operations["lookup_libro_api_v1_libros_lookup_get"];
         put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/libros/google": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Buscar Google Books
+         * @description Proxy a Google Books para el alta de libros (la API key nunca sale del backend).
+         */
+        get: operations["buscar_google_books_api_v1_libros_google_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/libros/catalogo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Listar Libros */
+        get: operations["listar_libros_api_v1_libros_catalogo_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/libros/catalogo/{libro_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Obtener Libro */
+        get: operations["obtener_libro_api_v1_libros_catalogo__libro_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/libros": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Crear Libro Endpoint
+         * @description Alta de libro. Si el ISBN ya existe, devuelve el existente (no duplica).
+         */
+        post: operations["crear_libro_endpoint_api_v1_libros_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/libros/{libro_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Actualizar Libro Endpoint
+         * @description Edición de un libro del catálogo (reemplaza datos y autores).
+         */
+        put: operations["actualizar_libro_endpoint_api_v1_libros__libro_id__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/libros/{libro_id}/baja": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Dar De Baja Libro Endpoint
+         * @description Baja lógica (activo = False). 409 si hay ejemplares en circulación.
+         */
+        patch: operations["dar_de_baja_libro_endpoint_api_v1_libros__libro_id__baja_patch"];
+        trace?: never;
+    };
+    "/api/v1/ejemplares": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Listar Inventario Endpoint
+         * @description Inventario físico (todos los estados) filtrable por libro, sede actual y estado.
+         */
+        get: operations["listar_inventario_endpoint_api_v1_ejemplares_get"];
+        put?: never;
+        /** Crear Ejemplar Endpoint */
+        post: operations["crear_ejemplar_endpoint_api_v1_ejemplares_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ejemplares/lote": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Crear Lote Endpoint
+         * @description Alta rápida de 1..50 copias de un libro en una sede (códigos autogenerados).
+         *     El bibliotecario solo puede dar de alta en su sede (403 si no).
+         */
+        post: operations["crear_lote_endpoint_api_v1_ejemplares_lote_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ejemplares/disponibles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Listar Disponibles Endpoint
+         * @description Consulta de disponibilidad por libro y/o sede ACTUAL del ejemplar.
+         */
+        get: operations["listar_disponibles_endpoint_api_v1_ejemplares_disponibles_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ejemplares/por-libro/{libro_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Listar Por Libro Endpoint */
+        get: operations["listar_por_libro_endpoint_api_v1_ejemplares_por_libro__libro_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ejemplares/{ejemplar_id}/estado": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Cambiar Estado Endpoint */
+        patch: operations["cambiar_estado_endpoint_api_v1_ejemplares__ejemplar_id__estado_patch"];
+        trace?: never;
+    };
+    "/api/v1/ejemplares/{ejemplar_id}/reparacion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Enviar A Reparacion Endpoint
+         * @description DISPONIBLE -> EN_REPARACION.
+         */
+        patch: operations["enviar_a_reparacion_endpoint_api_v1_ejemplares__ejemplar_id__reparacion_patch"];
+        trace?: never;
+    };
+    "/api/v1/ejemplares/{ejemplar_id}/reincorporacion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Reincorporar Endpoint
+         * @description EN_REPARACION -> DISPONIBLE.
+         */
+        patch: operations["reincorporar_endpoint_api_v1_ejemplares__ejemplar_id__reincorporacion_patch"];
+        trace?: never;
+    };
+    "/api/v1/ejemplares/{ejemplar_id}/inutilizable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Marcar Inutilizable Endpoint
+         * @description DISPONIBLE / EN_REPARACION -> INUTILIZABLE (terminal, no se puede deshacer).
+         */
+        patch: operations["marcar_inutilizable_endpoint_api_v1_ejemplares__ejemplar_id__inutilizable_patch"];
+        trace?: never;
+    };
+    "/api/v1/prestamos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Listar Prestamos
+         * @description Listado general del bibliotecario. El handler no toca SQL ni ORM.
+         */
+        get: operations["listar_prestamos_api_v1_prestamos_get"];
+        put?: never;
+        /** Crear Prestamo Endpoint */
+        post: operations["crear_prestamo_endpoint_api_v1_prestamos_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/prestamos/mios": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Listar Prestamos Mios
+         * @description Préstamos del socio autenticado (o indicado). Sin auth todavía, requiere `?socio_id=`.
+         */
+        get: operations["listar_prestamos_mios_api_v1_prestamos_mios_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/prestamos/vencidos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Listar Prestamos Vencidos
+         * @description Préstamos actualmente vencidos (estado VENCIDO).
+         */
+        get: operations["listar_prestamos_vencidos_api_v1_prestamos_vencidos_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/prestamos/{prestamo_id}/devolucion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Devolver Prestamo Endpoint */
+        put: operations["devolver_prestamo_endpoint_api_v1_prestamos__prestamo_id__devolucion_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/prestamos/{prestamo_id}/renovacion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Renovar Prestamo Endpoint */
+        put: operations["renovar_prestamo_endpoint_api_v1_prestamos__prestamo_id__renovacion_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/prestamos/{prestamo_id}/perdida": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Marcar Perdido Endpoint
+         * @description Da por perdido el ejemplar de un préstamo que nunca se devolvió (a mano, en el mostrador).
+         *
+         *     El ejemplar pasa a PERDIDO, el socio a BAJA y se crea la sanción REPOSICION.
+         */
+        put: operations["marcar_perdido_endpoint_api_v1_prestamos__prestamo_id__perdida_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/prestamos/{prestamo_id}/reposicion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Reponer Libro Endpoint
+         * @description El socio entrega una copia de reposición (mismo libro o edición posterior).
+         *
+         *     Se da de alta el ejemplar nuevo, el perdido pasa a INUTILIZABLE, el préstamo se finaliza
+         *     y el socio vuelve a ACTIVO.
+         */
+        put: operations["reponer_libro_endpoint_api_v1_prestamos__prestamo_id__reposicion_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/remitos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Listar Remitos Endpoint
+         * @description Listado general de remitos (F8.1), del más nuevo al más viejo.
+         */
+        get: operations["listar_remitos_endpoint_api_v1_remitos_get"];
+        put?: never;
+        /** Crear Remito Endpoint */
+        post: operations["crear_remito_endpoint_api_v1_remitos_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/remitos/de-despacho": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Listar De Despacho Endpoint
+         * @description Tablero: remitos CREADO listos para despachar (filtrable por sede de origen).
+         */
+        get: operations["listar_de_despacho_endpoint_api_v1_remitos_de_despacho_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/remitos/de-recepcion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Listar De Recepcion Endpoint
+         * @description Tablero: remitos EN_TRANSITO pendientes de recibir (filtrable por sede de destino).
+         */
+        get: operations["listar_de_recepcion_endpoint_api_v1_remitos_de_recepcion_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/remitos/con-incidencia": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Listar Con Incidencia Endpoint
+         * @description Tablero: remitos CON_INCIDENCIA recibidos con algún ejemplar dañado (filtrable por sede de destino).
+         */
+        get: operations["listar_con_incidencia_endpoint_api_v1_remitos_con_incidencia_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/remitos/{remito_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Obtener Remito Endpoint */
+        get: operations["obtener_remito_endpoint_api_v1_remitos__remito_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/remitos/{remito_id}/despacho": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Despacho Remito Endpoint */
+        put: operations["despacho_remito_endpoint_api_v1_remitos__remito_id__despacho_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/remitos/{remito_id}/recepcion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Recepcion Remito Endpoint */
+        put: operations["recepcion_remito_endpoint_api_v1_remitos__remito_id__recepcion_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reservas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Crear Reserva Endpoint */
+        post: operations["crear_reserva_endpoint_api_v1_reservas_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reservas/mios": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Listar Mios Endpoint
+         * @description Reservas del socio del más reciente al más viejo (cualquier estado).
+         */
+        get: operations["listar_mios_endpoint_api_v1_reservas_mios_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reservas/pendientes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Listar Pendientes Endpoint
+         * @description Cola de espera SIN ejemplar (PENDIENTE) de toda la red, FIFO. Filtrable por libro o sede.
+         */
+        get: operations["listar_pendientes_endpoint_api_v1_reservas_pendientes_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reservas/listas-para-retiro": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Listar Listas Para Retiro Endpoint
+         * @description Reservas LISTA_PARA_RETIRO de la sede, para entregarlas en el mostrador (F7.1).
+         */
+        get: operations["listar_listas_para_retiro_endpoint_api_v1_reservas_listas_para_retiro_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reservas/eta": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Eta Reserva Endpoint
+         * @description Vista previa SIN crear la reserva: ¿lo tiene ahora o para cuándo?
+         *
+         *     Lo usa el front antes de que el socio confirme la reserva.
+         */
+        get: operations["eta_reserva_endpoint_api_v1_reservas_eta_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reservas/{reserva_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Cancelar Reserva Endpoint
+         * @description Cancelación de reserva viva (PENDIENTE / EN_TRANSITO / LISTA_PARA_RETIRO).
+         *
+         *     Si el ejemplar estaba pre-asignado y no viaja en un remito, se libera y pasa a la
+         *     siguiente reserva en fila; si viajaba, se reasigna al llegar al destino.
+         */
+        delete: operations["cancelar_reserva_endpoint_api_v1_reservas__reserva_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reservas/procesar-vencimientos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Procesar Vencimientos Endpoint
+         * @description Cierra las reservas LISTA_PARA_RETIRO cuya ventana de retiro ya pasó.
+         *
+         *     Cada una pasa a VENCIDA; el ejemplar se libera y se sirve la siguiente reserva
+         *     más vieja FIFO del libro. Devuelve las reservas que vencieron.
+         */
+        post: operations["procesar_vencimientos_endpoint_api_v1_reservas_procesar_vencimientos_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reservas/{reserva_id}/retira": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Retira Reserva Endpoint */
+        post: operations["retira_reserva_endpoint_api_v1_reservas__reserva_id__retira_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sanciones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Listar Sanciones Endpoint
+         * @description Sanciones vigentes hoy. Filtrable por socio.
+         */
+        get: operations["listar_sanciones_endpoint_api_v1_sanciones_get"];
+        put?: never;
+        /** Crear Sancion Endpoint */
+        post: operations["crear_sancion_endpoint_api_v1_sanciones_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sanciones/{socio_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Listar Sanciones Socio Endpoint
+         * @description Sanciones vigentes de un socio.
+         */
+        get: operations["listar_sanciones_socio_endpoint_api_v1_sanciones__socio_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sanciones/{sancion_id}/levantar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Levantar Sancion Endpoint
+         * @description Levanta (perdona) una sanción: cierra fecha_fin en hoy y el socio vuelve a poder reservar/prestar.
+         *
+         *     Para COBRAR una multa usar `/abonar`, que además suspende al socio. La baja por pérdida
+         *     (REPOSICION) no se levanta acá: se resuelve con la reposición del libro.
+         */
+        put: operations["levantar_sancion_endpoint_api_v1_sanciones__sancion_id__levantar_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sanciones/{sancion_id}/abonar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Abonar Multa Endpoint
+         * @description Registra el pago de una multa y arranca la suspensión posterior (15 días desde hoy).
+         *
+         *     Devuelve la suspensión creada; la multa queda levantada.
+         */
+        put: operations["abonar_multa_endpoint_api_v1_sanciones__sancion_id__abonar_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sedes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Listar Sedes
+         * @description Sedes activas, para los selectores del front (filtros, alta de ejemplares, retiro).
+         *
+         *     Es público (sin login) porque también lo usa el formulario de registro de socios.
+         *     Solo expone datos de contacto de las sedes, nada sensible.
+         */
+        get: operations["listar_sedes_api_v1_sedes_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Login */
+        post: operations["login_api_v1_auth_login_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Me */
+        get: operations["me_api_v1_auth_me_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Actualizar Mi Perfil */
+        patch: operations["actualizar_mi_perfil_api_v1_auth_me_patch"];
+        trace?: never;
+    };
+    "/api/v1/auth/registro": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Registro Socio
+         * @description Autorregistro de socios (público). Crea el Usuario con rol Socio y su ficha de Socio.
+         *
+         *     No devuelve token: el frontend hace login con las mismas credenciales.
+         *     409 si el usuario, DNI o email ya existen; 400 si la sede no es válida.
+         */
+        post: operations["registro_socio_api_v1_auth_registro_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/me/password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Cambiar Mi Password */
+        put: operations["cambiar_mi_password_api_v1_auth_me_password_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/socios": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Buscar Socios Endpoint
+         * @description Sin `q`: padrón completo con su estado (F8.3).
+         *     Con `q`: buscador del mostrador por nombre, apellido o DNI (F7.2), sin los dados de baja.
+         */
+        get: operations["buscar_socios_endpoint_api_v1_socios_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/usuarios/bibliotecarios": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Listar Bibliotecarios Endpoint
+         * @description Personal con rol Bibliotecario (incluye los dados de baja).
+         */
+        get: operations["listar_bibliotecarios_endpoint_api_v1_usuarios_bibliotecarios_get"];
+        put?: never;
+        /**
+         * Registrar Bibliotecario Endpoint
+         * @description Alta de un bibliotecario: crea su Usuario (rol Bibliotecario) y su ficha de Empleado.
+         *
+         *     409 si el usuario, email o legajo ya existen; 400 si la sede no es válida.
+         */
+        post: operations["registrar_bibliotecario_endpoint_api_v1_usuarios_bibliotecarios_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notificaciones/mios": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Mis Notificaciones
+         * @description Notificaciones del usuario logueado, de la más nueva a la más vieja.
+         *
+         *     Con `?solo_no_leidas=true` devuelve solo la bandeja de no leídas.
+         */
+        get: operations["mis_notificaciones_api_v1_notificaciones_mios_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notificaciones/mios/no-leidas/cantidad": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Cantidad No Leidas
+         * @description Cantidad de notificaciones sin leer del usuario logueado (globito de la campanita).
+         */
+        get: operations["cantidad_no_leidas_api_v1_notificaciones_mios_no_leidas_cantidad_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notificaciones/{notificacion_id}/leida": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Marcar Leida
+         * @description Marca como leída una notificación del usuario logueado (idempotente).
+         */
+        put: operations["marcar_leida_api_v1_notificaciones__notificacion_id__leida_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notificaciones/mios/leidas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Marcar Todas Leidas
+         * @description Marca como leídas todas las notificaciones del usuario. Devuelve cuántas cambió.
+         */
+        put: operations["marcar_todas_leidas_api_v1_notificaciones_mios_leidas_put"];
         post?: never;
         delete?: never;
         options?: never;
@@ -47,10 +1062,296 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** ActualizarPerfilRequest */
+        ActualizarPerfilRequest: {
+            /** Nombre Usuario */
+            nombre_usuario: string;
+            /**
+             * Email
+             * Format: email
+             */
+            email: string;
+            /** Telefono */
+            telefono?: string | null;
+            /** Sede Id */
+            sede_id: number;
+        };
+        /** AutorDTO */
+        AutorDTO: {
+            /** Id */
+            id: number;
+            /** Nombre */
+            nombre: string;
+        };
+        /** CambiarPasswordRequest */
+        CambiarPasswordRequest: {
+            /** Password Actual */
+            password_actual: string;
+            /** Password Nueva */
+            password_nueva: string;
+        };
+        /**
+         * EjemplarCreate
+         * @description Entrada: alta física de un ejemplar.
+         */
+        EjemplarCreate: {
+            /** Codigo Inventario */
+            codigo_inventario: string;
+            /** Signatura Topografica */
+            signatura_topografica?: string | null;
+            /** Descripcion Fisica */
+            descripcion_fisica?: string | null;
+            /** Libro Id */
+            libro_id: number;
+            /** Sede Origen Id */
+            sede_origen_id: number;
+            /** Sede Actual Id */
+            sede_actual_id: number;
+        };
+        /**
+         * EjemplarDTO
+         * @description Salida: ficha/lista de ejemplar.
+         */
+        EjemplarDTO: {
+            /** Id */
+            id: number;
+            /** Codigo Inventario */
+            codigo_inventario: string;
+            /** Signatura Topografica */
+            signatura_topografica?: string | null;
+            /** Descripcion Fisica */
+            descripcion_fisica?: string | null;
+            estado: components["schemas"]["EstadoEjemplar"];
+            /** Libro Id */
+            libro_id: number;
+            /** Sede Actual Id */
+            sede_actual_id: number;
+            /** Sede Origen Id */
+            sede_origen_id: number;
+        };
+        /**
+         * EjemplarEnRemitoDTO
+         * @description Información mínima del ejemplar para validar en despacho y recepción.
+         */
+        EjemplarEnRemitoDTO: {
+            /** Id */
+            id: number;
+            /** Codigo Inventario */
+            codigo_inventario: string;
+            /** Descripcion Fisica */
+            descripcion_fisica?: string | null;
+            /** Libro Nombre */
+            libro_nombre: string;
+        };
+        /**
+         * EjemplarEstadoUpdate
+         * @description Cuerpo para el endpoint PATCH de cambio de estado.
+         */
+        EjemplarEstadoUpdate: {
+            estado: components["schemas"]["EstadoEjemplar"];
+        };
+        /**
+         * EjemplarInventarioDTO
+         * @description Salida del inventario: el ejemplar con su libro y sedes ya resueltos.
+         */
+        EjemplarInventarioDTO: {
+            /** Id */
+            id: number;
+            /** Codigo Inventario */
+            codigo_inventario: string;
+            /** Signatura Topografica */
+            signatura_topografica?: string | null;
+            /** Descripcion Fisica */
+            descripcion_fisica?: string | null;
+            estado: components["schemas"]["EstadoEjemplar"];
+            /** Libro Id */
+            libro_id: number;
+            /** Sede Actual Id */
+            sede_actual_id: number;
+            /** Sede Origen Id */
+            sede_origen_id: number;
+            libro: components["schemas"]["LibroResumenDTO"];
+            sede_actual: components["schemas"]["SedeResumenDTO"];
+            sede_origen: components["schemas"]["SedeResumenDTO"];
+        };
+        /**
+         * EjemplarLoteCreate
+         * @description Entrada: alta rápida de una o más copias de un libro en una sede inicial.
+         *
+         *     La sede elegida es a la vez origen y sede actual. Si no se manda
+         *     `codigo_inventario` (o se cargan varias copias) el backend genera los códigos.
+         */
+        EjemplarLoteCreate: {
+            /** Libro Id */
+            libro_id: number;
+            /** Sede Id */
+            sede_id: number;
+            /**
+             * Cantidad
+             * @default 1
+             */
+            cantidad: number;
+            /** Codigo Inventario */
+            codigo_inventario?: string | null;
+            /** Signatura Topografica */
+            signatura_topografica?: string | null;
+            /** Descripcion Fisica */
+            descripcion_fisica?: string | null;
+        };
+        /**
+         * EmpleadoListadoDTO
+         * @description Salida del listado de personal: datos del empleado + su cuenta.
+         */
+        EmpleadoListadoDTO: {
+            /** Id */
+            id: number;
+            /** Usuario Id */
+            usuario_id: number;
+            /** Nombre Usuario */
+            nombre_usuario: string;
+            /** Nombre */
+            nombre: string;
+            /** Apellido */
+            apellido: string;
+            /** Email */
+            email: string;
+            /** Legajo */
+            legajo: string;
+            /** Sede Id */
+            sede_id: number;
+            /** Sede Nombre */
+            sede_nombre: string;
+            /** Activo */
+            activo: boolean;
+        };
+        /**
+         * EstadoEjemplar
+         * @enum {string}
+         */
+        EstadoEjemplar: "DISPONIBLE" | "RESERVADO" | "EN_TRANSITO" | "PRESTADO" | "EN_REPARACION" | "PERDIDO" | "INUTILIZABLE";
+        /**
+         * EstadoPrestamo
+         * @enum {string}
+         */
+        EstadoPrestamo: "ACTIVO" | "VENCIDO" | "FINALIZADO";
+        /**
+         * EstadoRemito
+         * @enum {string}
+         */
+        EstadoRemito: "CREADO" | "EN_TRANSITO" | "RECIBIDO" | "CON_INCIDENCIA";
+        /**
+         * EstadoReserva
+         * @enum {string}
+         */
+        EstadoReserva: "PENDIENTE" | "EN_TRANSITO" | "LISTA_PARA_RETIRO" | "CUMPLIDA" | "VENCIDA" | "CANCELADA";
+        /**
+         * EstadoSocio
+         * @enum {string}
+         */
+        EstadoSocio: "ACTIVO" | "SUSPENDIDO" | "BAJA";
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /**
+         * IncidenciaItemDTO
+         * @description Daño informado al recibir un ejemplar. Solo EN_REPARACION o INUTILIZABLE (validado en el servicio).
+         */
+        IncidenciaItemDTO: {
+            /** Ejemplar Id */
+            ejemplar_id: number;
+            estado: components["schemas"]["EstadoEjemplar"];
+        };
+        /**
+         * LibroCreate
+         * @description Entrada: alta de título en el catálogo.
+         */
+        LibroCreate: {
+            /** Nombre */
+            nombre: string;
+            /** Isbn */
+            isbn?: string | null;
+            /** Cant Paginas */
+            cant_paginas?: number | null;
+            /** Editorial */
+            editorial?: string | null;
+            /** Fecha Publicacion */
+            fecha_publicacion?: string | null;
+            /** Imagen Url */
+            imagen_url?: string | null;
+            /** Genero */
+            genero?: string | null;
+            /**
+             * Autor Ids
+             * @default []
+             */
+            autor_ids: number[];
+            /**
+             * Autores
+             * @default []
+             */
+            autores: string[];
+        };
+        /**
+         * LibroDTO
+         * @description Salida: detalle completo del libro.
+         */
+        LibroDTO: {
+            /** Id */
+            id: number;
+            /** Nombre */
+            nombre: string;
+            /** Isbn */
+            isbn?: string | null;
+            /** Cant Paginas */
+            cant_paginas?: number | null;
+            /** Editorial */
+            editorial?: string | null;
+            /** Fecha Publicacion */
+            fecha_publicacion?: string | null;
+            /** Imagen Url */
+            imagen_url?: string | null;
+            /** Genero */
+            genero?: string | null;
+            /**
+             * Activo
+             * @default true
+             */
+            activo: boolean;
+            /**
+             * Autores
+             * @default []
+             */
+            autores: components["schemas"]["AutorDTO"][];
+        };
+        /**
+         * LibroListadoDTO
+         * @description Salida de catálogo/backoffice.
+         */
+        LibroListadoDTO: {
+            /** Id */
+            id: number;
+            /** Nombre */
+            nombre: string;
+            /** Editorial */
+            editorial?: string | null;
+            /** Isbn */
+            isbn?: string | null;
+            /** Imagen Url */
+            imagen_url?: string | null;
+            /** Genero */
+            genero?: string | null;
+            /**
+             * Activo
+             * @default true
+             */
+            activo: boolean;
+            /**
+             * Autores
+             * @default []
+             */
+            autores: components["schemas"]["AutorDTO"][];
         };
         /**
          * LibroLookupDTO
@@ -74,11 +1375,518 @@ export interface components {
             fecha_publicacion?: string | null;
             /** Imagen Url */
             imagen_url?: string | null;
+            /** Genero */
+            genero?: string | null;
             /**
              * Autores
              * @default []
              */
             autores: string[];
+        };
+        /** LibroResumenDTO */
+        LibroResumenDTO: {
+            /** Id */
+            id: number;
+            /** Nombre */
+            nombre: string;
+            /** Isbn */
+            isbn?: string | null;
+            /** Imagen Url */
+            imagen_url?: string | null;
+        };
+        /**
+         * LibroUpdate
+         * @description Entrada: edición de un título (reemplaza todos los campos y los autores).
+         */
+        LibroUpdate: {
+            /** Nombre */
+            nombre: string;
+            /** Isbn */
+            isbn?: string | null;
+            /** Cant Paginas */
+            cant_paginas?: number | null;
+            /** Editorial */
+            editorial?: string | null;
+            /** Fecha Publicacion */
+            fecha_publicacion?: string | null;
+            /** Imagen Url */
+            imagen_url?: string | null;
+            /** Genero */
+            genero?: string | null;
+            /**
+             * Autores
+             * @default []
+             */
+            autores: string[];
+        };
+        /**
+         * LoginRequest
+         * @description Entrada de POST /auth/login.
+         */
+        LoginRequest: {
+            /** Usuario */
+            usuario: string;
+            /** Password */
+            password: string;
+        };
+        /**
+         * MeDTO
+         * @description Salida de GET /auth/me: usuario con rol y sede, más su perfil (socio o empleado).
+         *
+         *     Para un socio vienen `socio_id`; para bibliotecario/administrador, `empleado_id`.
+         */
+        MeDTO: {
+            /** Id */
+            id: number;
+            /** Nombre Usuario */
+            nombre_usuario: string;
+            /** Email */
+            email?: string | null;
+            /** Activo */
+            activo: boolean;
+            rol: components["schemas"]["RolDTO"];
+            sede: components["schemas"]["SedeDTO"];
+            /** Nombre */
+            nombre?: string | null;
+            /** Apellido */
+            apellido?: string | null;
+            /** Telefono */
+            telefono?: string | null;
+            /** Socio Id */
+            socio_id?: number | null;
+            /** Empleado Id */
+            empleado_id?: number | null;
+        };
+        /**
+         * MotivoTraslado
+         * @enum {string}
+         */
+        MotivoTraslado: "IDA" | "REBALANCEO";
+        /**
+         * NotificacionDTO
+         * @description Salida: bandeja de notificaciones de la app.
+         */
+        NotificacionDTO: {
+            /** Id */
+            id: number;
+            tipo: components["schemas"]["NotificacionTipo"];
+            /** Titulo */
+            titulo: string;
+            /** Cuerpo */
+            cuerpo: string;
+            /** Leida */
+            leida: boolean;
+            /**
+             * Fecha Creacion
+             * Format: date-time
+             */
+            fecha_creacion: string;
+        };
+        /**
+         * NotificacionTipo
+         * @enum {string}
+         */
+        NotificacionTipo: "RESERVA_LISTA" | "RESERVA_VENCIDA" | "SANCION_APLICADA" | "SANCION_LEVANTADA" | "EJEMPLAR_ASIGNADO";
+        /**
+         * PrestamoCreate
+         * @description Entrada: lo que manda la vista/controller para dar de alta un préstamo.
+         *
+         *     La fecha de vencimiento NO la decide el cliente — se calcula en el service
+         *     como `today() + DIAS_PRESTAMO`.
+         */
+        PrestamoCreate: {
+            /** Socio Id */
+            socio_id: number;
+            /** Ejemplar Id */
+            ejemplar_id: number;
+            tipo: components["schemas"]["TipoPrestamo"];
+            /** Observaciones */
+            observaciones?: string | null;
+        };
+        /**
+         * PrestamoDTO
+         * @description Salida plana 1:1 con el modelo.
+         */
+        PrestamoDTO: {
+            /** Id */
+            id: number;
+            /** Numero */
+            numero: string;
+            tipo: components["schemas"]["TipoPrestamo"];
+            estado: components["schemas"]["EstadoPrestamo"];
+            /** Socio Id */
+            socio_id: number;
+            /** Ejemplar Id */
+            ejemplar_id: number;
+            /**
+             * Fecha Inicio
+             * Format: date
+             */
+            fecha_inicio: string;
+            /**
+             * Fecha Vencimiento
+             * Format: date
+             */
+            fecha_vencimiento: string;
+            /** Fecha Devolucion */
+            fecha_devolucion: string | null;
+            /** Observaciones */
+            observaciones: string | null;
+        };
+        /**
+         * PrestamoListadoDTO
+         * @description Salida enriquecida para la grilla/pantallas: trae datos cruzados planos.
+         */
+        PrestamoListadoDTO: {
+            /** Id */
+            id: number;
+            /** Numero */
+            numero: string;
+            estado: components["schemas"]["EstadoPrestamo"];
+            tipo: components["schemas"]["TipoPrestamo"];
+            /**
+             * Fecha Inicio
+             * Format: date
+             */
+            fecha_inicio: string;
+            /**
+             * Fecha Vencimiento
+             * Format: date
+             */
+            fecha_vencimiento: string;
+            /** Fecha Devolucion */
+            fecha_devolucion?: string | null;
+            /** Socio Id */
+            socio_id: number;
+            /** Socio Nombre */
+            socio_nombre: string;
+            /** Ejemplar Id */
+            ejemplar_id: number;
+            /** Ejemplar Codigo */
+            ejemplar_codigo: string;
+            /** Libro Id */
+            libro_id: number;
+            /** Libro Nombre */
+            libro_nombre: string;
+            /** Libro Isbn */
+            libro_isbn?: string | null;
+            /** Libro Imagen Url */
+            libro_imagen_url?: string | null;
+        };
+        /**
+         * RegistroBibliotecarioRequest
+         * @description Entrada de POST /usuarios/bibliotecarios (solo Administrador).
+         */
+        RegistroBibliotecarioRequest: {
+            /** Nombre Usuario */
+            nombre_usuario: string;
+            /** Password */
+            password: string;
+            /** Nombre */
+            nombre: string;
+            /** Apellido */
+            apellido: string;
+            /**
+             * Email
+             * Format: email
+             */
+            email: string;
+            /** Sede Id */
+            sede_id: number;
+            /** Legajo */
+            legajo: string;
+        };
+        /**
+         * RegistroSocioRequest
+         * @description Entrada de POST /auth/registro. `sede_id` es la sede donde retira los libros.
+         */
+        RegistroSocioRequest: {
+            /** Nombre Usuario */
+            nombre_usuario: string;
+            /** Password */
+            password: string;
+            /** Nombre */
+            nombre: string;
+            /** Apellido */
+            apellido: string;
+            /**
+             * Email
+             * Format: email
+             */
+            email: string;
+            /** Sede Id */
+            sede_id: number;
+            /**
+             * Dni
+             * @description Solo números, sin puntos
+             */
+            dni: string;
+            /** Telefono */
+            telefono?: string | null;
+        };
+        /**
+         * RemitoCreate
+         * @description Entrada: alta de remito interbibliotecario. Responsables se completan por flujo.
+         *
+         *     `numero_remito` es opcional: si no viene, el service lo autogenera `R-YYYYMMDD-NNN`.
+         */
+        RemitoCreate: {
+            /** Numero Remito */
+            numero_remito?: string | null;
+            motivo_traslado: components["schemas"]["MotivoTraslado"];
+            /** Sede Origen Id */
+            sede_origen_id: number;
+            /** Sede Destino Id */
+            sede_destino_id: number;
+            /**
+             * Ejemplar Ids
+             * @default []
+             */
+            ejemplar_ids: number[];
+            /** Observaciones */
+            observaciones?: string | null;
+        };
+        /**
+         * RemitoDetalleDTO
+         * @description Salida: vista completa del remito (incluye ejemplares).
+         */
+        RemitoDetalleDTO: {
+            /** Id */
+            id: number;
+            /** Numero Remito */
+            numero_remito: string;
+            motivo_traslado: components["schemas"]["MotivoTraslado"];
+            estado: components["schemas"]["EstadoRemito"];
+            /** Observaciones */
+            observaciones?: string | null;
+            /** Sede Origen Id */
+            sede_origen_id: number;
+            /** Sede Destino Id */
+            sede_destino_id: number;
+            /** Responsable Creacion Id */
+            responsable_creacion_id: number;
+            /** Responsable Despacho Id */
+            responsable_despacho_id?: number | null;
+            /** Responsable Recepcion Id */
+            responsable_recepcion_id?: number | null;
+            /**
+             * Fecha Creacion
+             * Format: date
+             */
+            fecha_creacion: string;
+            /** Fecha Despacho */
+            fecha_despacho?: string | null;
+            /** Fecha Recepcion */
+            fecha_recepcion?: string | null;
+            /**
+             * Ejemplares
+             * @default []
+             */
+            ejemplares: components["schemas"]["EjemplarEnRemitoDTO"][];
+        };
+        /**
+         * RemitoListadoDTO
+         * @description Salida: tablero/alta de despachos y recepciones.
+         */
+        RemitoListadoDTO: {
+            /** Id */
+            id: number;
+            /** Numero Remito */
+            numero_remito: string;
+            motivo_traslado: components["schemas"]["MotivoTraslado"];
+            estado: components["schemas"]["EstadoRemito"];
+            /** Sede Origen Id */
+            sede_origen_id: number;
+            /** Sede Destino Id */
+            sede_destino_id: number;
+            /** Ejemplares Count */
+            ejemplares_count: number;
+            /**
+             * Fecha Creacion
+             * Format: date
+             */
+            fecha_creacion: string;
+            /** Fecha Despacho */
+            fecha_despacho?: string | null;
+            /** Fecha Recepcion */
+            fecha_recepcion?: string | null;
+        };
+        /**
+         * ReservaCreate
+         * @description Entrada: solicitud de reserva de un libro con sede concreta de retiro.
+         */
+        ReservaCreate: {
+            /** Socio Id */
+            socio_id: number;
+            /** Libro Id */
+            libro_id: number;
+            /** Sede Retiro Id */
+            sede_retiro_id: number;
+        };
+        /**
+         * ReservaDTO
+         * @description Salida de ficha/listado de reservas (ventana de retiro por 48 hs).
+         */
+        ReservaDTO: {
+            /** Id */
+            id: number;
+            /**
+             * Fecha Reserva
+             * Format: date
+             */
+            fecha_reserva: string;
+            /** Fecha Asignacion */
+            fecha_asignacion?: string | null;
+            /** Fecha Vencimiento Retiro */
+            fecha_vencimiento_retiro?: string | null;
+            estado: components["schemas"]["EstadoReserva"];
+            /** Socio Id */
+            socio_id: number;
+            /** Libro Id */
+            libro_id: number;
+            /** Sede Retiro Id */
+            sede_retiro_id: number;
+            /** Ejemplar Id */
+            ejemplar_id?: number | null;
+        };
+        /**
+         * ReservaEtaDTO
+         * @description Vista previa para el socio ANTES de reservar: ¿lo tenés ya o para cuándo?
+         *
+         *     `eta` es la fecha mínima estimada (o null si no hay nada estimable).
+         *     `disponible_ahora` indica si hay un ejemplar en la sede de retiro hoy mismo.
+         */
+        ReservaEtaDTO: {
+            /** Libro Id */
+            libro_id: number;
+            /** Sede Retiro Id */
+            sede_retiro_id: number;
+            /** Disponible Ahora */
+            disponible_ahora: boolean;
+            /** Eta */
+            eta?: string | null;
+        };
+        /**
+         * RolDTO
+         * @description Salida: catálogo de roles (semilla, no se crea desde la app).
+         */
+        RolDTO: {
+            /** Id */
+            id: number;
+            /** Nombre */
+            nombre: string;
+            /** Descripcion */
+            descripcion?: string | null;
+        };
+        /**
+         * SancionCreate
+         * @description Entrada: alta de sanción generada por el service (no es un formulario libre).
+         */
+        SancionCreate: {
+            /** Prestamo Id */
+            prestamo_id: number;
+            tipo: components["schemas"]["TipoSancion"];
+            /** Motivo */
+            motivo: string;
+            /** Monto */
+            monto?: number | null;
+            /** Dias Suspension */
+            dias_suspension?: number | null;
+            /** Fecha Inicio */
+            fecha_inicio?: string | null;
+        };
+        /**
+         * SancionDTO
+         * @description Salida: ficha de sanción (también para resumen en ficha de socio).
+         */
+        SancionDTO: {
+            /** Id */
+            id: number;
+            tipo: components["schemas"]["TipoSancion"];
+            /** Motivo */
+            motivo: string;
+            /** Monto */
+            monto?: number | null;
+            /** Dias Suspension */
+            dias_suspension?: number | null;
+            /**
+             * Fecha Inicio
+             * Format: date
+             */
+            fecha_inicio: string;
+            /** Fecha Fin */
+            fecha_fin?: string | null;
+            /** Socio Id */
+            socio_id: number;
+            /** Prestamo Id */
+            prestamo_id: number;
+        };
+        /**
+         * SedeDTO
+         * @description Salida: dropdowns/pickers y ficha de sede. Las sedes se crean por semilla administrativa.
+         */
+        SedeDTO: {
+            /** Id */
+            id: number;
+            /** Nombre */
+            nombre: string;
+            /** Direccion */
+            direccion: string;
+            /** Telefono */
+            telefono?: string | null;
+            /** Email */
+            email?: string | null;
+            /** Horario Atencion */
+            horario_atencion?: string | null;
+            /** Activo */
+            activo: boolean;
+        };
+        /** SedeResumenDTO */
+        SedeResumenDTO: {
+            /** Id */
+            id: number;
+            /** Nombre */
+            nombre: string;
+        };
+        /**
+         * SocioDTO
+         * @description Salida: ficha de socio.
+         */
+        SocioDTO: {
+            /** Id */
+            id: number;
+            /** Nombre */
+            nombre: string;
+            /** Apellido */
+            apellido: string;
+            /** Dni */
+            dni: string;
+            /** Telefono */
+            telefono?: string | null;
+            estado: components["schemas"]["EstadoSocio"];
+        };
+        /**
+         * TipoPrestamo
+         * @enum {string}
+         */
+        TipoPrestamo: "LOCAL" | "INTERBIBLIOTECARIO";
+        /**
+         * TipoSancion
+         * @enum {string}
+         */
+        TipoSancion: "MULTA" | "SUSPENSION" | "REPOSICION";
+        /**
+         * TokenDTO
+         * @description Salida de POST /auth/login.
+         */
+        TokenDTO: {
+            /** Access Token */
+            access_token: string;
+            /**
+             * Token Type
+             * @default bearer
+             */
+            token_type: string;
         };
         /** ValidationError */
         ValidationError: {
@@ -120,6 +1928,1836 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LibroLookupDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    buscar_google_books_api_v1_libros_google_get: {
+        parameters: {
+            query: {
+                /** @description Título, autor o ISBN */
+                q: string;
+                max_resultados?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LibroLookupDTO"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listar_libros_api_v1_libros_catalogo_get: {
+        parameters: {
+            query?: {
+                /** @description Búsqueda parcial por título */
+                titulo?: string | null;
+                /** @description Búsqueda parcial por ISBN */
+                isbn?: string | null;
+                /** @description Búsqueda parcial por nombre de autor */
+                autor?: string | null;
+                /** @description Filtrar por género (exacto) */
+                genero?: string | null;
+                /** @description IDs de sede donde debe haber al menos una copia disponible */
+                sedes?: number[];
+                /** @description default | populares (préstamos) | recientes (fecha de publicación) */
+                orden?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LibroListadoDTO"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    obtener_libro_api_v1_libros_catalogo__libro_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                libro_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LibroDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    crear_libro_endpoint_api_v1_libros_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LibroCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LibroDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    actualizar_libro_endpoint_api_v1_libros__libro_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                libro_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LibroUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LibroDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    dar_de_baja_libro_endpoint_api_v1_libros__libro_id__baja_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                libro_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LibroDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listar_inventario_endpoint_api_v1_ejemplares_get: {
+        parameters: {
+            query?: {
+                libro_id?: number | null;
+                sede_id?: number | null;
+                estado?: components["schemas"]["EstadoEjemplar"] | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EjemplarInventarioDTO"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    crear_ejemplar_endpoint_api_v1_ejemplares_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EjemplarCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EjemplarDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    crear_lote_endpoint_api_v1_ejemplares_lote_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EjemplarLoteCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EjemplarInventarioDTO"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listar_disponibles_endpoint_api_v1_ejemplares_disponibles_get: {
+        parameters: {
+            query?: {
+                libro_id?: number | null;
+                sede_id?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EjemplarDTO"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listar_por_libro_endpoint_api_v1_ejemplares_por_libro__libro_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                libro_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EjemplarDTO"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cambiar_estado_endpoint_api_v1_ejemplares__ejemplar_id__estado_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ejemplar_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EjemplarEstadoUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EjemplarDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    enviar_a_reparacion_endpoint_api_v1_ejemplares__ejemplar_id__reparacion_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ejemplar_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EjemplarInventarioDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reincorporar_endpoint_api_v1_ejemplares__ejemplar_id__reincorporacion_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ejemplar_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EjemplarInventarioDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    marcar_inutilizable_endpoint_api_v1_ejemplares__ejemplar_id__inutilizable_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ejemplar_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EjemplarInventarioDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listar_prestamos_api_v1_prestamos_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PrestamoListadoDTO"][];
+                };
+            };
+        };
+    };
+    crear_prestamo_endpoint_api_v1_prestamos_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PrestamoCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PrestamoDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listar_prestamos_mios_api_v1_prestamos_mios_get: {
+        parameters: {
+            query: {
+                socio_id: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PrestamoListadoDTO"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listar_prestamos_vencidos_api_v1_prestamos_vencidos_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PrestamoListadoDTO"][];
+                };
+            };
+        };
+    };
+    devolver_prestamo_endpoint_api_v1_prestamos__prestamo_id__devolucion_put: {
+        parameters: {
+            query: {
+                /** @description Sede donde el socio devuelve el ejemplar */
+                sede_id: number;
+                /** @description Usuario bibliotecario/empleado que recibe la devolución */
+                responsable_devolucion_id: number;
+                /** @description Devuelto con daños menores: va a reparación y suspende al socio */
+                con_danios?: boolean;
+            };
+            header?: never;
+            path: {
+                prestamo_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PrestamoDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    renovar_prestamo_endpoint_api_v1_prestamos__prestamo_id__renovacion_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                prestamo_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PrestamoDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    marcar_perdido_endpoint_api_v1_prestamos__prestamo_id__perdida_put: {
+        parameters: {
+            query: {
+                /** @description Usuario bibliotecario/empleado que da por perdido el ejemplar */
+                responsable_id: number;
+            };
+            header?: never;
+            path: {
+                prestamo_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PrestamoDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reponer_libro_endpoint_api_v1_prestamos__prestamo_id__reposicion_put: {
+        parameters: {
+            query: {
+                /** @description Usuario bibliotecario/empleado que recibe la reposición */
+                responsable_id: number;
+            };
+            header?: never;
+            path: {
+                prestamo_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EjemplarCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PrestamoDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listar_remitos_endpoint_api_v1_remitos_get: {
+        parameters: {
+            query?: {
+                /** @description Filtrar por estado (si no se pasa, todos) */
+                estado?: components["schemas"]["EstadoRemito"] | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RemitoListadoDTO"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    crear_remito_endpoint_api_v1_remitos_post: {
+        parameters: {
+            query: {
+                /** @description Usuario que da de alta el remito */
+                responsable_creacion_id: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RemitoCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RemitoDetalleDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listar_de_despacho_endpoint_api_v1_remitos_de_despacho_get: {
+        parameters: {
+            query?: {
+                /** @description Solo los remitos CREADO cuyo origen es esta sede */
+                sede_id?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RemitoListadoDTO"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listar_de_recepcion_endpoint_api_v1_remitos_de_recepcion_get: {
+        parameters: {
+            query?: {
+                /** @description Solo los remitos EN_TRANSITO cuyo destino es esta sede */
+                sede_id?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RemitoListadoDTO"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listar_con_incidencia_endpoint_api_v1_remitos_con_incidencia_get: {
+        parameters: {
+            query?: {
+                /** @description Solo los remitos con incidencia cuyo destino es esta sede */
+                sede_id?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RemitoListadoDTO"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    obtener_remito_endpoint_api_v1_remitos__remito_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                remito_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RemitoDetalleDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    despacho_remito_endpoint_api_v1_remitos__remito_id__despacho_put: {
+        parameters: {
+            query: {
+                /** @description Usuario que despacha (bibliotecario) */
+                responsable_despacho_id: number;
+            };
+            header?: never;
+            path: {
+                remito_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RemitoDetalleDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    recepcion_remito_endpoint_api_v1_remitos__remito_id__recepcion_put: {
+        parameters: {
+            query: {
+                /** @description Usuario que recibe (bibliotecario) */
+                responsable_recepcion_id: number;
+                /** @description Observaciones libres de la recepción */
+                observaciones?: string | null;
+            };
+            header?: never;
+            path: {
+                remito_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["IncidenciaItemDTO"][] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RemitoDetalleDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    crear_reserva_endpoint_api_v1_reservas_post: {
+        parameters: {
+            query: {
+                /** @description Usuario que da de alta la reserva (mostrador o sistema) */
+                responsable_creacion_id: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReservaCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReservaDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listar_mios_endpoint_api_v1_reservas_mios_get: {
+        parameters: {
+            query: {
+                /** @description Socio cuyas reservas se muestran */
+                socio_id: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReservaDTO"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listar_pendientes_endpoint_api_v1_reservas_pendientes_get: {
+        parameters: {
+            query?: {
+                /** @description Filtrar por libro (cola de espera del título) */
+                libro_id?: number | null;
+                /** @description Filtrar por sede de retiro */
+                sede_id?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReservaDTO"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listar_listas_para_retiro_endpoint_api_v1_reservas_listas_para_retiro_get: {
+        parameters: {
+            query: {
+                /** @description Sede del mostrador (sede de retiro) */
+                sede_id: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReservaDTO"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    eta_reserva_endpoint_api_v1_reservas_eta_get: {
+        parameters: {
+            query: {
+                /** @description Libro por el que se pregunta */
+                libro_id: number;
+                /** @description Sede en que el socio retiraría */
+                sede_retiro_id: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReservaEtaDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancelar_reserva_endpoint_api_v1_reservas__reserva_id__delete: {
+        parameters: {
+            query: {
+                /** @description Usuario que cancela (mostrador o socios) */
+                responsable_cancelacion_id: number;
+            };
+            header?: never;
+            path: {
+                reserva_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReservaDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    procesar_vencimientos_endpoint_api_v1_reservas_procesar_vencimientos_post: {
+        parameters: {
+            query: {
+                /** @description Usuario que dispara el procesamiento (admin/bibliotecario) */
+                responsable_proceso_id: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReservaDTO"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    retira_reserva_endpoint_api_v1_reservas__reserva_id__retira_post: {
+        parameters: {
+            query: {
+                /** @description Sede donde el socio retira (debe ser la sede de retiro de la reserva) */
+                sede_id: number;
+                /** @description Usuario que confirma el retiro (bibliotecario) */
+                responsable_retiro_id: number;
+                /** @description Tipo de préstamo que nace del retiro */
+                tipo?: components["schemas"]["TipoPrestamo"];
+            };
+            header?: never;
+            path: {
+                reserva_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PrestamoDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listar_sanciones_endpoint_api_v1_sanciones_get: {
+        parameters: {
+            query?: {
+                /** @description Filtrar por socio (si no se pasa, todas las activas) */
+                socio_id?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SancionDTO"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    crear_sancion_endpoint_api_v1_sanciones_post: {
+        parameters: {
+            query: {
+                /** @description Usuario bibliotecario/admin que aplica la sanción */
+                responsable_id: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SancionCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SancionDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listar_sanciones_socio_endpoint_api_v1_sanciones__socio_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                socio_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SancionDTO"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    levantar_sancion_endpoint_api_v1_sanciones__sancion_id__levantar_put: {
+        parameters: {
+            query: {
+                /** @description Usuario bibliotecario/admin que levanta la sanción */
+                responsable_id: number;
+            };
+            header?: never;
+            path: {
+                sancion_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SancionDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    abonar_multa_endpoint_api_v1_sanciones__sancion_id__abonar_put: {
+        parameters: {
+            query: {
+                /** @description Usuario bibliotecario/admin que registra el pago */
+                responsable_id: number;
+            };
+            header?: never;
+            path: {
+                sancion_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SancionDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listar_sedes_api_v1_sedes_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SedeDTO"][];
+                };
+            };
+        };
+    };
+    login_api_v1_auth_login_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoginRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TokenDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    me_api_v1_auth_me_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeDTO"];
+                };
+            };
+        };
+    };
+    actualizar_mi_perfil_api_v1_auth_me_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActualizarPerfilRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    registro_socio_api_v1_auth_registro_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegistroSocioRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cambiar_mi_password_api_v1_auth_me_password_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CambiarPasswordRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    buscar_socios_endpoint_api_v1_socios_get: {
+        parameters: {
+            query?: {
+                /** @description Nombre, apellido o DNI (búsqueda parcial) */
+                q?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SocioDTO"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listar_bibliotecarios_endpoint_api_v1_usuarios_bibliotecarios_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EmpleadoListadoDTO"][];
+                };
+            };
+        };
+    };
+    registrar_bibliotecario_endpoint_api_v1_usuarios_bibliotecarios_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegistroBibliotecarioRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EmpleadoListadoDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    mis_notificaciones_api_v1_notificaciones_mios_get: {
+        parameters: {
+            query: {
+                usuario_id: number;
+                solo_no_leidas?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificacionDTO"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cantidad_no_leidas_api_v1_notificaciones_mios_no_leidas_cantidad_get: {
+        parameters: {
+            query: {
+                usuario_id: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    marcar_leida_api_v1_notificaciones__notificacion_id__leida_put: {
+        parameters: {
+            query: {
+                usuario_id: number;
+            };
+            header?: never;
+            path: {
+                notificacion_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificacionDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    marcar_todas_leidas_api_v1_notificaciones_mios_leidas_put: {
+        parameters: {
+            query: {
+                usuario_id: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */

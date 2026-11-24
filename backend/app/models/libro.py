@@ -1,7 +1,7 @@
 from datetime import date
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, ForeignKey, String, Table
+from sqlalchemy import Column, ForeignKey, String, Table, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, BajaLogicaMixin
@@ -29,6 +29,7 @@ class Libro(Base, BajaLogicaMixin):
     id: Mapped[int] = mapped_column(primary_key=True)
     nombre: Mapped[str] = mapped_column(String(200))
     isbn: Mapped[str | None] = mapped_column(String(20), unique=True)
+    sinopsis: Mapped[str | None] = mapped_column(Text)
     cant_paginas: Mapped[int | None]
     editorial: Mapped[str | None] = mapped_column(String(100))
     fecha_publicacion: Mapped[date | None]

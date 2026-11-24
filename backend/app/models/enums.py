@@ -61,3 +61,4 @@ class NotificacionTipo(enum.Enum):
     SANCION_APLICADA = "SANCION_APLICADA"            # se le aplicó una sanción
     SANCION_LEVANTADA = "SANCION_LEVANTADA"          # se levantó una sanción
     EJEMPLAR_ASIGNADO = "EJEMPLAR_ASIGNADO"          # le asignaron un ejemplar para retiro
+    PASSWORD_REESTABLECIDA = "PASSWORD_REESTABLECIDA"  # un admin le blanqueó la contraseña

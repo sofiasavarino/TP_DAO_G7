@@ -102,7 +102,7 @@ export default function SancionesPage({ sanciones, prestamos, cargando, error, o
                 )}
                 {s.tipo === SancionTipo.REPOSICION && (
                   <p className="fine-alert">
-                    Para volver a asociarte tenés que reponer una copia del libro (igual o posterior edición) en una sede.
+                    Para volver a asociarte tenés que reponer una copia del libro (igual o posterior edición) en una sede, o devolver el ejemplar original y abonar la multa correspondiente.
                   </p>
                 )}
                 {prestamo && (
@@ -126,10 +126,10 @@ export default function SancionesPage({ sanciones, prestamos, cargando, error, o
 
       <h3 className="list-title">Cómo se sanciona</h3>
       <ul className="rules">
-        <li>Devolución fuera de plazo: multa de $5.000 más un 2% diario acumulado; al abonarla, 15 días de suspensión.</li>
+        <li>Devolución fuera de plazo: se debe abonar una multa que aumenta conforme pasa el tiempo; al abonarla, 15 días de suspensión.</li>
         <li>Libro devuelto con daños menores (reparables): suspensión de 15 días.</li>
-        <li>Daños mayores (irreparables): multa del 100% del costo del libro y suspensión hasta abonarla.</li>
-        <li>Más de 2 meses de atraso: el libro se da por perdido y el socio se da de baja hasta reponerlo.</li>
+        <li>Daños mayores (irreparables): el socio queda de baja hasta reponer el libro (igual o edición posterior).</li>
+        <li>Más de 2 meses de atraso: el libro se da por perdido y el socio se da de baja hasta reponerlo (igual o edición posterior) o devolverlo y abonar la multa.</li>
       </ul>
     </section>
   );

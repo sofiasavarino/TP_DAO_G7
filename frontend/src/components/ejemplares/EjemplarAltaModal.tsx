@@ -186,13 +186,25 @@ export default function EjemplarAltaModal({
           )}
 
           <div className="modal-actions">
-            <button type="button" className="ghost-btn" onClick={onCerrar} disabled={guardando}>
-              Cancelar
-            </button>
             <button type="submit" className="confirm-reservation" disabled={guardando}>
               {guardando ? 'REGISTRANDO…' : cantidad === 1 ? 'REGISTRAR EJEMPLAR' : `REGISTRAR ${cantidad} EJEMPLARES`}
             </button>
           </div>
+            <button type="button" className="ghost-btn" style={{
+                    width: '100%',
+                    padding: '14px 18px',
+                    fontFamily: 'inherit',
+                    fontSize: 13,
+                    fontWeight: 700,
+                    borderRadius: 0,
+                    background: '#e5e2dc',
+                    color: '#3d433f',
+                    border: '1px solid #c9c4ba',
+                    cursor: 'pointer',
+                  }} onClick={onCerrar} disabled={guardando}>
+              Cancelar
+            </button>
+            
         </form>
       </section>
     </div>
