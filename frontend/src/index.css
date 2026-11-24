@@ -1485,6 +1485,8 @@ footer > span {
 .libro-form-campos input:not(#autor-input) { border: 1px solid rgba(29, 36, 32, .25); border-radius: 8px; padding: 11px 13px; background: #fff; font-weight: 400; color: var(--ink); min-width: 0; }
 .libro-form-campos input:focus { outline: 2px solid var(--green); outline-offset: 1px; }
 .libro-form-campos input[aria-invalid="true"] { border-color: var(--rust); }
+.libro-form-campos textarea { border: 1px solid rgba(29, 36, 32, .25); border-radius: 8px; padding: 11px 13px; background: #fff; font-weight: 400; color: var(--ink); min-width: 0; resize: vertical; }
+.libro-form-campos textarea:focus { outline: 2px solid var(--green); outline-offset: 1px; }
 .campo-error { color: #8a3a1e; font-weight: 600; font-size: 12px; }
 .chips-input { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-height: 46px; padding: 6px 8px; border: 1px solid rgba(29, 36, 32, .25); border-radius: 8px; background: #fff; cursor: text; }
 .chips-input:focus-within { outline: 2px solid var(--green); outline-offset: 1px; }

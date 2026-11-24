@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.config.database import get_session
+from app.controllers.dependencies import BIBLIOTECARIO, get_current_user, require_roles
 from app.dtos.prestamo_dto import PrestamoDTO
 from app.dtos.reserva_dto import ReservaCreate, ReservaDTO, ReservaEtaDTO
 from app.exceptions import BibliotecaError, LibroNoEncontrado, RemitoNoEncontrado, ReservaNoEncontrada
@@ -17,7 +18,9 @@ from app.services.reserva_service import (
     procesar_vencimientos,
 )
 
-reserva_router = APIRouter(prefix="/reservas", tags=["reservas"])
+reserva_router = APIRouter(
+    prefix="/reservas", tags=["reservas"], dependencies=[Depends(get_current_user)]
+)
 
 
 def _mapear_excepcion(e: Exception) -> HTTPException:
@@ -57,7 +60,10 @@ def listar_mios_endpoint(
         raise _mapear_excepcion(e) from e
 
 
-@reserva_router.get("/pendientes", response_model=list[ReservaDTO])
+@reserva_router.get(
+    "/pendientes", response_model=list[ReservaDTO],
+    dependencies=[Depends(require_roles(BIBLIOTECARIO))],
+)
 def listar_pendientes_endpoint(
     libro_id: int | None = Query(None, description="Filtrar por libro (cola de espera del título)"),
     sede_id: int | None = Query(None, description="Filtrar por sede de retiro"),
@@ -67,7 +73,10 @@ def listar_pendientes_endpoint(
     return listar_pendientes(session, libro_id=libro_id, sede_id=sede_id)
 
 
-@reserva_router.get("/listas-para-retiro", response_model=list[ReservaDTO])
+@reserva_router.get(
+    "/listas-para-retiro", response_model=list[ReservaDTO],
+    dependencies=[Depends(require_roles(BIBLIOTECARIO))],
+)
 def listar_listas_para_retiro_endpoint(
     sede_id: int = Query(..., description="Sede del mostrador (sede de retiro)"),
     session: Session = Depends(get_session),
@@ -108,7 +117,10 @@ def cancelar_reserva_endpoint(
     return ReservaDTO.model_validate(reserva)
 
 
-@reserva_router.post("/procesar-vencimientos", response_model=list[ReservaDTO])
+@reserva_router.post(
+    "/procesar-vencimientos", response_model=list[ReservaDTO],
+    dependencies=[Depends(require_roles(BIBLIOTECARIO))],
+)
 def procesar_vencimientos_endpoint(
     responsable_proceso_id: int = Query(..., description="Usuario que dispara el procesamiento (admin/bibliotecario)"),
     session: Session = Depends(get_session),
@@ -126,7 +138,10 @@ def procesar_vencimientos_endpoint(
     return [ReservaDTO.model_validate(r) for r in vencidas]
 
 
-@reserva_router.post("/{reserva_id}/retira", response_model=PrestamoDTO, status_code=201)
+@reserva_router.post(
+    "/{reserva_id}/retira", response_model=PrestamoDTO, status_code=201,
+    dependencies=[Depends(require_roles(BIBLIOTECARIO))],
+)
 def retira_reserva_endpoint(
     reserva_id: int,
     sede_id: int = Query(..., description="Sede donde el socio retira (debe ser la sede de retiro de la reserva)"),

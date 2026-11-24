@@ -1,7 +1,7 @@
 """Endpoints de notificaciones del usuario logueado.
 
-Todavía no hay autenticación: el `usuario_id` llega como query param (`?usuario_id=3`).
-Cuando exista el login, se reemplaza ese parámetro por el usuario logueado.
+Requieren sesión: el `usuario_id` se pasa como query param por compatibilidad con el front
+hasta que se reemplace por el usuario del token en el service.
 
 Rutas finales (con el prefijo general /api/v1 al incluir el router):
     GET /api/v1/notificaciones/mios
@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 
 # AJUSTAR al nombre real de la dependencia que da la sesión (commit al final):
 from app.config.database import get_session
+from app.controllers.dependencies import get_current_user
 
 from app.dtos.notificacion_dto import NotificacionDTO
 from app.notifications import notificacion_service
@@ -22,7 +23,9 @@ from app.repositories.notificacion_repository import NotificacionRepository
 
 notificacion_repo = NotificacionRepository()
 
-router = APIRouter(prefix="/notificaciones", tags=["notificaciones"])
+router = APIRouter(
+    prefix="/notificaciones", tags=["notificaciones"], dependencies=[Depends(get_current_user)]
+)
 
 
 @router.get("/mios", response_model=list[NotificacionDTO])

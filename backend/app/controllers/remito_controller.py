@@ -2,6 +2,7 @@ from fastapi import APIRouter, Body, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.config.database import get_session
+from app.controllers.dependencies import BIBLIOTECARIO, require_roles
 from app.dtos.remito_dto import IncidenciaItemDTO, RemitoCreate, RemitoDetalleDTO, RemitoListadoDTO
 from app.exceptions import BibliotecaError, RemitoNoEncontrado
 from app.models.enums import EstadoRemito
@@ -17,7 +18,10 @@ from app.services.remito_service import (
     to_detalle,
 )
 
-remito_router = APIRouter(prefix="/remitos", tags=["remitos"])
+remito_router = APIRouter(
+    prefix="/remitos", tags=["remitos"],
+    dependencies=[Depends(require_roles(BIBLIOTECARIO))],
+)
 
 
 def _mapear_excepcion(e: Exception) -> HTTPException:

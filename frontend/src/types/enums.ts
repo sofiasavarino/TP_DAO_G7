@@ -61,7 +61,7 @@ export enum SocioEstado {
 export enum SancionTipo {
   MULTA = 'MULTA',
   SUSPENSION = 'SUSPENSION',
-  /** Baja del socio hasta que reponga el libro perdido */
+  /** Baja del socio hasta regularizar el libro perdido: reponerlo (igual o edición posterior) o devolverlo y pagar la multa. */
   REPOSICION = 'REPOSICION',
 }
 

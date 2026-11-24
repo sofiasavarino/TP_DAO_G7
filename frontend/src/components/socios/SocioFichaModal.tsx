@@ -556,24 +556,17 @@ export default function SocioFichaModal({ socio, usuarioId, onCerrar, onCambio }
                   <strong>
                     {s.tipo === SancionTipo.MULTA && s.monto != null && pesos(s.monto)}
                     {s.tipo === SancionTipo.SUSPENSION && s.dias_suspension != null && `${s.dias_suspension} días`}
-                    {s.tipo === 'REPOSICION' && 'Hasta reponer el libro'}
+                    {s.tipo === SancionTipo.REPOSICION && 'Hasta regularizar el libro'}
                   </strong>
                   <small>
                     {s.motivo} · Préstamo {numeroDe(s.prestamo_id)} · desde {formatearFecha(s.fecha_inicio)}
                     {s.fecha_fin ? ` hasta ${formatearFecha(s.fecha_fin)}` : ''}
                   </small>
                 </div>
-                {s.tipo === 'REPOSICION' ? (
-                  <small className="muted soc-nota">Se levanta al reponer el libro</small>
+                {s.tipo === SancionTipo.REPOSICION ? (
+                  <small className="muted soc-nota">Se levanta al reponer el libro o al devolverlo y pagar la multa</small>
                 ) : (
-                  <button
-                    type="button"
-                    className="inv-accion"
-                    onClick={() => {
-                      setError(null);
-                      setSancionALevantar(s);
-                    }}
-                  >
+                  <button className="inv-accion" onClick={() => setSancionALevantar(s)}>
                     Levantar
                   </button>
                 )}
@@ -943,6 +936,11 @@ function SancionForm({
           ))}
         </div>
       </div>
+
+      <p className="muted">
+        La baja por libro perdido (REPOSICIÓN) no se aplica desde este formulario: se registra al dar por perdido el
+        préstamo y deja al socio de baja hasta reponer el libro o devolverlo y abonar la multa.
+      </p>
 
       <div className="ejemplar-form-fila">
         <label className="campo">
