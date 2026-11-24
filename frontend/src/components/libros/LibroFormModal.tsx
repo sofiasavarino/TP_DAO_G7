@@ -25,6 +25,7 @@ interface Campos {
   cant_paginas: string;
   fecha_publicacion: string;
   imagen_url: string;
+  sinopsis: string;
 }
 
 const VACIO: Campos = {
@@ -36,6 +37,7 @@ const VACIO: Campos = {
   cant_paginas: '',
   fecha_publicacion: '',
   imagen_url: '',
+  sinopsis: '',
 };
 
 function desdeLibro(l: Libro): Campos {
@@ -48,6 +50,7 @@ function desdeLibro(l: Libro): Campos {
     cant_paginas: l.cant_paginas != null ? String(l.cant_paginas) : '',
     fecha_publicacion: l.fecha_publicacion ?? '',
     imagen_url: l.imagen_url ?? '',
+    sinopsis: l.sinopsis ?? '',
   };
 }
 
@@ -61,6 +64,7 @@ function desdeGoogle(r: LibroGoogle): Campos {
     cant_paginas: r.cant_paginas != null ? String(r.cant_paginas) : '',
     fecha_publicacion: r.fecha_publicacion ?? '',
     imagen_url: r.imagen_url ?? '',
+    sinopsis: r.sinopsis ?? '',
   };
 }
 
@@ -158,6 +162,7 @@ export default function LibroFormModal({ libro, librosExistentes, onCerrar, onGu
       cant_paginas: campos.cant_paginas.trim() ? Number(campos.cant_paginas) : null,
       fecha_publicacion: campos.fecha_publicacion || null,
       imagen_url: textoONull(campos.imagen_url),
+      sinopsis: textoONull(campos.sinopsis),
     };
 
     setGuardando(true);
@@ -322,6 +327,16 @@ export default function LibroFormModal({ libro, librosExistentes, onCerrar, onGu
                   aria-invalid={!!errores.imagen_url}
                 />
                 {errores.imagen_url && <small className="campo-error">{errores.imagen_url}</small>}
+              </label>
+
+              <label className="full">
+                Sinopsis
+                <textarea
+                  rows={4}
+                  value={campos.sinopsis}
+                  onChange={(e) => set('sinopsis', e.target.value)}
+                  placeholder="Breve descripción del libro…"
+                />
               </label>
             </div>
           </div>

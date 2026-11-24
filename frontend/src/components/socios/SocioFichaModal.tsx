@@ -563,19 +563,10 @@ export default function SocioFichaModal({ socio, usuarioId, onCerrar, onCambio }
                     {s.fecha_fin ? ` hasta ${formatearFecha(s.fecha_fin)}` : ''}
                   </small>
                 </div>
-                {s.tipo === 'REPOSICION' ? (
-                  <small className="muted soc-nota">Se levanta al reponer el libro</small>
-                ) : aLevantar === s.id ? (
-                  <span className="inv-acciones">
-                    <button className="inv-accion" onClick={() => setALevantar(null)} disabled={levantando}>
-                      No
-                    </button>
-                    <button className="inv-accion ok" onClick={() => void levantar(s)} disabled={levantando}>
-                      {levantando ? 'Levantando…' : 'Sí, levantar'}
-                    </button>
-                  </span>
+                {s.tipo === SancionTipo.REPOSICION ? (
+                  <small className="muted soc-nota">Se levanta al reponer el libro o al devolverlo y pagar la multa</small>
                 ) : (
-                  <button className="inv-accion" onClick={() => setALevantar(s.id)}>
+                  <button className="inv-accion" onClick={() => setSancionALevantar(s)}>
                     Levantar
                   </button>
                 )}
