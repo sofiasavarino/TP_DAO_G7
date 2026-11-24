@@ -23,16 +23,64 @@ function mensajeDeError(e: unknown, porDefecto: string): string {
   return `${porDefecto} Verificá que el backend esté levantado.`;
 }
 
+/** Genera el próximo legajo correlativo a partir de los existentes (ej. BIB-001, BIB-002...). */
+function generarProximoLegajo(personal: EmpleadoListado[]): string {
+  let maxNum = 0;
+  let prefijo = 'BIB-';
+  let digitos = 3;
+
+  for (const p of personal) {
+    const match = p.legajo.trim().match(/^([A-Za-z-]*?)(\d+)$/);
+    if (match) {
+      const n = Number(match[2]);
+      if (n >= maxNum) {
+        maxNum = n;
+        if (match[1]) prefijo = match[1];
+        digitos = Math.max(3, match[2].length);
+      }
+    }
+  }
+
+  return `${prefijo}${String(maxNum + 1).padStart(digitos, '0')}`;
+}
+
+// function validar(c: Campos): Errores {
+//   const e: Errores = {};
+//   if (!c.nombre.trim()) e.nombre = 'Obligatorio.';
+//   if (!c.apellido.trim()) e.apellido = 'Obligatorio.';
+//   if (!/^\S+@\S+\.\S+$/.test(c.email.trim())) e.email = 'Email inválido.';
+//   if (!c.legajo.trim()) e.legajo = 'Obligatorio.';
+//   if (!c.sede_id) e.sede_id = 'Elegí una sede.';
+//   if (!/^[A-Za-z0-9._-]{3,50}$/.test(c.nombre_usuario))
+//     e.nombre_usuario = '3 a 50 caracteres: letras, números, punto, guion o guion bajo.';
+//   if (c.password.length < 8) e.password = 'Al menos 8 caracteres.';
+//   return e;
+// }
+
+const SOLO_LETRAS = /^[A-Za-zÁÉÍÓÚáéíóúÑñÜü\s]+$/;
+const EMAIL_VALIDO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 function validar(c: Campos): Errores {
   const e: Errores = {};
-  if (!c.nombre.trim()) e.nombre = 'Obligatorio.';
-  if (!c.apellido.trim()) e.apellido = 'Obligatorio.';
-  if (!/^\S+@\S+\.\S+$/.test(c.email.trim())) e.email = 'Email inválido.';
-  if (!c.legajo.trim()) e.legajo = 'Obligatorio.';
-  if (!c.sede_id) e.sede_id = 'Elegí una sede.';
+  const nombre = c.nombre.trim();
+  const apellido = c.apellido.trim();
+  const email = c.email.trim();
+  if (!nombre) e.nombre = 'Ingresá tu nombre.';
+  else if (!SOLO_LETRAS.test(nombre)) e.nombre = 'El nombre solo puede contener letras.';
+
+  if (!apellido) e.apellido = 'Ingresá tu apellido.';
+  else if (!SOLO_LETRAS.test(apellido)) e.apellido = 'El apellido solo puede contener letras.';
+
+  if (!c.sede_id) e.sede_id = 'Elegí la sede donde vas a retirar los libros.';
+
   if (!/^[A-Za-z0-9._-]{3,50}$/.test(c.nombre_usuario))
-    e.nombre_usuario = '3 a 50 caracteres: letras, números, punto, guion o guion bajo.';
+    e.nombre_usuario = 'Entre 3 y 50 caracteres: letras, números, punto, guion o guion bajo.';
+
   if (c.password.length < 8) e.password = 'Al menos 8 caracteres.';
+
+  if (!email) e.email = 'Ingresá tu correo electrónico.';
+  else if (!EMAIL_VALIDO.test(email))
+    e.email = 'Ingresá un correo electrónico válido (ej. lucia@ejemplo.com).';
   return e;
 }
 
@@ -78,7 +126,10 @@ export default function PersonalPage() {
   }, [aviso]);
 
   const abrirForm = () => {
-    setCampos(VACIO);
+    setCampos({
+      ...VACIO,
+      legajo: generarProximoLegajo(personal),
+    });
     setErrores({});
     setErrorForm(null);
     setFormAbierto(true);
@@ -128,11 +179,18 @@ export default function PersonalPage() {
     }
   };
 
-  const campo = (nombre: keyof Campos, etiqueta: string, tipo = 'text', autoComplete = 'off') => (
+  const campo = (
+    nombre: keyof Campos,
+    etiqueta: string,
+    placeholder: string,
+    tipo = 'text',
+    autoComplete = 'off',
+  ) => (
     <label>
       {etiqueta}
       <input
         type={tipo}
+        placeholder={placeholder}
         autoComplete={autoComplete}
         value={campos[nombre]}
         onChange={cambiar(nombre)}
@@ -249,10 +307,32 @@ export default function PersonalPage() {
 
             <form className="libro-form" onSubmit={guardar} noValidate>
               <div className="libro-form-campos">
-                {campo('nombre', 'Nombre')}
-                {campo('apellido', 'Apellido')}
-                {campo('email', 'Email', 'email')}
-                {campo('legajo', 'Legajo')}
+                {campo('nombre', 'Nombre', 'Ej: Lucía')}
+                {campo('apellido', 'Apellido', 'Ej: Méndez')}
+                {campo('email', 'Email', 'Ej: lucia.mendez@hermes.org', 'email')}
+
+                <div>
+                  <span style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 6 }}>
+                    Legajo <small className="muted" style={{ fontWeight: 400 }}>(autogenerado)</small>
+                  </span>
+                  <div
+                    className="mono"
+                    aria-label="Legajo asignado automáticamente"
+                    style={{
+                      padding: '12px 14px',
+                      border: '1px solid #d4ccbf',
+                      borderRadius: 10,
+                      background: 'rgba(29, 36, 32, 0.04)',
+                      color: 'var(--ink)',
+                      fontSize: 14,
+                      fontWeight: 600,
+                    }}
+                  >
+                    {campos.legajo}
+                  </div>
+                  {errores.legajo && <span className="campo-error">{errores.legajo}</span>}
+                </div>
+
                 <label className="full">
                   Sede
                   <select
@@ -269,8 +349,9 @@ export default function PersonalPage() {
                   </select>
                   {errores.sede_id && <span className="campo-error">{errores.sede_id}</span>}
                 </label>
-                {campo('nombre_usuario', 'Usuario', 'text', 'off')}
-                {campo('password', 'Contraseña inicial', 'password', 'new-password')}
+
+                {campo('nombre_usuario', 'Usuario', 'Ej: lucia.mendez', 'text', 'off')}
+                {campo('password', 'Contraseña inicial', 'Mínimo 8 caracteres', 'password', 'new-password')}
               </div>
 
               {errorForm && (
@@ -279,12 +360,40 @@ export default function PersonalPage() {
                 </div>
               )}
 
-              <div className="modal-actions">
-                <button type="button" className="ghost-btn" onClick={() => setFormAbierto(false)}>
-                  Cancelar
-                </button>
-                <button type="submit" className="confirm-reservation" disabled={guardando}>
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 10,
+                  marginTop: 22,
+                }}
+              >
+                <button
+                  type="submit"
+                  className="confirm-reservation"
+                  disabled={guardando}
+                  style={{ width: '100%', marginTop: 0, borderRadius: 0 }}
+                >
                   {guardando ? 'CREANDO…' : 'CREAR CUENTA'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormAbierto(false)}
+                  disabled={guardando}
+                  style={{
+                    width: '100%',
+                    padding: '14px 18px',
+                    fontFamily: 'inherit',
+                    fontSize: 13,
+                    fontWeight: 700,
+                    borderRadius: 0,
+                    background: '#e5e2dc',
+                    color: '#3d433f',
+                    border: '1px solid #c9c4ba',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Cancelar
                 </button>
               </div>
             </form>
