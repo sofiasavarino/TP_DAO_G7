@@ -33,6 +33,7 @@ def to_me_dto(usuario: Usuario) -> MeDTO:
     dto = MeDTO.model_validate(usuario)
     dto.nombre = perfil.nombre if perfil else None
     dto.apellido = perfil.apellido if perfil else None
+    dto.telefono = usuario.socio.telefono if usuario.socio else None
     dto.socio_id = usuario.socio.id if usuario.socio else None
     dto.empleado_id = usuario.empleado.id if usuario.empleado else None
     return dto

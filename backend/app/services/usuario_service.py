@@ -25,7 +25,10 @@ from app.repositories.rol_repository import RolRepository
 from app.repositories.sede_repository import SedeRepository
 from app.repositories.socio_repository import SocioRepository
 from app.repositories.usuario_repository import UsuarioRepository
-from app.utils.security import hash_password
+from app.utils.security import hash_password, verify_password
+from app.dtos.auth_dto import ActualizarPerfilRequest, CambiarPasswordRequest
+from app.exceptions.auth import CredencialesInvalidas
+
 
 # Nombres exactos de los roles cargados en seeds.py
 ROL_SOCIO = "Socio"
@@ -116,3 +119,41 @@ def to_empleado_listado_dto(empleado: Empleado) -> EmpleadoListadoDTO:
         sede_nombre=usuario.sede.nombre,
         activo=empleado.activo and usuario.activo,
     )
+
+def actualizar_perfil_socio(
+    session: Session, usuario: Usuario, datos: ActualizarPerfilRequest
+) -> Usuario:
+    """Actualiza usuario, email, teléfono y sede preferida del socio logueado."""
+    nuevo_user = datos.nombre_usuario.strip()
+    nuevo_email = str(datos.email).strip().lower()
+
+    if nuevo_user != usuario.nombre_usuario and usuario_repo.existe_nombre_usuario(
+        session, nuevo_user
+    ):
+        raise DatoDuplicado("nombre_usuario", "Ese nombre de usuario ya está en uso.")
+
+    if nuevo_email != usuario.email and usuario_repo.existe_email(session, nuevo_email):
+        raise DatoDuplicado("email", "Ya hay una cuenta registrada con ese email.")
+
+    if not sede_repo.esta_activa(session, datos.sede_id):
+        raise SedeInvalida("La sede elegida no existe o no está activa.")
+
+    usuario.nombre_usuario = nuevo_user
+    usuario.email = nuevo_email
+    usuario.sede_id = datos.sede_id
+
+    if usuario.socio is not None:
+        usuario.socio.telefono = datos.telefono.strip() if datos.telefono else None
+
+    session.flush()
+    return usuario
+
+
+def cambiar_password_usuario(
+    session: Session, usuario: Usuario, datos: CambiarPasswordRequest
+) -> None:
+    """Verifica la contraseña actual y guarda el nuevo hash Argon2id."""
+    if not verify_password(datos.password_actual, usuario.hash):
+        raise CredencialesInvalidas("La contraseña actual es incorrecta.")
+    usuario.hash = hash_password(datos.password_nueva)
+    session.flush()

@@ -21,4 +21,22 @@ export const usuariosService = {
   /** Solo Administrador. */
   registrarBibliotecario: (payload: RegistroBibliotecarioPayload) =>
     api.post<EmpleadoListado>('/api/v1/usuarios/bibliotecarios', payload),
+
+  actualizarPerfil: (payload: {
+    nombre_usuario: string;
+    email: string;
+    telefono: string | null;
+    sede_id: number;
+  }) =>
+    api.request<UsuarioSesion>('/api/v1/auth/me', {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    }),
+
+  cambiarPassword: (payload: { password_actual: string; password_nueva: string }) =>
+    api.request<void>('/api/v1/auth/me/password', {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    }),
 };
+

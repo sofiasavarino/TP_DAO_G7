@@ -222,16 +222,7 @@ export default function CatalogoPage({
             </div>
           )}
         </div>
-        <label>
-          <span>Ordenar por</span>
-          <select value={orden} onChange={(e) => onOrden(e.target.value as OrdenCatalogo)}>
-            <option value="default">Relevancia</option>
-            <option value="populares">Más prestados</option>
-            <option value="recientes">Más recientes</option>
-            <option value="autor">Autor (A–Z)</option>
-          </select>
-          <Icon name="chevron" size={17} />
-        </label>
+
         <div className="filter-control branch-filter" ref={sedesRef}>
           <span>Disponible en</span>
           <button
@@ -262,11 +253,25 @@ export default function CatalogoPage({
             </div>
           )}
         </div>
+
+        <span className="filter-label" style={{ marginLeft: 'auto' }}>Ordenar por</span>
+          <label>
+            <span>Criterio</span>
+            <select value={orden} onChange={(e) => onOrden(e.target.value as OrdenCatalogo)}>
+              <option value="default">Relevancia</option>
+              <option value="populares">Más prestados</option>
+              <option value="recientes">Más recientes</option>
+              <option value="autor">Autor (A–Z)</option>
+            </select>
+            <Icon name="chevron" size={17} />
+          </label>
+
         {hayFiltros && (
           <button className="clear-filters" onClick={limpiarFiltros}>
             Limpiar
           </button>
         )}
+        
       </section>
 
       {error ? (
