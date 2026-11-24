@@ -14,11 +14,11 @@ class PrestamoCreate(BaseModel):
     """Entrada: lo que manda la vista/controller para dar de alta un préstamo.
 
     La fecha de vencimiento NO la decide el cliente — se calcula en el service
-    como `today() + DIAS_PRESTAMO`."""
+    como `today() + DIAS_PRESTAMO`. El tipo tampoco: el directo es siempre LOCAL y el
+    de una reserva se deriva de si un remito trajo el ejemplar a la sede de retiro."""
 
     socio_id: int
     ejemplar_id: int
-    tipo: TipoPrestamo
     observaciones: str | None = None
 
 

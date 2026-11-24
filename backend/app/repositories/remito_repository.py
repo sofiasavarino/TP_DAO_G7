@@ -5,7 +5,7 @@ from sqlalchemy import Row, func, select
 from sqlalchemy.orm import Session, aliased, selectinload
 
 from app.models.ejemplar import Ejemplar
-from app.models.enums import EstadoRemito
+from app.models.enums import EstadoRemito, MotivoTraslado
 from app.models.remito import Remito, remito_ejemplar
 from app.models.sede import Sede
 from app.repositories.base_repository import BaseRepository
@@ -87,6 +87,31 @@ class RemitoRepository(BaseRepository[Remito]):
             )
         )
         return session.scalars(stmt).first()
+
+    def fue_servida_por_remito(
+        self, session: Session, ejemplar_id: int, sede_destino_id: int, desde: date
+    ) -> bool:
+        """¿Un remito IDA recibido desde `desde` trajo el ejemplar a esa sede?
+
+        Se usa para clasificar el préstamo que nace de una reserva. Sólo cuenta el
+        viaje que pudo habilitar esa reserva: un remito anterior (p. ej. un
+        REBALANCEO o un traslado de otro préstamo) no convierte en interbibliotecario
+        un retiro que se sirvió con un ejemplar ya presente en la sede.
+        """
+        stmt = (
+            select(Remito.id)
+            .join(remito_ejemplar, remito_ejemplar.c.remito_id == Remito.id)
+            .where(
+                remito_ejemplar.c.ejemplar_id == ejemplar_id,
+                Remito.sede_destino_id == sede_destino_id,
+                Remito.sede_origen_id != sede_destino_id,
+                Remito.motivo_traslado == MotivoTraslado.IDA,
+                Remito.estado.in_((EstadoRemito.RECIBIDO, EstadoRemito.CON_INCIDENCIA)),
+                Remito.fecha_recepcion >= desde,
+            )
+            .limit(1)
+        )
+        return session.scalars(stmt).first() is not None
 
     # ---------------------------------------------------------------- reportes
 

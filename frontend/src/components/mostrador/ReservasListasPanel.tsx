@@ -334,7 +334,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ENDPOINTS_PENDIENTES, esEndpointFaltante, mostradorService } from '../../services/mostradorService';
 import { sociosService } from '../../services/sociosService';
 import type { EjemplarInventario } from '../../types/ejemplares';
-import { PrestamoTipo } from '../../types/enums';
 import type { LibroListado } from '../../types/libros';
 import type { ReservaListaRetiro } from '../../types/mostrador';
 import type { Socio } from '../../types/socios';
@@ -588,10 +587,6 @@ function EntregaModal({
   onCerrar: () => void;
   onEntregada: (reservaId: number, aviso: string) => void;
 }) {
-  const tipo =
-    reserva.ejemplar && reserva.ejemplar.sede_origen_id !== sedeId
-      ? PrestamoTipo.INTERBIBLIOTECARIO
-      : PrestamoTipo.LOCAL;
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -605,7 +600,7 @@ function EntregaModal({
     setGuardando(true);
     setError(null);
     try {
-      const prestamo = await mostradorService.entregarReserva(reserva.id, sedeId, usuarioId, tipo);
+      const prestamo = await mostradorService.entregarReserva(reserva.id, sedeId, usuarioId);
       onEntregada(
         reserva.id,
         `Se entregó "${reserva.libroTexto}" a ${reserva.socioTexto}. Préstamo ${prestamo.numero}, vence el ${formatearFecha(prestamo.fecha_vencimiento)}.`,

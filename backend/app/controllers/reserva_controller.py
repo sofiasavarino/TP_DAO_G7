@@ -6,7 +6,6 @@ from app.controllers.dependencies import BIBLIOTECARIO, get_current_user, requir
 from app.dtos.prestamo_dto import PrestamoDTO
 from app.dtos.reserva_dto import ReservaCreate, ReservaDTO, ReservaEtaDTO
 from app.exceptions import BibliotecaError, LibroNoEncontrado, RemitoNoEncontrado, ReservaNoEncontrada
-from app.models.enums import TipoPrestamo
 from app.services.reserva_service import (
     cancelar_reserva,
     crear_reserva,
@@ -146,7 +145,6 @@ def retira_reserva_endpoint(
     reserva_id: int,
     sede_id: int = Query(..., description="Sede donde el socio retira (debe ser la sede de retiro de la reserva)"),
     responsable_retiro_id: int = Query(..., description="Usuario que confirma el retiro (bibliotecario)"),
-    tipo: TipoPrestamo = Query(TipoPrestamo.LOCAL, description="Tipo de préstamo que nace del retiro"),
     session: Session = Depends(get_session),
 ) -> PrestamoDTO:
     try:
@@ -155,7 +153,6 @@ def retira_reserva_endpoint(
             reserva_id,
             sede_id=sede_id,
             usuario_id=responsable_retiro_id,
-            tipo=tipo,
         )
     except Exception as e:  # noqa: BLE001
         raise _mapear_excepcion(e) from e

@@ -7,7 +7,6 @@ import type {
   SancionVigente,
   SocioBusqueda,
 } from '../types/mostrador';
-import type { PrestamoTipo } from '../types/enums';
 
 const PRESTAMOS = '/api/v1/prestamos';
 const RESERVAS = '/api/v1/reservas';
@@ -53,9 +52,9 @@ export const mostradorService = {
     api.get<ReservaListaRetiro[]>(ENDPOINTS_PENDIENTES.reservasListas, { sede_id: sedeId }),
 
   /** El socio retira: la reserva pasa a CUMPLIDA y nace el préstamo (endpoint existente). */
-  entregarReserva: (reservaId: number, sedeId: number, usuarioId: number, tipo: PrestamoTipo) =>
+  entregarReserva: (reservaId: number, sedeId: number, usuarioId: number) =>
     api.post<Prestamo>(
-      `${RESERVAS}/${reservaId}/retira${query({ sede_id: sedeId, responsable_retiro_id: usuarioId, tipo })}`,
+      `${RESERVAS}/${reservaId}/retira${query({ sede_id: sedeId, responsable_retiro_id: usuarioId })}`,
     ),
 
   // ---------------------------------------------------------- F7.2 préstamo directo
