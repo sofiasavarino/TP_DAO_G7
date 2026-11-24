@@ -36,4 +36,5 @@ def to_me_dto(usuario: Usuario) -> MeDTO:
     dto.telefono = usuario.socio.telefono if usuario.socio else None
     dto.socio_id = usuario.socio.id if usuario.socio else None
     dto.empleado_id = usuario.empleado.id if usuario.empleado else None
+    dto.estado_socio = usuario.socio.estado.value if usuario.socio else None
     return dto

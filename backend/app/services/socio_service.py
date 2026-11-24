@@ -27,3 +27,14 @@ def listar_socios(session: Session) -> list[SocioDTO]:
     """Padrón completo (incluye SUSPENDIDO y BAJA), ordenado por apellido y nombre (F8.3)."""
     socios = sorted(socio_repo.list_todos(session), key=lambda s: (s.apellido.lower(), s.nombre.lower()))
     return [SocioDTO.model_validate(s) for s in socios]
+
+
+from app.models.enums import EstadoSocio
+
+def habilitar_socio_cuota(session: Session, socio_id: int) -> SocioDTO:
+    socio = socio_repo.get_by_id(session, socio_id, incluir_inactivos=True)
+    if socio is None:
+        raise ValueError(f"Socio {socio_id} no encontrado")
+    socio.estado = EstadoSocio.ACTIVO
+    session.flush()
+    return SocioDTO.model_validate(socio)

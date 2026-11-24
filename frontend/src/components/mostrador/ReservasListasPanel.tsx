@@ -1,10 +1,12 @@
 // import { useCallback, useEffect, useMemo, useState } from 'react';
 // import { ENDPOINTS_PENDIENTES, esEndpointFaltante, mostradorService } from '../../services/mostradorService';
+// import { sociosService } from '../../services/sociosService';
 // import type { EjemplarInventario } from '../../types/ejemplares';
 // import { PrestamoTipo } from '../../types/enums';
 // import type { LibroListado } from '../../types/libros';
-// import { ETIQUETA_TIPO_PRESTAMO, type ReservaListaRetiro } from '../../types/mostrador';
-// import { diasHasta, formatearFecha, textoVencimiento } from '../../utils/fechas';
+// import type { ReservaListaRetiro } from '../../types/mostrador';
+// import type { Socio } from '../../types/socios';
+// import { addDays, diasHasta, formatearFecha, textoVencimiento } from '../../utils/fechas';
 // import { normalizar } from '../../utils/texto';
 // import AdminIcon from '../admin/AdminIcon';
 // import { mensajeDeError, type Aviso } from './avisos';
@@ -22,10 +24,11 @@
 //   onConteo: (n: number | null) => void;
 // }
 
-// /** Datos de la reserva completados con catálogo e inventario si el backend no los manda. */
+// /** Datos de la reserva completados con catálogo, inventario y padrón de socios. */
 // interface ReservaVista extends ReservaListaRetiro {
 //   libro?: LibroListado;
 //   ejemplar?: EjemplarInventario;
+//   socio?: Socio;
 //   socioTexto: string;
 //   libroTexto: string;
 //   codigoTexto: string;
@@ -46,6 +49,7 @@
 //   onConteo,
 // }: Props) {
 //   const [reservas, setReservas] = useState<ReservaListaRetiro[]>([]);
+//   const [socios, setSocios] = useState<Socio[]>([]);
 //   const [cargando, setCargando] = useState(true);
 //   const [error, setError] = useState<string | null>(null);
 //   const [faltaEndpoint, setFaltaEndpoint] = useState(false);
@@ -57,7 +61,10 @@
 //     setError(null);
 //     setFaltaEndpoint(false);
 //     try {
-//       const lista = await mostradorService.reservasListas(sedeId);
+//       const [lista, listaSocios] = await Promise.all([
+//         mostradorService.reservasListas(sedeId),
+//         sociosService.listar().catch(() => [] as Socio[]),
+//       ]);
 //       // Primero las más urgentes (vencen antes); las de plazo ya vencido van al final
 //       const clave = (r: ReservaListaRetiro) => {
 //         const f = r.fecha_vencimiento_retiro;
@@ -65,6 +72,7 @@
 //       };
 //       lista.sort((a, b) => clave(a).localeCompare(clave(b)));
 //       setReservas(lista);
+//       setSocios(listaSocios);
 //       onConteo(lista.length);
 //     } catch (e) {
 //       onConteo(null);
@@ -84,16 +92,19 @@
 //       reservas.map((r) => {
 //         const libro = libros.find((l) => l.id === r.libro_id);
 //         const ejemplar = ejemplares.find((e) => e.id === r.ejemplar_id);
+//         const socio = socios.find((s) => s.id === r.socio_id);
+//         const nombreCompleto = socio ? `${socio.nombre} ${socio.apellido}` : null;
 //         return {
 //           ...r,
 //           libro,
 //           ejemplar,
-//           socioTexto: r.socio_nombre ?? `Socio N° ${r.socio_id}`,
+//           socio,
+//           socioTexto: r.socio_nombre ?? nombreCompleto ?? `Socio N° ${r.socio_id}`,
 //           libroTexto: r.libro_nombre ?? libro?.nombre ?? ejemplar?.libro.nombre ?? `Libro #${r.libro_id}`,
 //           codigoTexto: r.ejemplar_codigo ?? ejemplar?.codigo_inventario ?? (r.ejemplar_id ? `#${r.ejemplar_id}` : '—'),
 //         };
 //       }),
-//     [reservas, libros, ejemplares],
+//     [reservas, libros, ejemplares, socios],
 //   );
 
 //   const filtradas = useMemo(() => {
@@ -102,7 +113,7 @@
 //     return vistas.filter(
 //       (r) =>
 //         normalizar(r.socioTexto).includes(q) ||
-//         normalizar(r.socio_dni).includes(q) ||
+//         normalizar(r.socio_dni ?? r.socio?.dni).includes(q) ||
 //         String(r.socio_id) === q ||
 //         normalizar(r.libroTexto).includes(q) ||
 //         normalizar(r.codigoTexto).includes(q),
@@ -172,6 +183,7 @@
 //           {filtradas.map((r) => {
 //             const dias = r.fecha_vencimiento_retiro ? diasHasta(r.fecha_vencimiento_retiro) : null;
 //             const urgencia = dias === null ? '' : dias < 0 ? 'vencida' : dias === 0 ? 'hoy' : '';
+//             const dni = r.socio_dni ?? r.socio?.dni;
 //             return (
 //               <li key={r.id} className={urgencia ? `urgente-${urgencia}` : ''}>
 //                 {r.libro?.imagen_url ? (
@@ -185,7 +197,7 @@
 //                   <strong>{r.libroTexto}</strong>
 //                   <span>
 //                     <AdminIcon name="socios" size={14} /> {r.socioTexto}
-//                     {r.socio_dni && <small> · DNI {r.socio_dni}</small>}
+//                     {dni && <small> · DNI {dni}</small>}
 //                   </span>
 //                   <small>
 //                     Ejemplar <b className="mono">{r.codigoTexto}</b> · Reservado el {formatearFecha(r.fecha_reserva)}
@@ -230,7 +242,7 @@
 //   );
 // }
 
-// /** Confirmación de la entrega: elige el tipo de préstamo que nace del retiro. */
+// /** Confirmación de entrega con detalle del cliente y del préstamo. */
 // function EntregaModal({
 //   reserva,
 //   sedeId,
@@ -244,10 +256,10 @@
 //   onCerrar: () => void;
 //   onEntregada: (reservaId: number, aviso: string) => void;
 // }) {
-//   // Si el ejemplar es de otra sede (llegó por remito) el préstamo es interbibliotecario
-//   const sugerido =
-//     reserva.ejemplar && reserva.ejemplar.sede_origen_id !== sedeId ? PrestamoTipo.INTERBIBLIOTECARIO : PrestamoTipo.LOCAL;
-//   const [tipo, setTipo] = useState<PrestamoTipo>(sugerido);
+//   const tipo =
+//     reserva.ejemplar && reserva.ejemplar.sede_origen_id !== sedeId
+//       ? PrestamoTipo.INTERBIBLIOTECARIO
+//       : PrestamoTipo.LOCAL;
 //   const [guardando, setGuardando] = useState(false);
 //   const [error, setError] = useState<string | null>(null);
 
@@ -272,6 +284,19 @@
 //     }
 //   };
 
+//   const dni = reserva.socio_dni ?? reserva.socio?.dni;
+//   const hoy = addDays(0);
+//   const vencimientoEstimado = addDays(15);
+
+//   const filaDato = (etiqueta: string, valor: string, mono = false) => (
+//     <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 13.5 }}>
+//       <span className="muted">{etiqueta}</span>
+//       <strong className={mono ? 'mono' : undefined} style={{ textAlign: 'right' }}>
+//         {valor}
+//       </strong>
+//     </div>
+//   );
+
 //   return (
 //     <div className="reservation-modal-backdrop" role="presentation">
 //       <section className="reservation-modal" role="dialog" aria-modal="true" aria-labelledby="entrega-title">
@@ -279,66 +304,126 @@
 //           <AdminIcon name="close" size={18} />
 //         </button>
 //         <span className="eyebrow">ENTREGA DE RESERVA</span>
-//         <h2 id="entrega-title">¿Entregar el libro?</h2>
+//         <h2 id="entrega-title">Confirmar entrega</h2>
+
 //         <div className="modal-book">
 //           {reserva.libro?.imagen_url && <img src={reserva.libro.imagen_url} alt="" />}
 //           <div>
 //             <strong>{reserva.libroTexto}</strong>
-//             <span>
-//               {reserva.socioTexto} · Ejemplar {reserva.codigoTexto}
-//             </span>
+//             <span>Ejemplar {reserva.codigoTexto}</span>
 //           </div>
 //         </div>
 
-//         <p className="campo-ayuda mos-modal-label">Tipo de préstamo</p>
-//         <div className="pickup-options">
-//           {[PrestamoTipo.LOCAL, PrestamoTipo.INTERBIBLIOTECARIO].map((t) => (
-//             <label key={t} className={tipo === t ? 'selected' : ''}>
-//               <input type="radio" name="tipo-entrega" checked={tipo === t} onChange={() => setTipo(t)} />
-//               <span className="radio-mark" />
-//               <div>
-//                 <strong>{ETIQUETA_TIPO_PRESTAMO[t]}</strong>
-//                 <small className={t === sugerido ? 'available-now' : ''}>
-//                   {t === PrestamoTipo.LOCAL ? 'El ejemplar es de esta sede' : 'El ejemplar llegó de otra sede'}
-//                   {t === sugerido ? ' · sugerido' : ''}
-//                 </small>
-//               </div>
-//             </label>
-//           ))}
+//         <div
+//           style={{
+//             display: 'grid',
+//             gap: 10,
+//             padding: '14px 16px',
+//             border: '1px solid rgba(29, 36, 32, .14)',
+//             background: '#fff',
+//             marginTop: 14,
+//           }}
+//         >
+//           <span
+//             style={{
+//               fontSize: 10.5,
+//               fontWeight: 700,
+//               letterSpacing: '0.14em',
+//               textTransform: 'uppercase',
+//               color: 'var(--rust)',
+//             }}
+//           >
+//             Datos del cliente
+//           </span>
+//           {filaDato('Socio', reserva.socioTexto)}
+//           {filaDato('N° de socio', `#${reserva.socio_id}`, true)}
+//           {dni && filaDato('DNI', dni, true)}
+//           {reserva.socio?.telefono && filaDato('Teléfono', reserva.socio.telefono)}
 //         </div>
 
-//         <p className="ejemplar-resumen mos-resumen">
-//           La reserva queda <b>cumplida</b> y se crea el préstamo a nombre del socio.
-//         </p>
+//         <div
+//           style={{
+//             display: 'grid',
+//             gap: 10,
+//             padding: '14px 16px',
+//             border: '1px solid rgba(29, 36, 32, .14)',
+//             background: '#fff',
+//             marginTop: 12,
+//           }}
+//         >
+//           <span
+//             style={{
+//               fontSize: 10.5,
+//               fontWeight: 700,
+//               letterSpacing: '0.14em',
+//               textTransform: 'uppercase',
+//               color: 'var(--rust)',
+//             }}
+//           >
+//             Datos del préstamo
+//           </span>
+//           {filaDato('Ejemplar', reserva.codigoTexto, true)}
+//           {filaDato('Reservado el', formatearFecha(reserva.fecha_reserva))}
+//           {filaDato('Fecha de retiro', formatearFecha(hoy))}
+//           {filaDato('Devolución estimada (15 días)', formatearFecha(vencimientoEstimado))}
+//         </div>
 
 //         {error && (
-//           <div className="login-error" role="alert">
+//           <div className="login-error" role="alert" style={{ marginTop: 14 }}>
 //             {error}
 //           </div>
 //         )}
 
-//         <div className="modal-actions">
-//           <button className="ghost-btn" onClick={onCerrar} disabled={guardando}>
-//             Cancelar
-//           </button>
-//           <button className="confirm-reservation" onClick={() => void confirmar()} disabled={guardando}>
+//         <div
+//           style={{
+//             display: 'flex',
+//             flexDirection: 'column',
+//             gap: 10,
+//             marginTop: 20,
+//           }}
+//         >
+//           <button
+//             type="button"
+//             className="confirm-reservation"
+//             onClick={() => void confirmar()}
+//             disabled={guardando}
+//             style={{ width: '100%', marginTop: 0, borderRadius: 0 }}
+//           >
 //             {guardando ? 'ENTREGANDO…' : 'CONFIRMAR ENTREGA'}
+//           </button>
+//           <button
+//             type="button"
+//             onClick={onCerrar}
+//             disabled={guardando}
+//             style={{
+//               width: '100%',
+//               padding: '14px 18px',
+//               fontFamily: 'inherit',
+//               fontSize: 13,
+//               fontWeight: 700,
+//               borderRadius: 0,
+//               background: '#e5e2dc',
+//               color: '#3d433f',
+//               border: '1px solid #c9c4ba',
+//               cursor: 'pointer',
+//             }}
+//           >
+//             Cancelar
 //           </button>
 //         </div>
 //       </section>
 //     </div>
 //   );
 // }
-
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ENDPOINTS_PENDIENTES, esEndpointFaltante, mostradorService } from '../../services/mostradorService';
 import { sociosService } from '../../services/sociosService';
 import type { EjemplarInventario } from '../../types/ejemplares';
-import { PrestamoTipo } from '../../types/enums';
+import { PrestamoTipo, SocioEstado } from '../../types/enums';
 import type { LibroListado } from '../../types/libros';
-import type { ReservaListaRetiro } from '../../types/mostrador';
+import { ETIQUETA_TIPO_PRESTAMO, type ReservaListaRetiro } from '../../types/mostrador';
 import type { Socio } from '../../types/socios';
-import { addDays, diasHasta, formatearFecha, textoVencimiento } from '../../utils/fechas';
+import { diasHasta, formatearFecha, textoVencimiento } from '../../utils/fechas';
 import { normalizar } from '../../utils/texto';
 import AdminIcon from '../admin/AdminIcon';
 import { mensajeDeError, type Aviso } from './avisos';
@@ -356,7 +441,7 @@ interface Props {
   onConteo: (n: number | null) => void;
 }
 
-/** Datos de la reserva completados con catálogo, inventario y padrón de socios. */
+/** Datos de la reserva completados con catálogo e inventario si el backend no los manda. */
 interface ReservaVista extends ReservaListaRetiro {
   libro?: LibroListado;
   ejemplar?: EjemplarInventario;
@@ -425,13 +510,12 @@ export default function ReservasListasPanel({
         const libro = libros.find((l) => l.id === r.libro_id);
         const ejemplar = ejemplares.find((e) => e.id === r.ejemplar_id);
         const socio = socios.find((s) => s.id === r.socio_id);
-        const nombreCompleto = socio ? `${socio.nombre} ${socio.apellido}` : null;
         return {
           ...r,
           libro,
           ejemplar,
           socio,
-          socioTexto: r.socio_nombre ?? nombreCompleto ?? `Socio N° ${r.socio_id}`,
+          socioTexto: r.socio_nombre ?? (socio ? `${socio.nombre} ${socio.apellido}` : `Socio N° ${r.socio_id}`),
           libroTexto: r.libro_nombre ?? libro?.nombre ?? ejemplar?.libro.nombre ?? `Libro #${r.libro_id}`,
           codigoTexto: r.ejemplar_codigo ?? ejemplar?.codigo_inventario ?? (r.ejemplar_id ? `#${r.ejemplar_id}` : '—'),
         };
@@ -516,6 +600,7 @@ export default function ReservasListasPanel({
             const dias = r.fecha_vencimiento_retiro ? diasHasta(r.fecha_vencimiento_retiro) : null;
             const urgencia = dias === null ? '' : dias < 0 ? 'vencida' : dias === 0 ? 'hoy' : '';
             const dni = r.socio_dni ?? r.socio?.dni;
+            const sinCuota = r.socio?.estado === SocioEstado.PENDIENTE_CUOTA;
             return (
               <li key={r.id} className={urgencia ? `urgente-${urgencia}` : ''}>
                 {r.libro?.imagen_url ? (
@@ -530,6 +615,11 @@ export default function ReservasListasPanel({
                   <span>
                     <AdminIcon name="socios" size={14} /> {r.socioTexto}
                     {dni && <small> · DNI {dni}</small>}
+                    {sinCuota && (
+                      <span className="mos-plazo hoy" style={{ marginLeft: 6 }}>
+                        Pendiente de cuota social
+                      </span>
+                    )}
                   </span>
                   <small>
                     Ejemplar <b className="mono">{r.codigoTexto}</b> · Reservado el {formatearFecha(r.fecha_reserva)}
@@ -568,38 +658,68 @@ export default function ReservasListasPanel({
           usuarioId={usuarioId}
           onCerrar={() => setAEntregar(null)}
           onEntregada={alEntregar}
+          onCuotaActivada={(socioId) => {
+            setSocios((prev) =>
+              prev.map((s) => (s.id === socioId ? { ...s, estado: SocioEstado.ACTIVO } : s)),
+            );
+            onAviso({
+              tipo: 'ok',
+              texto: `Cuota social registrada: ${aEntregar.socioTexto} ya está habilitado como socio.`,
+            });
+            onCambio();
+          }}
         />
       )}
     </>
   );
 }
 
-/** Confirmación de entrega con detalle del cliente y del préstamo. */
+/** Confirmación de la entrega: elige el tipo de préstamo que nace del retiro. */
 function EntregaModal({
   reserva,
   sedeId,
   usuarioId,
   onCerrar,
   onEntregada,
+  onCuotaActivada,
 }: {
   reserva: ReservaVista;
   sedeId: number;
   usuarioId: number;
   onCerrar: () => void;
   onEntregada: (reservaId: number, aviso: string) => void;
+  onCuotaActivada: (socioId: number) => void;
 }) {
-  const tipo =
-    reserva.ejemplar && reserva.ejemplar.sede_origen_id !== sedeId
-      ? PrestamoTipo.INTERBIBLIOTECARIO
-      : PrestamoTipo.LOCAL;
+  // Si el ejemplar es de otra sede (llegó por remito) el préstamo es interbibliotecario
+  const sugerido =
+    reserva.ejemplar && reserva.ejemplar.sede_origen_id !== sedeId ? PrestamoTipo.INTERBIBLIOTECARIO : PrestamoTipo.LOCAL;
+  const [tipo, setTipo] = useState<PrestamoTipo>(sugerido);
+  const [habilitadoLocal, setHabilitadoLocal] = useState(
+    reserva.socio?.estado !== SocioEstado.PENDIENTE_CUOTA,
+  );
+  const [activandoCuota, setActivandoCuota] = useState(false);
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const onKey = (e: globalThis.KeyboardEvent) => e.key === 'Escape' && !guardando && onCerrar();
+    const onKey = (e: globalThis.KeyboardEvent) => e.key === 'Escape' && !guardando && !activandoCuota && onCerrar();
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [onCerrar, guardando]);
+  }, [onCerrar, guardando, activandoCuota]);
+
+  const cobrarCuota = async () => {
+    setActivandoCuota(true);
+    setError(null);
+    try {
+      await mostradorService.activarSocio(reserva.socio_id);
+      setHabilitadoLocal(true);
+      onCuotaActivada(reserva.socio_id);
+    } catch (e) {
+      setError(mensajeDeError(e, 'No se pudo registrar el pago de la cuota.'));
+    } finally {
+      setActivandoCuota(false);
+    }
+  };
 
   const confirmar = async () => {
     setGuardando(true);
@@ -616,130 +736,91 @@ function EntregaModal({
     }
   };
 
-  const dni = reserva.socio_dni ?? reserva.socio?.dni;
-  const hoy = addDays(0);
-  const vencimientoEstimado = addDays(15);
-
-  const filaDato = (etiqueta: string, valor: string, mono = false) => (
-    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 13.5 }}>
-      <span className="muted">{etiqueta}</span>
-      <strong className={mono ? 'mono' : undefined} style={{ textAlign: 'right' }}>
-        {valor}
-      </strong>
-    </div>
-  );
-
   return (
     <div className="reservation-modal-backdrop" role="presentation">
       <section className="reservation-modal" role="dialog" aria-modal="true" aria-labelledby="entrega-title">
-        <button className="modal-close" onClick={onCerrar} aria-label="Cerrar" disabled={guardando}>
+        <button className="modal-close" onClick={onCerrar} aria-label="Cerrar" disabled={guardando || activandoCuota}>
           <AdminIcon name="close" size={18} />
         </button>
         <span className="eyebrow">ENTREGA DE RESERVA</span>
-        <h2 id="entrega-title">Confirmar entrega</h2>
-
+        <h2 id="entrega-title">¿Entregar el libro?</h2>
         <div className="modal-book">
           {reserva.libro?.imagen_url && <img src={reserva.libro.imagen_url} alt="" />}
           <div>
             <strong>{reserva.libroTexto}</strong>
-            <span>Ejemplar {reserva.codigoTexto}</span>
+            <span>
+              {reserva.socioTexto} · Ejemplar {reserva.codigoTexto}
+            </span>
           </div>
         </div>
 
-        <div
-          style={{
-            display: 'grid',
-            gap: 10,
-            padding: '14px 16px',
-            border: '1px solid rgba(29, 36, 32, .14)',
-            background: '#fff',
-            marginTop: 14,
-          }}
-        >
-          <span
-            style={{
-              fontSize: 10.5,
-              fontWeight: 700,
-              letterSpacing: '0.14em',
-              textTransform: 'uppercase',
-              color: 'var(--rust)',
-            }}
-          >
-            Datos del cliente
-          </span>
-          {filaDato('Socio', reserva.socioTexto)}
-          {filaDato('N° de socio', `#${reserva.socio_id}`, true)}
-          {dni && filaDato('DNI', dni, true)}
-          {reserva.socio?.telefono && filaDato('Teléfono', reserva.socio.telefono)}
+        {!habilitadoLocal && (
+          <div className="mos-alerta aviso" role="alert" style={{ marginBottom: 14 }}>
+            <strong>Aún no es socio: debe abonar la cuota social</strong>
+            <span>
+              Esta persona se registró por la web pero todavía no pagó la cuota de ingreso. Cobrala antes de entregar el libro.
+            </span>
+            <button
+              type="button"
+              className="inv-accion ok"
+              style={{ justifySelf: 'start', marginTop: 6 }}
+              disabled={activandoCuota}
+              onClick={() => void cobrarCuota()}
+            >
+              {activandoCuota ? 'Registrando pago…' : 'Registrar pago de cuota y habilitar'}
+            </button>
+          </div>
+        )}
+
+        <p className="campo-ayuda mos-modal-label">Tipo de préstamo</p>
+        <div className="pickup-options">
+          {[PrestamoTipo.LOCAL, PrestamoTipo.INTERBIBLIOTECARIO].map((t) => (
+            <label key={t} className={tipo === t ? 'selected' : ''}>
+              <input type="radio" name="tipo-entrega" checked={tipo === t} onChange={() => setTipo(t)} />
+              <span className="radio-mark" />
+              <div>
+                <strong>{ETIQUETA_TIPO_PRESTAMO[t]}</strong>
+                <small className={t === sugerido ? 'available-now' : ''}>
+                  {t === PrestamoTipo.LOCAL ? 'El ejemplar es de esta sede' : 'El ejemplar llegó de otra sede'}
+                  {t === sugerido ? ' · sugerido' : ''}
+                </small>
+              </div>
+            </label>
+          ))}
         </div>
 
-        <div
-          style={{
-            display: 'grid',
-            gap: 10,
-            padding: '14px 16px',
-            border: '1px solid rgba(29, 36, 32, .14)',
-            background: '#fff',
-            marginTop: 12,
-          }}
-        >
-          <span
-            style={{
-              fontSize: 10.5,
-              fontWeight: 700,
-              letterSpacing: '0.14em',
-              textTransform: 'uppercase',
-              color: 'var(--rust)',
-            }}
-          >
-            Datos del préstamo
-          </span>
-          {filaDato('Ejemplar', reserva.codigoTexto, true)}
-          {filaDato('Reservado el', formatearFecha(reserva.fecha_reserva))}
-          {filaDato('Fecha de retiro', formatearFecha(hoy))}
-          {filaDato('Devolución estimada (15 días)', formatearFecha(vencimientoEstimado))}
-        </div>
+        <p className="ejemplar-resumen mos-resumen">
+          La reserva queda <b>cumplida</b> y se crea el préstamo a nombre del socio.
+        </p>
 
         {error && (
-          <div className="login-error" role="alert" style={{ marginTop: 14 }}>
+          <div className="login-error" role="alert">
             {error}
           </div>
         )}
 
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 10,
-            marginTop: 20,
-          }}
-        >
+        <div className="modal-actions">
+          
           <button
-            type="button"
             className="confirm-reservation"
-            onClick={() => void confirmar()}
-            disabled={guardando}
             style={{ width: '100%', marginTop: 0, borderRadius: 0 }}
+            onClick={() => void confirmar()}
+            disabled={guardando || !habilitadoLocal}
           >
-            {guardando ? 'ENTREGANDO…' : 'CONFIRMAR ENTREGA'}
+            {guardando ? 'ENTREGANDO…' : !habilitadoLocal ? 'COBRAR CUOTA PRIMERO' : 'CONFIRMAR ENTREGA'}
           </button>
-          <button
-            type="button"
-            onClick={onCerrar}
-            disabled={guardando}
-            style={{
-              width: '100%',
-              padding: '14px 18px',
-              fontFamily: 'inherit',
-              fontSize: 13,
-              fontWeight: 700,
-              borderRadius: 0,
-              background: '#e5e2dc',
-              color: '#3d433f',
-              border: '1px solid #c9c4ba',
-              cursor: 'pointer',
-            }}
-          >
+          <button className="ghost-btn" style={{
+                    width: '100%',
+                    padding: '14px 18px',
+                    fontFamily: 'inherit',
+                    fontSize: 13,
+                    fontWeight: 700,
+                    borderRadius: 0,
+                    background: '#e5e2dc',
+                    color: '#3d433f',
+                    border: '1px solid #c9c4ba',
+                    cursor: 'pointer',
+                  }} onClick={onCerrar} disabled={guardando || activandoCuota}>
             Cancelar
           </button>
         </div>

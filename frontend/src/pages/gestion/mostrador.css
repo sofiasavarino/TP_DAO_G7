@@ -99,3 +99,12 @@
   .mos-situacion-datos { grid-template-columns: 1fr; }
   .mos-situacion-datos > div + div { border-left: 0; border-top: 1px solid rgba(29, 36, 32, .12); }
 }
+
+/* --- Pestañas de los tres bloques --- */
+.mos-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  border-bottom: 1px solid rgba(29, 36, 32, .14);
+  margin-bottom: 22px;
+}

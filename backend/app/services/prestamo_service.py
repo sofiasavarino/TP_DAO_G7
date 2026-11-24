@@ -420,3 +420,15 @@ def reponer_libro(
     session.flush()
     session.refresh(prestamo)
     return prestamo
+
+# Valida si el socio es nuevo y no pago la cuota de la biblio
+def _validar_socio_y_limite(session: Session, socio_id: int):
+    """Socio existe, está activo, sin sanción vigente y sin alcanzar el cupo."""
+    socio = socio_repo.get_by_id(session, socio_id, incluir_inactivos=True)
+    if socio is None:
+        raise ValueError(f"socio {socio_id} no existe")
+
+    if socio.estado != EstadoSocio.ACTIVO:
+        raise SocioSancionado(
+            "El usuario aún no abonó la cuota social o no está activo como socio."
+        )

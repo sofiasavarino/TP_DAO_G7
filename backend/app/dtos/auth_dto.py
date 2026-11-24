@@ -26,6 +26,7 @@ class MeDTO(UsuarioSesionDTO):
     telefono: str | None = None
     socio_id: int | None = None
     empleado_id: int | None = None
+    estado_socio: str | None = None
 
 class ActualizarPerfilRequest(BaseModel):
     nombre_usuario: str = Field(..., min_length=3, max_length=50, pattern=r"^[A-Za-z0-9._-]+$")

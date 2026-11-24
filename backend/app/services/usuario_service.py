@@ -79,7 +79,7 @@ def registrar_socio(session: Session, datos: RegistroSocioRequest) -> Usuario:
             apellido=datos.apellido,
             dni=datos.dni,
             telefono=datos.telefono or None,
-            estado=EstadoSocio.ACTIVO,
+            estado=EstadoSocio.PENDIENTE_CUOTA,
             usuario_id=usuario.id,
         ),
     )

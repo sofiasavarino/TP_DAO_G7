@@ -55,6 +55,7 @@ export enum SocioEstado {
   ACTIVO = 'ACTIVO',
   SUSPENDIDO = 'SUSPENDIDO',
   BAJA = 'BAJA',
+  PENDIENTE_CUOTA = 'PENDIENTE_CUOTA',
 }
 
 // Tipos de sanción

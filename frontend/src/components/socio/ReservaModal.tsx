@@ -3,7 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { ApiError } from '../../services/api';
 import { reservasService } from '../../services/reservasService';
 import type { Sede } from '../../types/ejemplares';
-import { ReservaEstado } from '../../types/enums';
+import { ReservaEstado, SocioEstado } from '../../types/enums';
 import type { LibroListado } from '../../types/libros';
 import type { Reserva, ReservaEta } from '../../types/reservas';
 import { copiasEnSede, type Disponibilidad } from '../../utils/disponibilidad';
@@ -73,6 +73,8 @@ export default function ReservaModal({ libro, sedes, disponibilidad, onClose, on
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState<ApiError | Error | null>(null);
   const [creada, setCreada] = useState<Reserva | null>(null);
+
+  const pendienteCuota = usuario?.estado_socio === SocioEstado.PENDIENTE_CUOTA;
 
   // Para las sedes sin copias en el estante, pedimos la fecha estimada (GET /reservas/eta)
   useEffect(() => {
@@ -203,6 +205,15 @@ export default function ReservaModal({ libro, sedes, disponibilidad, onClose, on
               Si hay copia en la sede elegida, te la guardamos 2 días hábiles. Si está en otra sede, la
               trasladamos y te avisamos cuando llegue.
             </p>
+
+            {pendienteCuota && (
+              <div className="reserva-aviso" role="status">
+                <strong>Tenés pendiente el pago de la cuota social</strong>
+                <span>
+                  Recordá que debés abonar la cuota en la sede antes de poder retirar el libro.
+                </span>
+              </div>
+            )}
 
             {error && (
               <div className="reserva-error" role="alert">
