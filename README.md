@@ -258,6 +258,12 @@ python -m app.seed_catalogo_google  # OPCIONAL: importa ~108 libros desde Google
 uvicorn app.main:app --reload  # http://localhost:8000 | documentación en /docs
 ```
 
+Para correr tests:
+```bash
+pip install -e ".[dev]"
+python -m pytest --cov --cov-report=term-missing
+```
+
 Frontend:
 
 ```bash
