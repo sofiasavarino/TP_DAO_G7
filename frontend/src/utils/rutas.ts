@@ -17,4 +17,5 @@ export const RUTAS_GESTION = {
   remitos: `${RUTA_GESTION}/remitos`,
   socios: `${RUTA_GESTION}/socios`,
   personal: `${RUTA_GESTION}/personal`,
+  reportes: `${RUTA_GESTION}/reportes`,
 } as const;

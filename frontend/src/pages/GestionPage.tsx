@@ -10,6 +10,7 @@ import MostradorPage from './gestion/MostradorPage';
 import RemitosPage from './gestion/RemitosPage';
 import SociosPage from './gestion/SociosPage';
 import PersonalPage from './gestion/PersonalPage';
+import ReportesPage from './gestion/ReportesPage';
 
 /** Secciones que ya tienen pantalla propia; el resto muestra un placeholder. */
 const IMPLEMENTADAS: string[] = [
@@ -18,7 +19,8 @@ const IMPLEMENTADAS: string[] = [
   RUTAS_GESTION.mostrador,
   RUTAS_GESTION.remitos,
   RUTAS_GESTION.socios,
-  RUTAS_GESTION.personal
+  RUTAS_GESTION.personal,
+  RUTAS_GESTION.reportes,
 ];
 
 /** Rutas hijas de /gestion/* (App.tsx ya restringe a Bibliotecario y Administrador). */
@@ -37,6 +39,7 @@ export default function GestionPage() {
         {/* Personal: solo el Administrador (un Bibliotecario que entre por URL vuelve al catálogo) */}
         <Route element={<ProtectedRoute roles={[RolNombre.ADMINISTRADOR]} />}>
           <Route path={relativa(RUTAS_GESTION.personal)} element={<PersonalPage />} />
+          <Route path={relativa(RUTAS_GESTION.reportes)} element={<ReportesPage />} />
         </Route>
         {SECCIONES_GESTION.filter((s) => !IMPLEMENTADAS.includes(s.to)).map((s) => (
           <Route

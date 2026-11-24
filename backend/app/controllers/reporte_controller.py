@@ -75,13 +75,11 @@ def movimientos_endpoint(
 
 @reporte_router.get("/libros-solicitados", response_model=list[LibroSolicitadoDTO])
 def libros_solicitados_endpoint(
-    tipo: TipoPrestamo | None = Query(
-        TipoPrestamo.INTERBIBLIOTECARIO, description="Tipo de préstamo; vacío = todos"
-    ),
+    tipo: TipoPrestamo | None = Query(None, description="Filtrar por tipo de préstamo; vacío = todos"),
     limite: int = Query(10, ge=1, le=50),
     session: Session = Depends(get_session),
 ) -> list[LibroSolicitadoDTO]:
-    """Libros más prestados (por defecto, inter-bibliotecarios)."""
+    """Libros más prestados (todos los tipos; opcionalmente filtrar por tipo)."""
     return libros_mas_solicitados(session, tipo, limite)
 
 

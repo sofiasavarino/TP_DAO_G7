@@ -1,0 +1,83 @@
+/* Reportes: reutiliza las variables del panel (index.css) y va en archivo propio. */
+
+.rep-page { display: grid; gap: 22px; }
+
+.rep-cabecera {
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+}
+.rep-cabecera h1 { margin: 2px 0 4px; font-family: "Playfair Display", serif; font-size: 32px; }
+.rep-cabecera p { margin: 0; color: #697169; font-size: 14px; }
+
+.rep-filtros {
+  display: flex; gap: 14px; flex-wrap: wrap; padding: 14px 16px;
+  border: 1px solid rgba(29, 36, 32, .12); border-radius: 12px; background: #fff;
+}
+.rep-filtros label { display: grid; gap: 5px; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #697169; }
+.rep-filtros input, .rep-filtros select {
+  min-width: 150px; padding: 8px 10px; border: 1px solid rgba(29, 36, 32, .18);
+  border-radius: 8px; font-size: 14px; color: var(--ink); background: #fff; text-transform: none;
+}
+.rep-libro { position: relative; }
+.rep-sugerencias {
+  position: absolute; z-index: 10; top: 100%; left: 0; min-width: 300px; max-height: 260px;
+  overflow-y: auto; list-style: none; margin: 4px 0 0; padding: 4px;
+  border: 1px solid rgba(29, 36, 32, .16); border-radius: 10px; background: #fff;
+  box-shadow: 0 12px 28px rgba(29, 36, 32, .14);
+}
+.rep-sugerencias button {
+  display: grid; gap: 2px; width: 100%; padding: 9px 10px; border: 0; border-radius: 7px;
+  background: transparent; text-align: left; cursor: pointer; text-transform: none;
+}
+.rep-sugerencias button:hover { background: rgba(31, 74, 56, .08); }
+.rep-sugerencias strong { font-size: 13px; }
+.rep-sugerencias small { color: #697169; font-size: 11px; }
+.rep-libro-elegido {
+  display: flex; align-items: center; gap: 10px; align-self: end; padding-bottom: 8px; font-size: 13px;
+}
+.rep-libro-elegido button {
+  padding: 4px 9px; border: 1px solid rgba(29, 36, 32, .18); border-radius: 999px;
+  background: #fff; cursor: pointer; font-size: 11px;
+}
+
+.rep-error { padding: 12px 14px; border-left: 4px solid var(--rust); border-radius: 8px; background: rgba(188, 90, 56, .1); color: #8a3a1e; }
+
+.rep-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; }
+.rep-kpi {
+  display: grid; gap: 4px; padding: 16px 18px; border: 1px solid rgba(29, 36, 32, .12);
+  border-radius: 12px; background: #fff;
+}
+.rep-kpi span { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #697169; }
+.rep-kpi strong { font-family: "Playfair Display", serif; font-size: 30px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.rep-kpi small { color: #697169; font-size: 12px; }
+
+.rep-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 16px; }
+.rep-card { padding: 18px; border: 1px solid rgba(29, 36, 32, .12); border-radius: 12px; background: #fff; min-width: 0; }
+.rep-card h2 { margin: 0 0 16px; font-family: "Playfair Display", serif; font-size: 19px; font-weight: 600; }
+.rep-vacio { margin: 8px 0; color: #8b908b; font-size: 13px; }
+
+.rep-barras { display: grid; gap: 10px; }
+.rep-barra { display: grid; grid-template-columns: minmax(80px, 140px) 1fr auto; align-items: center; gap: 10px; font-size: 13px; }
+.rep-barra-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rep-barra-pista { height: 10px; border-radius: 999px; background: #e9e1d3; overflow: hidden; }
+.rep-barra-relleno { height: 100%; border-radius: 999px; background: var(--green); transition: width .3s ease; }
+.rep-barra strong { font-size: 12px; font-variant-numeric: tabular-nums; }
+
+.rep-dona { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+.rep-dona-svg { width: 150px; height: 150px; transform: rotate(-90deg); flex: none; }
+.rep-leyenda { list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; font-size: 12px; }
+.rep-leyenda li { display: flex; align-items: center; gap: 8px; }
+.rep-leyenda i { width: 10px; height: 10px; border-radius: 2px; flex: none; }
+.rep-leyenda span { min-width: 120px; }
+.rep-leyenda strong { font-variant-numeric: tabular-nums; }
+
+.rep-tabla-wrap { overflow-x: auto; }
+.rep-tabla { width: 100%; border-collapse: collapse; font-size: 13px; }
+.rep-tabla th, .rep-tabla td { padding: 9px 10px; text-align: left; border-bottom: 1px solid rgba(29, 36, 32, .1); }
+.rep-tabla th { font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: #697169; }
+.rep-tabla td { font-variant-numeric: tabular-nums; }
+.rep-tabla tbody tr:last-child td { border-bottom: 0; }
+
+@media (max-width: 640px) {
+  .rep-barra { grid-template-columns: 1fr auto; }
+  .rep-barra-pista { grid-column: 1 / -1; grid-row: 2; }
+}

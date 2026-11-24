@@ -107,10 +107,10 @@ def movimientos_entre_sedes(
 
 def libros_mas_solicitados(
     session: Session,
-    tipo: TipoPrestamo | None = TipoPrestamo.INTERBIBLIOTECARIO,
+    tipo: TipoPrestamo | None = None,
     limite: int = 10,
 ) -> list[LibroSolicitadoDTO]:
-    """Ranking de préstamos por libro (por defecto, sólo inter-bibliotecarios)."""
+    """Ranking de préstamos por libro (por defecto, todos los tipos)."""
     return [
         LibroSolicitadoDTO(
             libro_id=row._mapping["id"],

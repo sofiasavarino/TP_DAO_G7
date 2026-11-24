@@ -126,7 +126,7 @@ Todos los reportes son de solo lectura y devuelven agregados listos para grafica
 | `/api/v1/reportes/disponibilidad?libro_id=` | `DisponibilidadSedeDTO[]` | % de ejemplares disponibles por sede |
 | `/api/v1/reportes/eficacia-logistica?desde=&hasta=` | `EficaciaLogisticaDTO` | % de remitos recibidos sobre los cerrados (recibidos + incidencia) |
 | `/api/v1/reportes/movimientos?desde=&hasta=` | `MovimientoSedeDTO[]` | Envíos por origen/destino y días promedio de tránsito |
-| `/api/v1/reportes/libros-solicitados?tipo=&limite=` | `LibroSolicitadoDTO[]` | Ranking de préstamos por libro (por defecto inter-bibliotecarios) |
+| `/api/v1/reportes/libros-solicitados?tipo=&limite=` | `LibroSolicitadoDTO[]` | Ranking de préstamos por libro (todos los tipos; `tipo` opcional) |
 | `/api/v1/reportes/salud-coleccion` | `EstadoColeccionDTO[]` | % de ejemplares por estado (material fuera de circulación) |
 | `/api/v1/reportes/cumplimiento-retiro?desde=&hasta=` | `CumplimientoRetiroDTO` | % de reservas cumplidas sobre las cerradas |
 | `/api/v1/reportes/espera-reservas?desde=&hasta=` | `EsperaReservaDTO[]` | Días promedio desde la reserva hasta la asignación, por sede |
@@ -135,6 +135,25 @@ Todos los reportes son de solo lectura y devuelven agregados listos para grafica
 | `/api/v1/reportes/presion-libros?limite=` | `PresionLibroDTO[]` | Libros con más reservas en cola por ejemplar en circulación |
 | `/api/v1/reportes/uso-genero?desde=&hasta=` | `UsoGeneroSedeDTO[]` | Préstamos por género y sede (rotación del catálogo) |
 | `/api/v1/reportes/vencidos-sin-sancion` | `VencidosSinSancionDTO` | Préstamos vencidos a los que aún no se sancionó |
+
+**Filtros por reporte** (lo que acepta el backend / lo que expone el panel de reportes):
+
+| Reporte | `desde`/`hasta` | `libro_id` | `tipo` | `limite` | Front |
+|---|---|---|---|---|---|
+| disponibilidad | — | ✔ | — | — | ✔ libro (título/ISBN → id) |
+| eficacia-logistica | ✔ | — | — | — | ✔ |
+| movimientos | ✔ | — | — | — | ✔ |
+| libros-solicitados | — | — | ✔ (opcional) | ✔ (1–50, default 10) | — (usa el default) |
+| salud-coleccion | — | — | — | — | — |
+| cumplimiento-retiro | ✔ | — | — | — | ✔ |
+| espera-reservas | ✔ | — | — | — | ✔ |
+| carga-operativa | — | — | — | — | — |
+| multas | ✔ | — | — | — | ✔ |
+| presion-libros | — | — | — | ✔ (1–50, default 10) | — (usa el default) |
+| uso-genero | ✔ | — | — | — | ✔ |
+| vencidos-sin-sancion | — | — | — | — | — |
+
+`desde`/`hasta` filtran la **fecha de alta** de cada entidad, no siempre la de cierre: `Remito.fecha_creacion` en eficacia/movimientos, `Reserva.fecha_reserva` en cumplimiento/espera, `Sancion.fecha_inicio` en multas y `Prestamo.fecha_inicio` en uso-genero.
 
 - `/docs` — Swagger UI generado por FastAPI. `/openapi.json` — spec OpenAPI.
 - Versionado: todas las rutas de negocio cuelgan de `/api/v1/<recurso>` (`/api/v1/libros`, `/api/v1/prestamos`, ...). Cambios incompatibles a `v2` en el futuro.

@@ -27,6 +27,13 @@ export const SECCIONES_GESTION: Seccion[] = [
     descripcion: 'Alta de bibliotecarios',
     roles: [RolNombre.ADMINISTRADOR],
   },
+  {
+    to: RUTAS_GESTION.reportes,
+    label: 'Reportes',
+    icon: 'reportes',
+    descripcion: 'Indicadores de gestión',
+    roles: [RolNombre.ADMINISTRADOR],
+  },
 ];
 
 /** Secciones que puede ver un rol. */

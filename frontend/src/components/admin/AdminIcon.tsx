@@ -9,6 +9,7 @@ export type AdminIconName =
   | 'remitos'
   | 'socios'
   | 'personal'
+  | 'reportes'
   | 'logout'
   | 'search'
   | 'plus'
@@ -63,6 +64,14 @@ const paths: Record<AdminIconName, ReactNode> = {
       <path d="M5 17a4 4 0 0 1 8 0" />
       <path d="M15 10h3" />
       <path d="M15 14h3" />
+    </>
+  ),
+  reportes: (
+    <>
+      <path d="M4 20V11" />
+      <path d="M10 20V4" />
+      <path d="M16 20v-7" />
+      <path d="M22 20H2" />
     </>
   ),
   logout: (

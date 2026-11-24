@@ -100,7 +100,7 @@ class LibroRepository(BaseRepository[Libro]):
     def mas_solicitados(
         self,
         session: Session,
-        tipo: TipoPrestamo | None = TipoPrestamo.INTERBIBLIOTECARIO,
+        tipo: TipoPrestamo | None = None,
         limite: int = 10,
     ) -> list[Row[tuple[int, str, int]]]:
         """Reporte "libros mas solicitados para prestamos inter-sedes".
