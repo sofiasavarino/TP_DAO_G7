@@ -34,6 +34,16 @@ class EjemplarEstadoUpdate(BaseModel):
     estado: EstadoEjemplar
 
 
+class ReincorporarRequest(BaseModel):
+    """Cuerpo opcional de PATCH /ejemplares/{id}/reincorporacion.
+
+    `descripcion_fisica` es el estado físico actual de la copia (máx. 200 chars).
+    Viene precargado desde el front; si se manda vacío se limpia la nota anterior.
+    """
+
+    descripcion_fisica: str | None = None
+
+
 class EjemplarLoteCreate(BaseModel):
     """Entrada: alta rápida de una o más copias de un libro en una sede inicial.
 

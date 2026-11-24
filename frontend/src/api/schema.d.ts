@@ -269,7 +269,7 @@ export interface paths {
         head?: never;
         /**
          * Reincorporar Endpoint
-         * @description EN_REPARACION -> DISPONIBLE.
+         * @description EN_REPARACION -> DISPONIBLE. Opcionalmente actualiza el estado físico (`descripcion_fisica`).
          */
         patch: operations["reincorporar_endpoint_api_v1_ejemplares__ejemplar_id__reincorporacion_patch"];
         trace?: never;
@@ -959,6 +959,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/usuarios/{usuario_id}/password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Restablecer Password Endpoint
+         * @description Permite al administrador asignar una contraseña nueva a un socio o bibliotecario.
+         */
+        put: operations["restablecer_password_endpoint_api_v1_usuarios__usuario_id__password_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/notificaciones/mios": {
         parameters: {
             query?: never;
@@ -1041,6 +1061,246 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/reportes/disponibilidad": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Disponibilidad Endpoint
+         * @description % de ejemplares disponibles por sede.
+         */
+        get: operations["disponibilidad_endpoint_api_v1_reportes_disponibilidad_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reportes/eficacia-logistica": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Eficacia Endpoint
+         * @description Tasa de remitos recibidos correctamente sobre los cerrados.
+         */
+        get: operations["eficacia_endpoint_api_v1_reportes_eficacia_logistica_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reportes/movimientos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Movimientos Endpoint
+         * @description Envíos por origen/destino y tiempo medio de tránsito.
+         */
+        get: operations["movimientos_endpoint_api_v1_reportes_movimientos_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reportes/libros-solicitados": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Libros Solicitados Endpoint
+         * @description Libros más prestados (todos los tipos; opcionalmente filtrar por tipo).
+         */
+        get: operations["libros_solicitados_endpoint_api_v1_reportes_libros_solicitados_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reportes/salud-coleccion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Salud Endpoint
+         * @description Distribución del inventario por estado.
+         */
+        get: operations["salud_endpoint_api_v1_reportes_salud_coleccion_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reportes/cumplimiento-retiro": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Cumplimiento Endpoint
+         * @description % de reservas cumplidas sobre las cerradas.
+         */
+        get: operations["cumplimiento_endpoint_api_v1_reportes_cumplimiento_retiro_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reportes/espera-reservas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Espera Endpoint
+         * @description Días promedio de espera hasta la asignación, por sede.
+         */
+        get: operations["espera_endpoint_api_v1_reportes_espera_reservas_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reportes/carga-operativa": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Carga Endpoint
+         * @description Préstamos activos y material en tránsito por sede.
+         */
+        get: operations["carga_endpoint_api_v1_reportes_carga_operativa_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reportes/multas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Multas Endpoint
+         * @description Total de multas y ranking de socios por monto.
+         */
+        get: operations["multas_endpoint_api_v1_reportes_multas_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reportes/presion-libros": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Presion Endpoint
+         * @description Libros con más reservas en cola por ejemplar en circulación.
+         */
+        get: operations["presion_endpoint_api_v1_reportes_presion_libros_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reportes/uso-genero": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Uso Endpoint
+         * @description Préstamos por género y sede.
+         */
+        get: operations["uso_endpoint_api_v1_reportes_uso_genero_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reportes/vencidos-sin-sancion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Vencidos Endpoint
+         * @description Préstamos vencidos que todavía no tienen sanción applied.
+         */
+        get: operations["vencidos_endpoint_api_v1_reportes_vencidos_sin_sancion_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -1089,6 +1349,58 @@ export interface components {
             password_actual: string;
             /** Password Nueva */
             password_nueva: string;
+        };
+        /** CargaSedeDTO */
+        CargaSedeDTO: {
+            /** Sede Id */
+            sede_id: number;
+            /** Sede */
+            sede: string;
+            /** Prestamos Activos */
+            prestamos_activos: number;
+            /** Remitos En Transito */
+            remitos_en_transito: number;
+            /** Ejemplares En Transito */
+            ejemplares_en_transito: number;
+        };
+        /** CumplimientoRetiroDTO */
+        CumplimientoRetiroDTO: {
+            /** Cumplidas */
+            cumplidas: number;
+            /** Vencidas */
+            vencidas: number;
+            /** Canceladas */
+            canceladas: number;
+            /** Tasa Cumplimiento Porcentaje */
+            tasa_cumplimiento_porcentaje: number;
+        };
+        /** DisponibilidadSedeDTO */
+        DisponibilidadSedeDTO: {
+            /** Sede Id */
+            sede_id: number;
+            /** Sede */
+            sede: string;
+            /** Disponibles */
+            disponibles: number;
+            /** Total */
+            total: number;
+            /** Porcentaje */
+            porcentaje: number;
+        };
+        /** EficaciaLogisticaDTO */
+        EficaciaLogisticaDTO: {
+            /** Creados */
+            creados: number;
+            /** En Transito */
+            en_transito: number;
+            /** Recibidos */
+            recibidos: number;
+            /** Con Incidencia */
+            con_incidencia: number;
+            /** Finalizados */
+            finalizados: number;
+            /** Tasa Exito Porcentaje */
+            tasa_exito_porcentaje: number;
         };
         /**
          * EjemplarCreate
@@ -1224,6 +1536,26 @@ export interface components {
             /** Activo */
             activo: boolean;
         };
+        /** EsperaReservaDTO */
+        EsperaReservaDTO: {
+            /** Sede Id */
+            sede_id: number;
+            /** Sede */
+            sede: string;
+            /** Reservas */
+            reservas: number;
+            /** Dias Promedio */
+            dias_promedio: number | null;
+        };
+        /** EstadoColeccionDTO */
+        EstadoColeccionDTO: {
+            /** Estado */
+            estado: string;
+            /** Cantidad */
+            cantidad: number;
+            /** Porcentaje */
+            porcentaje: number;
+        };
         /**
          * EstadoEjemplar
          * @enum {string}
@@ -1292,6 +1624,8 @@ export interface components {
              * @default []
              */
             autores: string[];
+            /** Sinopsis */
+            sinopsis?: string | null;
         };
         /**
          * LibroDTO
@@ -1324,6 +1658,8 @@ export interface components {
              * @default []
              */
             autores: components["schemas"]["AutorDTO"][];
+            /** Sinopsis */
+            sinopsis?: string | null;
         };
         /**
          * LibroListadoDTO
@@ -1352,6 +1688,8 @@ export interface components {
              * @default []
              */
             autores: components["schemas"]["AutorDTO"][];
+            /** Sinopsis */
+            sinopsis?: string | null;
         };
         /**
          * LibroLookupDTO
@@ -1382,6 +1720,8 @@ export interface components {
              * @default []
              */
             autores: string[];
+            /** Sinopsis */
+            sinopsis?: string | null;
         };
         /** LibroResumenDTO */
         LibroResumenDTO: {
@@ -1393,6 +1733,15 @@ export interface components {
             isbn?: string | null;
             /** Imagen Url */
             imagen_url?: string | null;
+        };
+        /** LibroSolicitadoDTO */
+        LibroSolicitadoDTO: {
+            /** Libro Id */
+            libro_id: number;
+            /** Libro */
+            libro: string;
+            /** Cantidad */
+            cantidad: number;
         };
         /**
          * LibroUpdate
@@ -1418,6 +1767,8 @@ export interface components {
              * @default []
              */
             autores: string[];
+            /** Sinopsis */
+            sinopsis?: string | null;
         };
         /**
          * LoginRequest
@@ -1462,6 +1813,37 @@ export interface components {
          * @enum {string}
          */
         MotivoTraslado: "IDA" | "REBALANCEO";
+        /** MovimientoSedeDTO */
+        MovimientoSedeDTO: {
+            /** Origen */
+            origen: string;
+            /** Destino */
+            destino: string;
+            /** Remitos */
+            remitos: number;
+            /** Ejemplares */
+            ejemplares: number;
+            /** Dias Promedio */
+            dias_promedio: number | null;
+        };
+        /** MultaSocioDTO */
+        MultaSocioDTO: {
+            /** Socio Id */
+            socio_id: number;
+            /** Socio */
+            socio: string;
+            /** Cantidad */
+            cantidad: number;
+            /** Monto Total */
+            monto_total: number;
+        };
+        /** MultasAcumuladasDTO */
+        MultasAcumuladasDTO: {
+            /** Total */
+            total: number;
+            /** Socios */
+            socios: components["schemas"]["MultaSocioDTO"][];
+        };
         /**
          * NotificacionDTO
          * @description Salida: bandeja de notificaciones de la app.
@@ -1486,13 +1868,27 @@ export interface components {
          * NotificacionTipo
          * @enum {string}
          */
-        NotificacionTipo: "RESERVA_LISTA" | "RESERVA_VENCIDA" | "SANCION_APLICADA" | "SANCION_LEVANTADA" | "EJEMPLAR_ASIGNADO";
+        NotificacionTipo: "RESERVA_LISTA" | "RESERVA_VENCIDA" | "SANCION_APLICADA" | "SANCION_LEVANTADA" | "EJEMPLAR_ASIGNADO" | "PASSWORD_REESTABLECIDA";
+        /** PresionLibroDTO */
+        PresionLibroDTO: {
+            /** Libro Id */
+            libro_id: number;
+            /** Libro */
+            libro: string;
+            /** Reservas Esperando */
+            reservas_esperando: number;
+            /** Ejemplares */
+            ejemplares: number;
+            /** Ratio */
+            ratio: number;
+        };
         /**
          * PrestamoCreate
          * @description Entrada: lo que manda la vista/controller para dar de alta un préstamo.
          *
          *     La fecha de vencimiento NO la decide el cliente — se calcula en el service
-         *     como `today() + DIAS_PRESTAMO`.
+         *     como `today() + DIAS_PRESTAMO`. El tipo tampoco: el directo es siempre LOCAL y el
+         *     de una reserva se deriva de si un remito trajo el ejemplar a la sede de retiro.
          */
         PrestamoCreate: {
             /** Socio Id */
@@ -1622,6 +2018,17 @@ export interface components {
             dni: string;
             /** Telefono */
             telefono?: string | null;
+        };
+        /**
+         * ReincorporarRequest
+         * @description Cuerpo opcional de PATCH /ejemplares/{id}/reincorporacion.
+         *
+         *     `descripcion_fisica` es el estado físico actual de la copia (máx. 200 chars).
+         *     Viene precargado desde el front; si se manda vacío se limpia la nota anterior.
+         */
+        ReincorporarRequest: {
+            /** Descripcion Fisica */
+            descripcion_fisica?: string | null;
         };
         /**
          * RemitoCreate
@@ -1765,6 +2172,11 @@ export interface components {
             /** Eta */
             eta?: string | null;
         };
+        /** ResetPasswordAdminRequest */
+        ResetPasswordAdminRequest: {
+            /** Password Nueva */
+            password_nueva: string;
+        };
         /**
          * RolDTO
          * @description Salida: catálogo de roles (semilla, no se crea desde la app).
@@ -1854,6 +2266,10 @@ export interface components {
         SocioDTO: {
             /** Id */
             id: number;
+            /** Usuario Id */
+            usuario_id?: number | null;
+            /** Nombre Usuario */
+            nombre_usuario?: string | null;
             /** Nombre */
             nombre: string;
             /** Apellido */
@@ -1887,6 +2303,15 @@ export interface components {
              */
             token_type: string;
         };
+        /** UsoGeneroSedeDTO */
+        UsoGeneroSedeDTO: {
+            /** Genero */
+            genero: string;
+            /** Sede */
+            sede: string;
+            /** Prestamos */
+            prestamos: number;
+        };
         /** ValidationError */
         ValidationError: {
             /** Location */
@@ -1899,6 +2324,27 @@ export interface components {
             input?: unknown;
             /** Context */
             ctx?: Record<string, never>;
+        };
+        /** VencidoSinSancionDTO */
+        VencidoSinSancionDTO: {
+            /** Numero */
+            numero: string;
+            /** Socio */
+            socio: string;
+            /** Libro */
+            libro: string;
+            /**
+             * Fecha Vencimiento
+             * Format: date
+             */
+            fecha_vencimiento: string;
+        };
+        /** VencidosSinSancionDTO */
+        VencidosSinSancionDTO: {
+            /** Cantidad */
+            cantidad: number;
+            /** Prestamos */
+            prestamos: components["schemas"]["VencidoSinSancionDTO"][];
         };
     };
     responses: never;
@@ -2382,7 +2828,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ReincorporarRequest"] | null;
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -2548,6 +2998,8 @@ export interface operations {
                 responsable_devolucion_id: number;
                 /** @description Devuelto con daños menores: va a reparación y suspende al socio */
                 con_danios?: boolean;
+                /** @description Estado físico del ejemplar al devolverlo */
+                observaciones?: string | null;
             };
             header?: never;
             path: {
@@ -3641,6 +4093,39 @@ export interface operations {
             };
         };
     };
+    restablecer_password_endpoint_api_v1_usuarios__usuario_id__password_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                usuario_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResetPasswordAdminRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     mis_notificaciones_api_v1_notificaciones_mios_get: {
         parameters: {
             query: {
@@ -3764,6 +4249,354 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    disponibilidad_endpoint_api_v1_reportes_disponibilidad_get: {
+        parameters: {
+            query?: {
+                /** @description Filtrar por libro (opcional) */
+                libro_id?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DisponibilidadSedeDTO"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    eficacia_endpoint_api_v1_reportes_eficacia_logistica_get: {
+        parameters: {
+            query?: {
+                desde?: string | null;
+                hasta?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EficaciaLogisticaDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    movimientos_endpoint_api_v1_reportes_movimientos_get: {
+        parameters: {
+            query?: {
+                desde?: string | null;
+                hasta?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MovimientoSedeDTO"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    libros_solicitados_endpoint_api_v1_reportes_libros_solicitados_get: {
+        parameters: {
+            query?: {
+                /** @description Filtrar por tipo de préstamo; vacío = todos */
+                tipo?: components["schemas"]["TipoPrestamo"] | null;
+                limite?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LibroSolicitadoDTO"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    salud_endpoint_api_v1_reportes_salud_coleccion_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EstadoColeccionDTO"][];
+                };
+            };
+        };
+    };
+    cumplimiento_endpoint_api_v1_reportes_cumplimiento_retiro_get: {
+        parameters: {
+            query?: {
+                desde?: string | null;
+                hasta?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CumplimientoRetiroDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    espera_endpoint_api_v1_reportes_espera_reservas_get: {
+        parameters: {
+            query?: {
+                desde?: string | null;
+                hasta?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EsperaReservaDTO"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    carga_endpoint_api_v1_reportes_carga_operativa_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CargaSedeDTO"][];
+                };
+            };
+        };
+    };
+    multas_endpoint_api_v1_reportes_multas_get: {
+        parameters: {
+            query?: {
+                desde?: string | null;
+                hasta?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MultasAcumuladasDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    presion_endpoint_api_v1_reportes_presion_libros_get: {
+        parameters: {
+            query?: {
+                limite?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PresionLibroDTO"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    uso_endpoint_api_v1_reportes_uso_genero_get: {
+        parameters: {
+            query?: {
+                desde?: string | null;
+                hasta?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UsoGeneroSedeDTO"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    vencidos_endpoint_api_v1_reportes_vencidos_sin_sancion_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VencidosSinSancionDTO"];
                 };
             };
         };

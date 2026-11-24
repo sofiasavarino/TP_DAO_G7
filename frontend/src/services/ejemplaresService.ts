@@ -20,9 +20,12 @@ export const ejemplaresService = {
   /** Alta de 1..50 copias de un libro en una sede (los códigos se generan solos). */
   crearLote: (payload: EjemplarLotePayload) => api.post<EjemplarInventario[]>(`${BASE}/lote`, payload),
 
-  /** reparacion: DISPONIBLE→EN_REPARACION · reincorporacion: EN_REPARACION→DISPONIBLE · inutilizable: terminal */
-  aplicarAccion: (id: number, accion: AccionEjemplar) =>
-    api.patch<EjemplarInventario>(`${BASE}/${id}/${accion}`),
+  /** reparacion: DISPONIBLE→EN_REPARACION · reincorporacion: EN_REPARACION→DISPONIBLE (acepta el estado físico) · inutilizable: terminal */
+  aplicarAccion: (
+    id: number,
+    accion: AccionEjemplar,
+    cuerpo?: { descripcion_fisica: string | null },
+  ) => api.patch<EjemplarInventario>(`${BASE}/${id}/${accion}`, cuerpo),
 };
 
 export const sedesService = {

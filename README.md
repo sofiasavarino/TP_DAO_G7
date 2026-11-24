@@ -112,7 +112,7 @@ TP_DAO_G7/
 | GET | `/api/v1/ejemplares?libro_id=&sede_id=&estado=` | Inventario físico (todos los estados) con libro y sedes resueltos; filtros AND por libro, sede actual y estado. Bibliotecario/Admin |
 | POST | `/api/v1/ejemplares/lote` | Alta rápida de 1..50 copias de un libro en una sede (origen = actual). Códigos `I-<sede>-<libro>`, `-2`, `-3`… o uno manual si es 1 copia. El Bibliotecario solo en su sede (403); el Administrador en cualquiera |
 | PATCH | `/api/v1/ejemplares/{id}/reparacion` | `DISPONIBLE` → `EN_REPARACION`. 409 si el estado no lo admite; 403 si un Bibliotecario lo intenta sobre un ejemplar de otra sede |
-| PATCH | `/api/v1/ejemplares/{id}/reincorporacion` | `EN_REPARACION` → `DISPONIBLE`. 409 si el estado no lo admite; 403 si un Bibliotecario lo intenta sobre un ejemplar de otra sede |
+| PATCH | `/api/v1/ejemplares/{id}/reincorporacion` | `EN_REPARACION` → `DISPONIBLE`. Cuerpo opcional `{"descripcion_fisica": "..."}` para editar el estado físico (máx. 200; vacío limpia la nota; si se omite se conserva). 400 si supera 200, 409 si el estado no lo admite, 403 si un Bibliotecario lo intenta sobre un ejemplar de otra sede |
 | PATCH | `/api/v1/ejemplares/{id}/inutilizable` | `DISPONIBLE`/`EN_REPARACION` → `INUTILIZABLE` (terminal). 409 si el estado no lo admite; 403 si un Bibliotecario lo intenta sobre un ejemplar de otra sede |
 | GET | `/api/v1/sedes` | Sedes activas (para selectores). Público: lo usa el formulario de registro de socios |
 | PATCH | `/api/v1/ejemplares/{id}/estado` | Cambio de estado de un ejemplar |

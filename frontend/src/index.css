@@ -1331,6 +1331,12 @@ footer > span {
 .fine-card dl dd { margin: 0; font-variant-numeric: tabular-nums; }
 .fine-card dl .total { border-top: 1px solid rgba(29, 36, 32, .2); padding-top: 8px; font-weight: 700; }
 .fine-alert { background: rgba(188, 90, 56, .12); color: var(--rust); border-radius: 8px; padding: 12px 14px; font-weight: 600; }
+/* Estado físico del ejemplar al reincorporarlo de reparación */
+.inv-estado-fisico { display: grid; gap: 6px; margin: 16px 0 4px; }
+.inv-estado-fisico > span { font-size: 10px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: #697169; }
+.inv-estado-fisico textarea { width: 100%; border: 1px solid rgba(29, 36, 32, .25); border-radius: 8px; padding: 11px 13px; font: inherit; font-size: 14px; resize: vertical; background: #fff; color: var(--ink); }
+.inv-estado-fisico textarea:focus { outline: 2px solid var(--green); outline-offset: 1px; }
+.inv-estado-fisico small { color: #697169; font-size: 12px; }
 .rules { display: grid; gap: 8px; padding-left: 20px; line-height: 1.5; max-width: 70ch; }
 @media (max-width: 760px) { .fine-card { padding: 18px; } }
 

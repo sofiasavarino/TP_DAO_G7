@@ -147,12 +147,20 @@ _DESCRIPCION_ACCION = {
 
 
 def aplicar_accion(
-    session: Session, ejemplar_id: int, accion: str, sede_permitida: int | None = None
+    session: Session,
+    ejemplar_id: int,
+    accion: str,
+    sede_permitida: int | None = None,
+    descripcion_fisica: str | None = None,
+    actualizar_descripcion: bool = False,
 ) -> Ejemplar:
     """Aplica una acción manual validando la transición.
 
     `sede_permitida`: si viene, el ejemplar tiene que estar físicamente en esa sede
-    (sede ACTUAL). Lanza EjemplarNoEncontrado, SedeNoPermitida o TransicionEjemplarInvalida."""
+    (sede ACTUAL). `actualizar_descripcion` (sólo reincorporación): si es True se
+    reescribe `descripcion_fisica` con el valor recibido; vacío/None la limpia.
+    Lanza EjemplarNoEncontrado, SedeNoPermitida, TransicionEjemplarInvalida o ValueError.
+    """
     origenes, destino = ACCIONES_MANUALES[accion]
     ejemplar = ejemplar_repo.get_con_detalle(session, ejemplar_id)
     if ejemplar is None:
@@ -163,6 +171,11 @@ def aplicar_accion(
             f"El ejemplar {ejemplar.codigo_inventario} no puede {_DESCRIPCION_ACCION[accion]}: "
             f"está {ejemplar.estado.value}."
         )
+    if actualizar_descripcion:
+        detalle = (descripcion_fisica or "").strip() or None
+        if detalle is not None and len(detalle) > 200:
+            raise ValueError("el estado físico no puede superar los 200 caracteres")
+        ejemplar.descripcion_fisica = detalle
     ejemplar.estado = destino
     session.flush()
     return ejemplar

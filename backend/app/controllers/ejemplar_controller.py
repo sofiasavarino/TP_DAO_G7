@@ -11,6 +11,7 @@ from app.dtos.ejemplar_dto import (
     EjemplarEstadoUpdate,
     EjemplarInventarioDTO,
     EjemplarLoteCreate,
+    ReincorporarRequest,
 )
 from app.exceptions.catalogo import (
     EjemplarNoEncontrado,
@@ -125,15 +126,31 @@ def cambiar_estado_endpoint(
     return EjemplarDTO.model_validate(ejemplar)
 
 
-def _accion(session: Session, usuario: Usuario, ejemplar_id: int, accion: str) -> EjemplarInventarioDTO:
+def _accion(
+    session: Session,
+    usuario: Usuario,
+    ejemplar_id: int,
+    accion: str,
+    descripcion_fisica: str | None = None,
+    actualizar_descripcion: bool = False,
+) -> EjemplarInventarioDTO:
     try:
-        ejemplar = aplicar_accion(session, ejemplar_id, accion, _sede_permitida(usuario))
+        ejemplar = aplicar_accion(
+            session,
+            ejemplar_id,
+            accion,
+            _sede_permitida(usuario),
+            descripcion_fisica=descripcion_fisica,
+            actualizar_descripcion=actualizar_descripcion,
+        )
     except EjemplarNoEncontrado as e:
         raise HTTPException(404, str(e)) from e
     except SedeNoPermitida as e:
         raise HTTPException(403, str(e)) from e
     except TransicionEjemplarInvalida as e:
         raise HTTPException(409, str(e)) from e
+    except ValueError as e:
+        raise HTTPException(400, str(e)) from e
     session.commit()
     return EjemplarInventarioDTO.model_validate(ejemplar)
 
@@ -148,10 +165,22 @@ def enviar_a_reparacion_endpoint(
 
 @ejemplar_router.patch("/{ejemplar_id}/reincorporacion", response_model=EjemplarInventarioDTO)
 def reincorporar_endpoint(
-    ejemplar_id: int, session: Session = Depends(get_session), usuario: Usuario = Depends(_personal)
+    ejemplar_id: int,
+    cuerpo: ReincorporarRequest | None = None,
+    session: Session = Depends(get_session),
+    usuario: Usuario = Depends(_personal),
 ) -> EjemplarInventarioDTO:
-    """EN_REPARACION -> DISPONIBLE."""
-    return _accion(session, usuario, ejemplar_id, "reincorporar")
+    """EN_REPARACION -> DISPONIBLE. Opcionalmente actualiza el estado físico (`descripcion_fisica`)."""
+    actualizar = cuerpo is not None and "descripcion_fisica" in cuerpo.model_fields_set
+    descripcion = cuerpo.descripcion_fisica if cuerpo is not None else None
+    return _accion(
+        session,
+        usuario,
+        ejemplar_id,
+        "reincorporar",
+        descripcion_fisica=descripcion,
+        actualizar_descripcion=actualizar,
+    )
 
 
 @ejemplar_router.patch("/{ejemplar_id}/inutilizable", response_model=EjemplarInventarioDTO)

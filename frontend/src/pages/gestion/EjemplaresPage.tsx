@@ -64,6 +64,8 @@ export default function EjemplaresPage() {
   const [altaAbierta, setAltaAbierta] = useState(false);
   const [procesando, setProcesando] = useState<number | null>(null);
   const [aInutilizar, setAInutilizar] = useState<EjemplarInventario | null>(null);
+  const [aReincorporar, setAReincorporar] = useState<EjemplarInventario | null>(null);
+  const [estadoFisico, setEstadoFisico] = useState('');
 
   // Por defecto se muestra la sede del usuario (puede llegar después del primer render)
   const sedeUsuario = usuario?.sede.id ?? null;
@@ -138,10 +140,20 @@ export default function EjemplaresPage() {
   const reemplazar = (actualizado: EjemplarInventario) =>
     setEjemplares((lista) => lista.map((e) => (e.id === actualizado.id ? actualizado : e)));
 
-  const ejecutar = async (ej: EjemplarInventario, accion: AccionEjemplar) => {
+  const ejecutar = async (
+    ej: EjemplarInventario,
+    accion: AccionEjemplar,
+    descripcionFisica?: string,
+  ) => {
     setProcesando(ej.id);
     try {
-      const actualizado = await ejemplaresService.aplicarAccion(ej.id, accion);
+      const actualizado = await ejemplaresService.aplicarAccion(
+        ej.id,
+        accion,
+        descripcionFisica === undefined
+          ? undefined
+          : { descripcion_fisica: descripcionFisica.trim() || null },
+      );
       reemplazar(actualizado);
       setAviso({ tipo: 'ok', texto: `El ejemplar ${ej.codigo_inventario} ${AVISO_ACCION[accion]}.` });
     } catch (e) {
@@ -150,6 +162,7 @@ export default function EjemplaresPage() {
     } finally {
       setProcesando(null);
       setAInutilizar(null);
+      setAReincorporar(null);
     }
   };
 
@@ -357,7 +370,13 @@ export default function EjemplaresPage() {
                                 key={a}
                                 className={`inv-accion ${BOTON_ACCION[a].clase}`}
                                 disabled={ocupado}
-                                onClick={() => (a === 'inutilizable' ? setAInutilizar(ej) : void ejecutar(ej, a))}
+                                onClick={() => {
+                                  if (a === 'inutilizable') setAInutilizar(ej);
+                                  else if (a === 'reincorporacion') {
+                                    setEstadoFisico(ej.descripcion_fisica ?? '');
+                                    setAReincorporar(ej);
+                                  } else void ejecutar(ej, a);
+                                }}
                               >
                                 {BOTON_ACCION[a].texto}
                               </button>
@@ -406,6 +425,56 @@ export default function EjemplaresPage() {
         />
       )}
 
+      {/* --- Reincorporar: vuelve a DISPONIBLE y permite editar el estado físico --- */}
+      {aReincorporar && (
+        <div className="reservation-modal-backdrop" role="presentation">
+          <section className="reservation-modal" role="dialog" aria-modal="true" aria-labelledby="reinc-title">
+            <button className="modal-close" onClick={() => setAReincorporar(null)} aria-label="Cerrar">
+              <AdminIcon name="close" size={18} />
+            </button>
+            <span className="eyebrow">VOLVER DE REPARACIÓN</span>
+            <h2 id="reinc-title">Reincorporar ejemplar</h2>
+            <div className="modal-book">
+              {aReincorporar.libro.imagen_url && <img src={aReincorporar.libro.imagen_url} alt="" />}
+              <div>
+                <strong>{aReincorporar.libro.nombre}</strong>
+                <span>
+                  {aReincorporar.codigo_inventario} · {aReincorporar.sede_actual.nombre}
+                </span>
+              </div>
+            </div>
+            <label className="inv-estado-fisico">
+              <span>Estado físico</span>
+              <textarea
+                rows={4}
+                maxLength={200}
+                value={estadoFisico}
+                onChange={(e) => setEstadoFisico(e.target.value)}
+                placeholder="Ej. Reencuadernado, sin páginas sueltas"
+              />
+              <small>Se muestra en el inventario. Dejalo vacío para limpiar la nota anterior.</small>
+            </label>
+            <div className="modal-actions">
+              <button
+                className="ghost-btn"
+                style={{ width: '100%', marginTop: 0, borderRadius: 0 }}
+                onClick={() => setAReincorporar(null)}
+              >
+                Cancelar
+              </button>
+              <button
+                className="confirm-reservation"
+                style={{ width: '100%', marginTop: 0, borderRadius: 0, fontFamily: 'inherit', fontSize: 14 }}
+                disabled={procesando === aReincorporar.id}
+                onClick={() => void ejecutar(aReincorporar, 'reincorporacion', estadoFisico)}
+              >
+                {procesando === aReincorporar.id ? 'REINCORPORANDO…' : 'REINCORPORAR'}
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
+
       {/* --- Confirmación de INUTILIZABLE (F6.3, estado terminal) --- */}
       {aInutilizar && (
         <div className="reservation-modal-backdrop" role="presentation">
@@ -430,7 +499,11 @@ export default function EjemplaresPage() {
               disponible. Se conserva en el historial.
             </p>
             <div className="modal-actions">
-              <button className="confirm-reservation" style={{ width: '100%', marginTop: 0, borderRadius: 0 }} onClick={() => setAInutilizar(null)}>
+              <button
+                className="confirm-reservation"
+                style={{ width: '100%', marginTop: 0, borderRadius: 0, fontFamily: 'inherit', fontSize: 16 }}
+                onClick={() => setAInutilizar(null)}
+              >
                 Cancelar
               </button>
               <button
