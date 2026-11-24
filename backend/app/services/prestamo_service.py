@@ -77,10 +77,16 @@ def listar_vencidos(session: Session) -> list[PrestamoListadoDTO]:
 
 
 def _validar_socio_y_limite(session: Session, socio_id: int):
-    """Socio existe, sin sanción vigente y sin alcanzar el cupo de préstamos abiertos."""
+    """Socio existe, está activo (cuota al día), sin sanción vigente y con cupo."""
     socio = socio_repo.get_by_id(session, socio_id, incluir_inactivos=True)
     if socio is None:
         raise ValueError(f"socio {socio_id} no existe")
+
+    # Socio dado de alta por la web pero que todavía no abonó la cuota social.
+    if socio.estado != EstadoSocio.ACTIVO:
+        raise SocioSancionado(
+            "El usuario aún no abonó la cuota social o no está activo como socio."
+        )
 
     if sancion_repo.tiene_vigentes(session, socio_id):
         raise SocioSancionado(
@@ -445,15 +451,3 @@ def reponer_libro(
     session.flush()
     session.refresh(prestamo)
     return prestamo
-
-# Valida si el socio es nuevo y no pago la cuota de la biblio
-def _validar_socio_y_limite(session: Session, socio_id: int):
-    """Socio existe, está activo, sin sanción vigente y sin alcanzar el cupo."""
-    socio = socio_repo.get_by_id(session, socio_id, incluir_inactivos=True)
-    if socio is None:
-        raise ValueError(f"socio {socio_id} no existe")
-
-    if socio.estado != EstadoSocio.ACTIVO:
-        raise SocioSancionado(
-            "El usuario aún no abonó la cuota social o no está activo como socio."
-        )

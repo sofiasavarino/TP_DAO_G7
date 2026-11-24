@@ -419,11 +419,11 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ENDPOINTS_PENDIENTES, esEndpointFaltante, mostradorService } from '../../services/mostradorService';
 import { sociosService } from '../../services/sociosService';
 import type { EjemplarInventario } from '../../types/ejemplares';
-import { PrestamoTipo, SocioEstado } from '../../types/enums';
+import { SocioEstado } from '../../types/enums';
 import type { LibroListado } from '../../types/libros';
-import { ETIQUETA_TIPO_PRESTAMO, type ReservaListaRetiro } from '../../types/mostrador';
+import type { ReservaListaRetiro } from '../../types/mostrador';
 import type { Socio } from '../../types/socios';
-import { diasHasta, formatearFecha, textoVencimiento } from '../../utils/fechas';
+import { addDays, diasHasta, formatearFecha, textoVencimiento } from '../../utils/fechas';
 import { normalizar } from '../../utils/texto';
 import AdminIcon from '../admin/AdminIcon';
 import { mensajeDeError, type Aviso } from './avisos';
@@ -674,7 +674,7 @@ export default function ReservasListasPanel({
   );
 }
 
-/** Confirmación de la entrega: elige el tipo de préstamo que nace del retiro. */
+/** Confirmación de la entrega: el backend deriva el tipo del préstamo según el remito. */
 function EntregaModal({
   reserva,
   sedeId,
@@ -690,16 +690,24 @@ function EntregaModal({
   onEntregada: (reservaId: number, aviso: string) => void;
   onCuotaActivada: (socioId: number) => void;
 }) {
-  // Si el ejemplar es de otra sede (llegó por remito) el préstamo es interbibliotecario
-  const sugerido =
-    reserva.ejemplar && reserva.ejemplar.sede_origen_id !== sedeId ? PrestamoTipo.INTERBIBLIOTECARIO : PrestamoTipo.LOCAL;
-  const [tipo, setTipo] = useState<PrestamoTipo>(sugerido);
   const [habilitadoLocal, setHabilitadoLocal] = useState(
     reserva.socio?.estado !== SocioEstado.PENDIENTE_CUOTA,
   );
   const [activandoCuota, setActivandoCuota] = useState(false);
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const dni = reserva.socio_dni ?? reserva.socio?.dni;
+  const hoy = addDays(0);
+  const vencimientoEstimado = addDays(15);
+  const filaDato = (etiqueta: string, valor: string, mono = false) => (
+    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 13.5 }}>
+      <span className="muted">{etiqueta}</span>
+      <strong className={mono ? 'mono' : undefined} style={{ textAlign: 'right' }}>
+        {valor}
+      </strong>
+    </div>
+  );
 
   useEffect(() => {
     const onKey = (e: globalThis.KeyboardEvent) => e.key === 'Escape' && !guardando && !activandoCuota && onCerrar();
@@ -754,6 +762,60 @@ function EntregaModal({
           </div>
         </div>
 
+        <div
+          style={{
+            display: 'grid',
+            gap: 10,
+            padding: '14px 16px',
+            border: '1px solid rgba(29, 36, 32, .14)',
+            background: '#fff',
+            marginTop: 14,
+          }}
+        >
+          <span
+            style={{
+              fontSize: 10.5,
+              fontWeight: 700,
+              letterSpacing: '0.14em',
+              textTransform: 'uppercase',
+              color: 'var(--rust)',
+            }}
+          >
+            Datos del cliente
+          </span>
+          {filaDato('Socio', reserva.socioTexto)}
+          {filaDato('N° de socio', `#${reserva.socio_id}`, true)}
+          {dni && filaDato('DNI', dni, true)}
+          {reserva.socio?.telefono && filaDato('Teléfono', reserva.socio.telefono)}
+        </div>
+
+        <div
+          style={{
+            display: 'grid',
+            gap: 10,
+            padding: '14px 16px',
+            border: '1px solid rgba(29, 36, 32, .14)',
+            background: '#fff',
+            marginTop: 12,
+          }}
+        >
+          <span
+            style={{
+              fontSize: 10.5,
+              fontWeight: 700,
+              letterSpacing: '0.14em',
+              textTransform: 'uppercase',
+              color: 'var(--rust)',
+            }}
+          >
+            Datos del préstamo
+          </span>
+          {filaDato('Ejemplar', reserva.codigoTexto, true)}
+          {filaDato('Reservado el', formatearFecha(reserva.fecha_reserva))}
+          {filaDato('Fecha de retiro', formatearFecha(hoy))}
+          {filaDato('Devolución estimada (15 días)', formatearFecha(vencimientoEstimado))}
+        </div>
+
         {!habilitadoLocal && (
           <div className="mos-alerta aviso" role="alert" style={{ marginBottom: 14 }}>
             <strong>Aún no es socio: debe abonar la cuota social</strong>
@@ -771,23 +833,6 @@ function EntregaModal({
             </button>
           </div>
         )}
-
-        <p className="campo-ayuda mos-modal-label">Tipo de préstamo</p>
-        <div className="pickup-options">
-          {[PrestamoTipo.LOCAL, PrestamoTipo.INTERBIBLIOTECARIO].map((t) => (
-            <label key={t} className={tipo === t ? 'selected' : ''}>
-              <input type="radio" name="tipo-entrega" checked={tipo === t} onChange={() => setTipo(t)} />
-              <span className="radio-mark" />
-              <div>
-                <strong>{ETIQUETA_TIPO_PRESTAMO[t]}</strong>
-                <small className={t === sugerido ? 'available-now' : ''}>
-                  {t === PrestamoTipo.LOCAL ? 'El ejemplar es de esta sede' : 'El ejemplar llegó de otra sede'}
-                  {t === sugerido ? ' · sugerido' : ''}
-                </small>
-              </div>
-            </label>
-          ))}
-        </div>
 
         <p className="ejemplar-resumen mos-resumen">
           La reserva queda <b>cumplida</b> y se crea el préstamo a nombre del socio.

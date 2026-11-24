@@ -459,7 +459,7 @@
 //   );
 // }
 
-import { useEffect, useId, useMemo, useState, type FormEvent, type KeyboardEvent } from 'react';
+import { useEffect, useId, useMemo, useState, type FormEvent, type KeyboardEvent, type ReactNode } from 'react';
 import { ApiError } from '../../services/api';
 import { mostradorService } from '../../services/mostradorService';
 import type { EjemplarInventario } from '../../types/ejemplares';
@@ -471,7 +471,7 @@ import {
   type PrestamoListado,
   type SancionVigente,
 } from '../../types/mostrador';
-import { diasHasta, formatearFecha } from '../../utils/fechas';
+import { addDays, diasHasta, formatearFecha } from '../../utils/fechas';
 import { normalizar } from '../../utils/texto';
 import AdminIcon from '../admin/AdminIcon';
 import type { Aviso } from './avisos';
@@ -525,6 +525,7 @@ export default function PrestamoDirectoForm({ sedeId, sedeNombre, libros, ejempl
   const [errores, setErrores] = useState<{ socio?: string; ejemplar?: string }>({});
   const [alerta, setAlerta] = useState<Alerta | null>(null);
   const [guardando, setGuardando] = useState(false);
+  const [confirmando, setConfirmando] = useState(false);
   const [activandoSocio, setActivandoSocio] = useState(false);
   const [situacion, setSituacion] = useState<Situacion | null>(null);
 
@@ -619,7 +620,7 @@ export default function PrestamoDirectoForm({ sedeId, sedeNombre, libros, ejempl
     }
   };
 
-  const guardar = async (e: FormEvent) => {
+  const guardar = (e: FormEvent) => {
     e.preventDefault();
     const nuevos: typeof errores = {};
     if (!socio) nuevos.socio = 'Elegí el socio.';
@@ -627,6 +628,12 @@ export default function PrestamoDirectoForm({ sedeId, sedeNombre, libros, ejempl
     setErrores(nuevos);
     if (!socio || !ejemplar) return;
 
+    setAlerta(null);
+    setConfirmando(true);
+  };
+
+  const confirmarPrestamo = async () => {
+    if (!socio || !ejemplar) return;
     setGuardando(true);
     setAlerta(null);
     try {
@@ -639,17 +646,54 @@ export default function PrestamoDirectoForm({ sedeId, sedeNombre, libros, ejempl
         tipo: 'ok',
         texto: `Préstamo ${prestamo.numero} registrado: "${ejemplar.libro.nombre}" (${ejemplar.codigo_inventario}) vence el ${formatearFecha(prestamo.fecha_vencimiento)}.`,
       });
+      setConfirmando(false);
       limpiar();
       setSocio(null);
       onCambio();
     } catch (err) {
       setAlerta(alertaDeError(err));
+      setConfirmando(false);
     } finally {
       setGuardando(false);
     }
   };
 
+  const filaDato = (etiqueta: string, valor: string, mono = false) => (
+    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 13.5 }}>
+      <span className="muted">{etiqueta}</span>
+      <strong className={mono ? 'mono' : undefined} style={{ textAlign: 'right' }}>
+        {valor}
+      </strong>
+    </div>
+  );
+  const bloqueDatos = (titulo: string, filas: ReactNode) => (
+    <div
+      style={{
+        display: 'grid',
+        gap: 10,
+        padding: '14px 16px',
+        border: '1px solid rgba(29, 36, 32, .14)',
+        background: '#fff',
+        marginTop: 14,
+      }}
+    >
+      <span
+        style={{
+          fontSize: 10.5,
+          fontWeight: 700,
+          letterSpacing: '0.14em',
+          textTransform: 'uppercase',
+          color: 'var(--rust)',
+        }}
+      >
+        {titulo}
+      </span>
+      {filas}
+    </div>
+  );
+
   return (
+    <>
     <form className="ejemplar-form mos-form" onSubmit={guardar} noValidate>
       <div className="mos-form-grid">
         {/* --- Columna izquierda: socio y su situación --- */}
@@ -816,6 +860,76 @@ export default function PrestamoDirectoForm({ sedeId, sedeNombre, libros, ejempl
         </button>
       </div>
     </form>
+
+    {confirmando && socio && ejemplar && (
+      <div className="reservation-modal-backdrop" role="presentation">
+        <section className="reservation-modal" role="dialog" aria-modal="true" aria-labelledby="confirm-prestamo-title">
+          <button
+            className="modal-close"
+            onClick={() => setConfirmando(false)}
+            disabled={guardando}
+            aria-label="Cerrar"
+          >
+            <AdminIcon name="close" size={18} />
+          </button>
+          <span className="eyebrow">PRÉSTAMO DIRECTO</span>
+          <h2 id="confirm-prestamo-title">¿Registrar el préstamo?</h2>
+
+          <div className="modal-book">
+            {ejemplar.libro.imagen_url && <img src={ejemplar.libro.imagen_url} alt="" />}
+            <div>
+              <strong>{ejemplar.libro.nombre}</strong>
+              <span>Ejemplar {ejemplar.codigo_inventario} · {sedeNombre}</span>
+            </div>
+          </div>
+
+          {bloqueDatos(
+            'Datos del cliente',
+            <>
+              {filaDato('Socio', socio.socio ? `${socio.socio.nombre} ${socio.socio.apellido}` : `Socio N° ${socio.id}`)}
+              {filaDato('N° de socio', `#${socio.id}`, true)}
+              {socio.socio?.dni && filaDato('DNI', socio.socio.dni, true)}
+              {socio.socio?.email && filaDato('Email', socio.socio.email)}
+            </>,
+          )}
+
+          {bloqueDatos(
+            'Datos del préstamo',
+            <>
+              {filaDato('Ejemplar', ejemplar.codigo_inventario, true)}
+              {filaDato('Tipo', ETIQUETA_TIPO_PRESTAMO[tipo])}
+              {filaDato('Fecha de retiro', formatearFecha(addDays(0)))}
+              {filaDato('Devolución estimada (15 días)', formatearFecha(addDays(15)))}
+              {observaciones.trim() && filaDato('Observaciones', observaciones.trim())}
+            </>,
+          )}
+
+          <p className="ejemplar-resumen mos-resumen">
+            Se registrará el préstamo a nombre del socio. El vencimiento exacto lo calcula el sistema.
+          </p>
+
+          <div className="modal-actions">
+            <button
+              type="button"
+              className="ghost-btn"
+              onClick={() => setConfirmando(false)}
+              disabled={guardando}
+            >
+              Volver
+            </button>
+            <button
+              type="button"
+              className="confirm-reservation"
+              onClick={() => void confirmarPrestamo()}
+              disabled={guardando}
+            >
+              {guardando ? 'REGISTRANDO…' : 'CONFIRMAR PRÉSTAMO'}
+            </button>
+          </div>
+        </section>
+      </div>
+    )}
+    </>
   );
 }
 

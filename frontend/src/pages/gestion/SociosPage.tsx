@@ -388,6 +388,7 @@ export default function SociosPage() {
       [SocioEstado.ACTIVO]: vistas.filter((s) => s.estado === SocioEstado.ACTIVO).length,
       [SocioEstado.SUSPENDIDO]: vistas.filter((s) => s.estado === SocioEstado.SUSPENDIDO).length,
       [SocioEstado.BAJA]: vistas.filter((s) => s.estado === SocioEstado.BAJA).length,
+      [SocioEstado.PENDIENTE_CUOTA]: vistas.filter((s) => s.estado === SocioEstado.PENDIENTE_CUOTA).length,
     }),
     [vistas],
   );
