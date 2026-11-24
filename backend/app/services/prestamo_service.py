@@ -7,6 +7,7 @@ from app.dtos.ejemplar_dto import EjemplarCreate
 from app.dtos.prestamo_dto import PrestamoCreate, PrestamoListadoDTO
 from app.exceptions import (
     BibliotecaError,
+    EjemplarNoDisponible,
     LimitePrestamosExcedido,
     SocioSancionado,
 )
@@ -17,6 +18,7 @@ from app.models.sancion import Sancion
 from app.repositories.ejemplar_repository import EjemplarRepository
 from app.repositories.libro_repository import LibroRepository
 from app.repositories.prestamo_repository import PrestamoRepository
+from app.repositories.remito_repository import RemitoRepository
 from app.repositories.reserva_repository import ReservaRepository
 from app.repositories.sancion_repository import SancionRepository
 from app.repositories.socio_repository import SocioRepository
@@ -34,6 +36,7 @@ MULTA_INTERES_DIARIO = 0.02  # 2% diario compuesto (mismo en el front)
 
 prestamo_repo = PrestamoRepository()
 ejemplar_repo = EjemplarRepository()
+remito_repo = RemitoRepository()
 socio_repo = SocioRepository()
 sancion_repo = SancionRepository()
 reserva_repo = ReservaRepository()
@@ -121,6 +124,10 @@ def crear_prestamo(session: Session, datos: PrestamoCreate) -> Prestamo:
     ejemplar = ejemplar_repo.get_by_id(session, datos.ejemplar_id, incluir_inactivos=True)
     if ejemplar is None:
         raise ValueError(f"ejemplar {datos.ejemplar_id} no existe")
+    if remito_repo.get_en_transito_de_ejemplar(session, ejemplar.id) is not None:
+        raise EjemplarNoDisponible(
+            f"ejemplar {ejemplar.codigo_inventario} está comprometido en un remito"
+        )
     estado_de(ejemplar).prestar(ejemplar)  # DISPONIBLE -> PRESTADO (si no, TransicionInvalida)
     return _nuevo_prestamo(session, datos.socio_id, datos.ejemplar_id, datos.tipo, datos.observaciones)
 

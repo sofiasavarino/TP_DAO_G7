@@ -2,8 +2,9 @@ from sqlalchemy import Row, func, select
 from sqlalchemy.orm import Session, selectinload
 
 from app.models.ejemplar import Ejemplar
-from app.models.enums import EstadoEjemplar
+from app.models.enums import EstadoEjemplar, EstadoRemito
 from app.models.libro import Libro
+from app.models.remito import Remito, remito_ejemplar
 from app.models.sede import Sede
 from app.repositories.base_repository import BaseRepository
 
@@ -94,10 +95,24 @@ class EjemplarRepository(BaseRepository[Ejemplar]):
         self, session: Session, libro_id: int, sede_id: int | None = None
     ) -> Ejemplar | None:
         """Un ejemplar DISPONIBLE del libro (en la sede indicada si se pasa).
-        Lo usa el service de reservas para asignar."""
+
+        No devuelve ejemplares comprometidos en un remito abierto (CREADO o EN_TRANSITO):
+        están physicalmente en la sede pero ya están asignados a un envío y no pueden
+        ofrecerse para otra reserva.
+        """
+        en_remito = (
+            select(remito_ejemplar.c.remito_id)
+            .join(Remito, Remito.id == remito_ejemplar.c.remito_id)
+            .where(
+                remito_ejemplar.c.ejemplar_id == Ejemplar.id,
+                Remito.estado.in_((EstadoRemito.CREADO, EstadoRemito.EN_TRANSITO)),
+            )
+            .exists()
+        )
         stmt = select(Ejemplar).where(
             Ejemplar.libro_id == libro_id,
             Ejemplar.estado == EstadoEjemplar.DISPONIBLE,
+            ~en_remito,
         )
         if sede_id is not None:
             stmt = stmt.where(Ejemplar.sede_actual_id == sede_id)

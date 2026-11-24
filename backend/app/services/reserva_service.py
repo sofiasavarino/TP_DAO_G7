@@ -370,7 +370,8 @@ def asignar_ejemplar_a_reserva_mas_vieja(
       (EN_TRANSITO si viaja, DISPONIBLE si en sucursal).
     - si la reserva está en otra sede, se encola el ejemplar en el remito CREADO más
       antiguo de esa ruta (o se crea uno si no hay). La reserva conserva su estado: pasa a
-      EN_TRANSITO (y se avisa) cuando se despacha el remito.
+      EN_TRANSITO (y se avisa) cuando se despacha el remito. Si YA tenía un ejemplar en un
+      remito abierto, no se duplica el envío ni el aviso: ese ejemplar queda DISPONIBLE.
     - si no hay reserva en el sistema para este libro, el ejemplar queda DISPONIBLE.
     """
     hoy = hoy or date.today()
@@ -386,6 +387,12 @@ def asignar_ejemplar_a_reserva_mas_vieja(
 
     # Branch A: la reserva más vieja está en otra sede → encolar en remito (o crear uno)
     if reserva.sede_retiro_id != ejemplar.sede_actual_id:
+        # Si la reserva ya tiene un ejemplar comprometido en un remito abierto
+        # (CREADO o EN_TRANSITO), no duplicar el envío: el que ya viene llega antes y
+        # este ejemplar queda DISPONIBLE para otra reserva. Tampoco se avisa de nuevo.
+        if reserva.ejemplar_id is not None:
+            if remito_repo.get_en_transito_de_ejemplar(session, reserva.ejemplar_id) is not None:
+                return
         if usuario_id is None:
             raise ValueError("usuario_id requerido para encolumnar en remito interbibliotecario")
         # import diferido: remito_service importa de este módulo (asignar_ejemplar_a_reserva_mas_vieja)
