@@ -79,6 +79,12 @@ class NotificacionService:
         notificacion_repo.marcar_leida(session, notificacion_id)
         return notificacion
 
+    def notificar_a_usuario(
+        self, session: Session, usuario: Usuario, tipo: NotificacionTipo, titulo: str, cuerpo: str
+    ) -> Notificacion:
+        """Notifica a cualquier usuario (socio o bibliotecario: p. ej. reset de contraseña)."""
+        return self._notificar(session, usuario, tipo, titulo, cuerpo)
+
     def notificar_a_socio(
         self, session: Session, socio: Socio, tipo: NotificacionTipo, titulo: str, cuerpo: str
     ) -> Notificacion:
@@ -87,18 +93,14 @@ class NotificacionService:
         La notificación pertenece al *usuario* del socio: acá se resuelve `socio.usuario_id`
         para que los services no confundan `socio.id` con `usuario.id`.
         """
-        return self.notificar(
-            session,
-            NotificacionCreate(
-                usuario_id=socio.usuario_id, tipo=tipo, titulo=titulo, cuerpo=cuerpo
-            ),
-        )
+        return self._notificar(session, socio.usuario, tipo, titulo, cuerpo)
 
     def notificar(self, session: Session, datos: NotificacionCreate) -> Notificacion:
         """Genera la notificación y la dispara a los listeners del tipo.
 
         Regla de negocio: sólo se notifica a usuarios con perfil de **socio** (un
         empleado no debe recibir notificaciones de reservas/sanciones por error).
+        Para avisos de cuenta (contraseña) usar `notificar_a_usuario`.
         """
         usuario = usuario_repo.get_by_id(session, datos.usuario_id, incluir_inactivos=True)
         if usuario is None:
@@ -106,15 +108,18 @@ class NotificacionService:
         if usuario.socio is None:
             raise ValueError(f"el usuario {datos.usuario_id} no corresponde a un socio")
 
+        return self._notificar(session, usuario, datos.tipo, datos.titulo, datos.cuerpo)
+
+    def _notificar(
+        self, session: Session, usuario: Usuario, tipo: NotificacionTipo, titulo: str, cuerpo: str
+    ) -> Notificacion:
         notificacion = Notificacion(
-            tipo=datos.tipo,
-            titulo=datos.titulo,
-            cuerpo=datos.cuerpo,
-            usuario_id=datos.usuario_id,
+            tipo=tipo,
+            titulo=titulo,
+            cuerpo=cuerpo,
+            usuario_id=usuario.id,
         )
-        self.events.notify(
-            datos.tipo.value, NotificacionEvento(session, notificacion, usuario)
-        )
+        self.events.notify(tipo.value, NotificacionEvento(session, notificacion, usuario))
         return notificacion
 
 

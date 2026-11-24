@@ -15,6 +15,7 @@ from app.dtos.registro_dto import (
     RegistroSocioRequest,
     CuentaBase,
 )
+from app.exceptions import CredencialesInvalidas
 from app.exceptions.usuario import DatoDuplicado, RolNoConfigurado, SedeInvalida
 from app.models.empleado import Empleado
 from app.models.enums import EstadoSocio
@@ -27,7 +28,7 @@ from app.repositories.socio_repository import SocioRepository
 from app.repositories.usuario_repository import UsuarioRepository
 from app.utils.security import hash_password, verify_password
 from app.dtos.auth_dto import ActualizarPerfilRequest, CambiarPasswordRequest
-from app.exceptions.auth import CredencialesInvalidas
+from app.notifications import mensajes
 
 
 # Nombres exactos de los roles cargados en seeds.py
@@ -165,4 +166,5 @@ def restablecer_password_admin(session: Session, usuario_id: int, password_nueva
         return False
     usuario.hash = hash_password(password_nueva)
     session.flush()
+    mensajes.avisar_password_reestablecida(session, usuario)
     return True

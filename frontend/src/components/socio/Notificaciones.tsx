@@ -15,6 +15,7 @@ const TIPO: Record<NotificacionTipo, { etiqueta: string; tono: 'ok' | 'alerta' |
   [NotificacionTipo.RESERVA_VENCIDA]: { etiqueta: 'RESERVA VENCIDA', tono: 'alerta' },
   [NotificacionTipo.SANCION_APLICADA]: { etiqueta: 'SANCIÓN APLICADA', tono: 'alerta' },
   [NotificacionTipo.SANCION_LEVANTADA]: { etiqueta: 'SANCIÓN LEVANTADA', tono: 'ok' },
+  [NotificacionTipo.PASSWORD_REESTABLECIDA]: { etiqueta: 'CONTRASEÑA REESTABLECIDA', tono: 'alerta' },
 };
 
 /** "hace 5 min", "hace 3 h", "ayer", "12 de noviembre". */

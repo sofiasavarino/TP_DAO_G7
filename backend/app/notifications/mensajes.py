@@ -16,6 +16,7 @@ from app.models.enums import NotificacionTipo, TipoSancion
 from app.models.reserva import Reserva
 from app.models.sancion import Sancion
 from app.models.socio import Socio
+from app.models.usuario import Usuario
 from app.notifications.service import notificacion_service
 
 
@@ -85,4 +86,23 @@ def avisar_sancion_levantada(session: Session, socio: Socio, sancion: Sancion) -
         NotificacionTipo.SANCION_LEVANTADA,
         "Se levantó tu sanción",
         f"Se levantó la sanción: {sancion.motivo}",
+    )
+
+
+# ------------------------------------------------------------------------ cuenta
+
+
+def avisar_password_reestablecida(session: Session, usuario: Usuario) -> None:
+    """Avisa al socio o bibliotecario que un admin le blanqueó la contraseña.
+
+    Nunca incluye la contraseña nueva en la notificación ni en el mail: la entrega
+    el administrador por el canal que corresponda.
+    """
+    notificacion_service.notificar_a_usuario(
+        session,
+        usuario,
+        NotificacionTipo.PASSWORD_REESTABLECIDA,
+        "Tu contraseña fue reestablecida",
+        "Un administrador reestableció tu contraseña. Ingresá con la clave nueva que te "
+        "entregaron. Si no fuiste vos, avisá en la biblioteca.",
     )
