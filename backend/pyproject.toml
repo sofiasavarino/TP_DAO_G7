@@ -18,6 +18,8 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0",
+    "pytest-cov>=5.0",  # cobertura: pytest --cov
+    "httpx2",           # lo necesita fastapi.testclient.TestClient
 ]
 
 [build-system]
@@ -26,3 +28,11 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 include = ["app*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.coverage.run]
+source = ["app"]
+omit = ["app/seeds.py", "app/seed_catalogo_google.py"]
